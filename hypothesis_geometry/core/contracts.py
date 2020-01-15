@@ -1,15 +1,16 @@
-from typing import Sequence
+from typing import (Sequence,
+                    Tuple)
 
 from robust import cocircular
 
 from hypothesis_geometry.hints import (Contour,
                                        Point)
-from .hints import Segment
 from .utils import (Orientation,
-                    to_edges,
                     to_orientation,
                     to_orientations,
                     to_real_point)
+
+Segment = Tuple[Point, Point]
 
 
 def is_point_inside_circumcircle(first_vertex: Point,
@@ -42,7 +43,8 @@ def is_contour_strict(contour: Contour) -> bool:
 
 
 def is_non_self_intersecting_contour(contour: Contour) -> bool:
-    edges = tuple(to_edges(contour))
+    edges = tuple((contour[index], contour[(index + 1) % len(contour)])
+                  for index in range(len(contour)))
     for index, edge in enumerate(edges):
         # skipping neighbours because they always intersect
         # NOTE: first & last edges are neighbours
