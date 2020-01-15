@@ -66,6 +66,63 @@ Install:
   pypy setup.py install
   ```
 
+Usage
+-----
+With setup
+```python
+>>> from hypothesis import strategies
+>>> from hypothesis_geometry import planar
+>>> min_coordinate, max_coordinate = -100, 100
+>>> coordinates_type = int
+>>> coordinates = strategies.integers(min_coordinate, max_coordinate)
+>>> import warnings
+>>> from hypothesis.errors import NonInteractiveExampleWarning
+>>> # ignore hypothesis warnings caused by `example` method call
+... warnings.filterwarnings('ignore', category=NonInteractiveExampleWarning)
+
+```
+let's take a look at what can be generated and how.
+
+### Points
+```python
+>>> points = planar.points(coordinates)
+>>> point = points.example()
+>>> isinstance(point, tuple)
+True
+>>> len(point) == 2
+True
+>>> all(isinstance(coordinate, coordinates_type) for coordinate in point)
+True
+>>> all(min_coordinate <= coordinate <= max_coordinate for coordinate in point)
+True
+
+```
+
+### Contours
+```python
+>>> min_size, max_size = 5, 10
+>>> contours = planar.contours(coordinates, 
+...                            min_size=min_size,
+...                            max_size=max_size)
+>>> contour = contours.example()
+>>> isinstance(contour, list)
+True
+>>> min_size <= len(contour) <= max_size
+True
+>>> all(isinstance(vertex, tuple) for vertex in contour)
+True
+>>> all(len(vertex) == 2 for vertex in contour)
+True
+>>> all(all(isinstance(coordinate, coordinates_type) for coordinate in point)
+...     for vertex in contour)
+True
+>>> all(all(min_coordinate <= coordinate <= max_coordinate for coordinate in point)
+...     for vertex in contour)
+True
+
+```
+also `planar.concave_contours` & `planar.convex_contours` options are available.
+
 Development
 -----------
 
