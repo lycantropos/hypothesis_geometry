@@ -1,17 +1,15 @@
-from typing import (Iterable,
-                    Iterator,
-                    Sequence,
-                    Tuple)
+from typing import Sequence
 
 from robust import cocircular
 
 from hypothesis_geometry.hints import (Contour,
                                        Point)
-from .angular import (Orientation,
-                      to_orientation)
-from .utils import to_real_point
-
-Segment = Tuple[Point, Point]
+from .hints import Segment
+from .utils import (Orientation,
+                    to_edges,
+                    to_orientation,
+                    to_orientations,
+                    to_real_point)
 
 
 def is_point_inside_circumcircle(first_vertex: Point,
@@ -60,17 +58,12 @@ def _to_non_neighbours(edge_index: int,
             + edges[edge_index + 2:edge_index - 1 + len(edges)])
 
 
-def edge_orientation_with(edge: Segment, point: Point) -> Orientation:
-    start, end = edge
-    return to_orientation(end, start, point)
-
-
 def segments_intersect(left: Segment, right: Segment) -> bool:
     if left == right:
         return True
     left_start, left_end = left
-    self_start_orientation = edge_orientation_with(right, left_start)
-    self_end_orientation = edge_orientation_with(right, left_end)
+    self_start_orientation = _edge_orientation_with(right, left_start)
+    self_end_orientation = _edge_orientation_with(right, left_end)
     if (self_start_orientation is Orientation.COLLINEAR
             and _in_interval(left_start, right)):
         return True
@@ -78,8 +71,8 @@ def segments_intersect(left: Segment, right: Segment) -> bool:
           and _in_interval(left_end, right)):
         return True
     right_start, right_end = right
-    other_start_orientation = edge_orientation_with(left, right_start)
-    other_end_orientation = edge_orientation_with(left, right_end)
+    other_start_orientation = _edge_orientation_with(left, right_start)
+    other_end_orientation = _edge_orientation_with(left, right_end)
     if (self_start_orientation * self_end_orientation < 0
             and other_start_orientation * other_end_orientation < 0):
         return True
@@ -91,6 +84,11 @@ def segments_intersect(left: Segment, right: Segment) -> bool:
         return True
     else:
         return False
+
+
+def _edge_orientation_with(edge: Segment, point: Point) -> Orientation:
+    start, end = edge
+    return to_orientation(end, start, point)
 
 
 def _in_interval(point: Point, segment: Segment) -> bool:
@@ -110,14 +108,3 @@ def _in_interval(point: Point, segment: Segment) -> bool:
                            else (segment_end_y, segment_start_y))
         point_x, point_y = point
         return left_x <= point_x <= right_x and bottom_y <= point_y <= top_y
-
-
-def to_orientations(contour: Contour) -> Iterator[Orientation]:
-    return (to_orientation(contour[index - 1], contour[index],
-                           contour[(index + 1) % len(contour)])
-            for index in range(len(contour)))
-
-
-def to_edges(contour: Contour) -> Iterable[Segment]:
-    return ((contour[index], contour[(index + 1) % len(contour)])
-            for index in range(len(contour)))
