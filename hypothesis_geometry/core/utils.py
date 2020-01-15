@@ -16,7 +16,6 @@ from robust.hints import Point as RealPoint
 from hypothesis_geometry.hints import (Contour,
                                        Point,
                                        Scalar)
-from .hints import Segment
 
 Domain = TypeVar('Domain')
 
@@ -79,11 +78,6 @@ def to_orientation(first_ray_point: Point,
 def to_orientations(contour: Contour) -> Iterator[Orientation]:
     return (to_orientation(contour[index - 1], contour[index],
                            contour[(index + 1) % len(contour)])
-            for index in range(len(contour)))
-
-
-def to_edges(contour: Contour) -> Iterable[Segment]:
-    return ((contour[index], contour[(index + 1) % len(contour)])
             for index in range(len(contour)))
 
 
