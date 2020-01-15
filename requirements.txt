@@ -1,1 +1,3 @@
 hypothesis>=4.55.0
+reprit>=0.1.1
+robust>=0.0.1
