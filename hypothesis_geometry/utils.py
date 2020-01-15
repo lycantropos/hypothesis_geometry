@@ -3,12 +3,12 @@ from typing import (Iterable,
                     Sequence)
 
 from .core import triangular
-from .core.angular import (Orientation,
-                           to_orientation)
 from .core.subdivisional import (QuadEdge,
                                  edge_to_endpoints,
                                  edge_to_ring)
-from .core.utils import (flatten,
+from .core.utils import (Orientation,
+                         flatten,
+                         to_orientation,
                          unique_everseen)
 from .hints import (Contour,
                     Point)

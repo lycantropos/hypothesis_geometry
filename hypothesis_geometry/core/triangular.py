@@ -8,11 +8,12 @@ from reprit.base import generate_repr
 
 from hypothesis_geometry.hints import (Contour,
                                        Point)
-from .angular import (Orientation,
-                      to_orientation)
 from .contracts import is_point_inside_circumcircle
 from .subdivisional import QuadEdge
-from .utils import flatten, split
+from .utils import (Orientation,
+                    flatten,
+                    split,
+                    to_orientation)
 
 
 class Triangulation:

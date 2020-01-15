@@ -6,8 +6,8 @@ from typing import (FrozenSet,
 from reprit.base import generate_repr
 
 from hypothesis_geometry.hints import Point
-from .angular import (Orientation,
-                      to_orientation)
+from .utils import (Orientation,
+                    to_orientation)
 
 
 class QuadEdge:
