@@ -7,6 +7,6 @@ from typing import (Sequence,
 from hypothesis.strategies import SearchStrategy
 
 Strategy = SearchStrategy
-Scalar = TypeVar('Scalar', Real, Decimal)
-Point = Tuple[Scalar, Scalar]
+Coordinate = TypeVar('Coordinate', Real, Decimal)
+Point = Tuple[Coordinate, Coordinate]
 Contour = Sequence[Point]

@@ -14,13 +14,13 @@ from robust import parallelogram
 from robust.hints import Point as RealPoint
 
 from hypothesis_geometry.hints import (Contour,
-                                       Point,
-                                       Scalar)
+                                       Coordinate,
+                                       Point)
 
 Domain = TypeVar('Domain')
 
 
-def to_sign(value: Scalar) -> int:
+def to_sign(value: Real) -> int:
     if value > 0:
         return 1
     elif value < 0:
@@ -83,8 +83,8 @@ def to_orientations(contour: Contour) -> Iterator[Orientation]:
 
 def to_real_point(point: Point) -> RealPoint:
     x, y = point
-    return _scalar_to_real(x), _scalar_to_real(y)
+    return _coordinate_to_real(x), _coordinate_to_real(y)
 
 
-def _scalar_to_real(scalar: Scalar) -> Real:
-    return scalar if isinstance(scalar, Real) else float(scalar)
+def _coordinate_to_real(coordinate: Coordinate) -> Real:
+    return coordinate if isinstance(coordinate, Real) else float(coordinate)

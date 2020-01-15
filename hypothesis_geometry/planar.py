@@ -13,8 +13,8 @@ from .core.contracts import (is_contour_non_convex,
                              is_non_self_intersecting_contour,
                              points_do_not_lie_on_the_same_line)
 from .hints import (Contour,
+                    Coordinate,
                     Point,
-                    Scalar,
                     Strategy)
 from .utils import (to_convex_hull,
                     triangulation_to_concave_contour)
@@ -23,11 +23,11 @@ TRIANGLE_SIZE = 3
 MIN_CONCAVE_CONTOUR_SIZE = 4
 
 
-def points(coordinates: Strategy[Scalar]) -> Strategy[Point]:
+def points(coordinates: Strategy[Coordinate]) -> Strategy[Point]:
     return strategies.tuples(coordinates, coordinates)
 
 
-def contours(coordinates: Strategy[Scalar],
+def contours(coordinates: Strategy[Coordinate],
              *,
              min_size: int = TRIANGLE_SIZE,
              max_size: Optional[int] = None) -> Strategy[Contour]:
@@ -42,7 +42,7 @@ def contours(coordinates: Strategy[Scalar],
                                max_size=max_size))
 
 
-def convex_contours(coordinates: Strategy[Scalar],
+def convex_contours(coordinates: Strategy[Coordinate],
                     *,
                     min_size: int = TRIANGLE_SIZE,
                     max_size: Optional[int] = None) -> Strategy[Contour]:
@@ -62,14 +62,15 @@ def convex_contours(coordinates: Strategy[Scalar],
             else result)
 
 
-def triangular_contours(coordinates: Strategy[Scalar]) -> Strategy[Contour]:
+def triangular_contours(coordinates: Strategy[Coordinate]
+                        ) -> Strategy[Contour]:
     return (strategies.tuples(*repeat(points(coordinates),
                                       times=3))
             .filter(is_contour_strict)
             .map(list))
 
 
-def concave_contours(coordinates: Strategy[Scalar],
+def concave_contours(coordinates: Strategy[Coordinate],
                      *,
                      min_size: int = MIN_CONCAVE_CONTOUR_SIZE,
                      max_size: Optional[int] = None) -> Strategy[Contour]:
