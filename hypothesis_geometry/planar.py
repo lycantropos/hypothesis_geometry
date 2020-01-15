@@ -50,7 +50,7 @@ def convex_contours(coordinates: Strategy[Scalar],
     if max_size is not None and max_size == TRIANGLE_SIZE:
         return triangular_contours(coordinates)
     result = (strategies.lists(points(coordinates),
-                               min_size=min_size * min_size,
+                               min_size=min_size,
                                unique=True)
               .map(to_convex_hull)
               .map(itemgetter(slice(0, max_size)))
@@ -58,7 +58,7 @@ def convex_contours(coordinates: Strategy[Scalar],
                               min_size=min_size,
                               max_size=max_size)))
     return (triangular_contours(coordinates) | result
-            if min_size == TRIANGLE_SIZE
+            if min_size <= TRIANGLE_SIZE
             else result)
 
 
