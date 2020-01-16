@@ -14,10 +14,16 @@ from tests.utils import (Limits,
 
 data = strategies.data()
 
+MAX_VALUE = 10 ** 15
+MIN_VALUE = -MAX_VALUE
 coordinates_strategies_factories = {Decimal: partial(strategies.decimals,
+                                                     min_value=MIN_VALUE,
+                                                     max_value=MAX_VALUE,
                                                      allow_nan=False,
                                                      allow_infinity=False),
                                     float: partial(strategies.floats,
+                                                   min_value=MIN_VALUE,
+                                                   max_value=MAX_VALUE,
                                                    allow_nan=False,
                                                    allow_infinity=False),
                                     Fraction: strategies.fractions,
