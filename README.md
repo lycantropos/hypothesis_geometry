@@ -113,10 +113,10 @@ True
 True
 >>> all(len(vertex) == 2 for vertex in contour)
 True
->>> all(all(isinstance(coordinate, coordinates_type) for coordinate in point)
+>>> all(all(isinstance(coordinate, coordinates_type) for coordinate in vertex)
 ...     for vertex in contour)
 True
->>> all(all(min_coordinate <= coordinate <= max_coordinate for coordinate in point)
+>>> all(all(min_coordinate <= coordinate <= max_coordinate for coordinate in vertex)
 ...     for vertex in contour)
 True
 
