@@ -72,10 +72,12 @@ def to_coordinates_strategies_with_limits_and_types(
                 limits)
 
     def to_limits(coordinates: Strategy[Coordinate]) -> Strategy[Limits]:
-        return (strategies.tuples(coordinates, strategies.none())
-                | (strategies.tuples(coordinates, coordinates)
-                   .filter(are_pair_coordinates_sparse)
-                   .map(sort_pair)))
+        result = (strategies.tuples(coordinates, coordinates)
+                  .filter(are_pair_coordinates_sparse)
+                  .map(sort_pair))
+        return (strategies.tuples(coordinates, strategies.none()) | result
+                if type_ is not float and type_ is not Decimal
+                else result)
 
     return strategies.tuples(strategies.builds(to_strategy_with_limits,
                                                to_limits(strategy_factory())),
