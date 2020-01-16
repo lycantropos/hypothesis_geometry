@@ -17,9 +17,14 @@ from tests.utils import (CoordinatesLimitsType,
                          point_has_valid_size)
 
 
-@given(strategies.coordinates_strategies)
-def test_basic(coordinates: Strategy[Coordinate]) -> None:
-    result = contours(coordinates)
+@given(strategies.coordinates_strategies_with_sizes_pairs)
+def test_basic(coordinates_with_sizes_pair: Tuple[Strategy[Coordinate],
+                                                  SizesPair]) -> None:
+    coordinates, (min_size, max_size) = coordinates_with_sizes_pair
+
+    result = contours(coordinates,
+                      min_size=min_size,
+                      max_size=max_size)
 
     assert isinstance(result, Strategy)
 

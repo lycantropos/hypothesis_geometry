@@ -28,6 +28,30 @@ coordinates_strategies = strategies.sampled_from(
         [factory() for factory in coordinates_strategies_factories.values()])
 
 
+def to_sizes_pairs() -> Strategy[SizesPair]:
+    sizes = strategies.integers(min_value=0,
+                                max_value=10)
+    return (strategies.tuples(sizes, strategies.none())
+            | (strategies.tuples(sizes, sizes)
+               .filter(are_pair_coordinates_sparse)
+               .map(sort_pair)))
+
+
+def are_pair_coordinates_sparse(pair: Tuple[Any, Any]) -> bool:
+    first, second = pair
+    return abs(first - second) >= 10
+
+
+def sort_pair(pair: Tuple[Any, Any]) -> Tuple[Any, Any]:
+    first, second = pair
+    return (first, second) if first < second else (second, first)
+
+
+sizes_pairs = to_sizes_pairs()
+coordinates_strategies_with_sizes_pairs = strategies.tuples(
+        coordinates_strategies, sizes_pairs)
+
+
 def to_coordinates_strategies_with_limits_and_types(
         type_: Type[Coordinate]) -> Strategy[Tuple[Tuple[Strategy[Coordinate],
                                                          Limits],
@@ -52,27 +76,8 @@ def to_coordinates_strategies_with_limits_and_types(
                              strategies.just(type_))
 
 
-def to_sizes_pairs() -> Strategy[SizesPair]:
-    sizes = strategies.integers(min_value=0,
-                                max_value=10)
-    return (strategies.tuples(sizes, strategies.none())
-            | (strategies.tuples(sizes, sizes)
-               .filter(are_pair_coordinates_sparse)
-               .map(sort_pair)))
-
-
-def are_pair_coordinates_sparse(pair: Tuple[Any, Any]) -> bool:
-    first, second = pair
-    return abs(first - second) >= 10
-
-
-def sort_pair(pair: Tuple[Any, Any]) -> Tuple[Any, Any]:
-    first, second = pair
-    return (first, second) if first < second else (second, first)
-
-
 coordinates_strategies_with_limits_and_types = coordinates_types.flatmap(
         to_coordinates_strategies_with_limits_and_types)
 coordinates_strategies_limits_types_with_sizes_pairs = (
     strategies.tuples(coordinates_strategies_with_limits_and_types,
-                      to_sizes_pairs()))
+                      sizes_pairs))
