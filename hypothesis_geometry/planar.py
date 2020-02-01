@@ -34,12 +34,12 @@ def contours(coordinates: Strategy[Coordinate],
     _validate_sizes(min_size, max_size)
     if max_size is not None and max_size == TRIANGLE_SIZE:
         return triangular_contours(coordinates)
-    return (convex_contours(coordinates,
-                            min_size=min_size,
-                            max_size=max_size)
-            | concave_contours(coordinates,
-                               min_size=min_size,
-                               max_size=max_size))
+    return (concave_contours(coordinates,
+                             min_size=min_size,
+                             max_size=max_size)
+            | convex_contours(coordinates,
+                              min_size=min_size,
+                              max_size=max_size))
 
 
 def convex_contours(coordinates: Strategy[Coordinate],
