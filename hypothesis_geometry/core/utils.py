@@ -2,10 +2,7 @@ from enum import (IntEnum,
                   unique)
 from itertools import chain
 from numbers import Real
-from typing import (Callable,
-                    Hashable,
-                    Iterable,
-                    Iterator,
+from typing import (Iterator,
                     List,
                     Sequence,
                     TypeVar)
@@ -14,7 +11,6 @@ from robust import parallelogram
 from robust.hints import Point as RealPoint
 
 from hypothesis_geometry.hints import (Contour,
-                                       Coordinate,
                                        Point)
 
 Domain = TypeVar('Domain')
@@ -30,25 +26,6 @@ def to_sign(value: Real) -> int:
 
 
 flatten = chain.from_iterable
-
-
-def unique_everseen(iterable: Iterable[Domain],
-                    *,
-                    key: Callable[[Domain], Hashable] = None
-                    ) -> Iterable[Domain]:
-    seen = set()
-    seen_add = seen.add
-    if key is None:
-        for element in iterable:
-            if element not in seen:
-                seen_add(element)
-                yield element
-    else:
-        for element in iterable:
-            value = key(element)
-            if value not in seen:
-                seen_add(value)
-                yield element
 
 
 def split(sequence: Sequence[Domain],
@@ -70,9 +47,12 @@ class Orientation(IntEnum):
 def to_orientation(first_ray_point: Point,
                    vertex: Point,
                    second_ray_point: Point) -> Orientation:
+    if not _is_real_point(vertex):
+        first_ray_point, vertex, second_ray_point = (
+            _to_real_point(first_ray_point), _to_real_point(vertex),
+            _to_real_point(second_ray_point))
     return Orientation(to_sign(parallelogram.signed_area(
-            to_real_point(vertex), to_real_point(first_ray_point),
-            to_real_point(vertex), to_real_point(second_ray_point))))
+            vertex, first_ray_point, vertex, second_ray_point)))
 
 
 def to_orientations(contour: Contour) -> Iterator[Orientation]:
@@ -81,10 +61,11 @@ def to_orientations(contour: Contour) -> Iterator[Orientation]:
             for index in range(len(contour)))
 
 
-def to_real_point(point: Point) -> RealPoint:
+def _is_real_point(point: Point) -> bool:
     x, y = point
-    return _coordinate_to_real(x), _coordinate_to_real(y)
+    return isinstance(x, Real) and isinstance(y, Real)
 
 
-def _coordinate_to_real(coordinate: Coordinate) -> Real:
-    return coordinate if isinstance(coordinate, Real) else float(coordinate)
+def _to_real_point(point: Point) -> RealPoint:
+    x, y = point
+    return float(x), float(y)

@@ -6,9 +6,10 @@ from robust import cocircular
 from hypothesis_geometry.hints import (Contour,
                                        Point)
 from .utils import (Orientation,
+                    _is_real_point,
+                    _to_real_point,
                     to_orientation,
-                    to_orientations,
-                    to_real_point)
+                    to_orientations)
 
 Segment = Tuple[Point, Point]
 
@@ -17,10 +18,12 @@ def is_point_inside_circumcircle(first_vertex: Point,
                                  second_vertex: Point,
                                  third_vertex: Point,
                                  point: Point) -> bool:
-    return cocircular.determinant(to_real_point(first_vertex),
-                                  to_real_point(second_vertex),
-                                  to_real_point(third_vertex),
-                                  to_real_point(point)) > 0
+    if not _is_real_point(point):
+        first_vertex, second_vertex, third_vertex, point = (
+            _to_real_point(first_vertex), _to_real_point(second_vertex),
+            _to_real_point(third_vertex), _to_real_point(point))
+    return cocircular.determinant(first_vertex, second_vertex, third_vertex,
+                                  point) > 0
 
 
 def is_contour_non_convex(contour: Contour) -> bool:
