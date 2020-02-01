@@ -79,6 +79,7 @@ def concave_contours(coordinates: Strategy[Coordinate],
     _validate_sizes(min_size, max_size, MIN_CONCAVE_CONTOUR_SIZE)
     return (strategies.lists(points(coordinates),
                              min_size=min_size,
+                             max_size=max_size,
                              unique=True)
             .filter(points_do_not_lie_on_the_same_line)
             .map(triangular.delaunay)

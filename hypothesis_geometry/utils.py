@@ -1,54 +1,67 @@
 from typing import (Iterable,
                     List,
-                    Sequence)
+                    Sequence,
+                    Set)
 
 from .core import triangular
-from .core.subdivisional import (QuadEdge,
-                                 edge_to_endpoints,
-                                 edge_to_ring)
+from .core.subdivisional import QuadEdge
 from .core.utils import (Orientation,
-                         flatten,
-                         to_orientation,
-                         unique_everseen)
+                         to_orientation)
 from .hints import (Contour,
                     Point)
 
 
 def triangulation_to_concave_contour(triangulation: triangular.Triangulation
                                      ) -> Contour:
-    boundary = triangulation.to_boundary_edges()
+    boundary = to_triangulation_boundary(triangulation)
+    boundary_vertices = {edge.start for edge in boundary}
 
     def is_mouth(edge: QuadEdge) -> bool:
-        neighbours = triangulation.to_neighbours(edge)
-        return len(neighbours) == 2 and not (neighbours & boundary)
+        return edge.left_from_start.end not in boundary_vertices
 
-    mouths = {edge: triangulation.to_neighbours(edge)
-              for edge in unique_everseen(boundary,
-                                          key=edge_to_endpoints)
-              if is_mouth(edge)}
-    points = set(flatten((edge.start, edge.end)
-                         for edge in triangulation.to_edges()))
-    for _ in range(len(points) - len(boundary) // 2):
-        try:
-            edge, neighbours = mouths.popitem()
-        except KeyError:
-            break
-        boundary.remove(edge)
-        boundary.remove(edge.opposite)
+    candidates = {edge: to_edge_neighbours(edge)
+                  for edge in boundary
+                  if is_mouth(edge)}
+    while candidates:
+        edge, neighbours = candidates.popitem()
+        if not is_mouth(edge):
+            continue
+        boundary_vertices.add(edge.left_from_start.end)
         triangulation.delete(edge)
-        boundary.update(flatten((neighbour, neighbour.opposite)
-                                for neighbour in neighbours))
-        mouths.update((edge, triangulation.to_neighbours(edge))
-                      for edge in neighbours
-                      if is_mouth(edge))
-        for edge in edge_to_ring(next(iter(neighbours)).opposite):
-            mouths.pop(edge.left_from_end, None)
-            mouths.pop(edge.left_from_end.opposite, None)
-            mouths.pop(edge.right_from_end, None)
-            mouths.pop(edge.right_from_end.opposite, None)
+        candidates.update((edge, to_edge_neighbours(edge))
+                          for edge in neighbours)
     boundary_endpoints = [edge.start
-                          for edge in triangulation._to_boundary_edges()]
+                          for edge in to_triangulation_boundary(triangulation)]
     return shrink_collinear_vertices(boundary_endpoints)
+
+
+def to_triangulation_boundary(triangulation: triangular.Triangulation
+                              ) -> List[QuadEdge]:
+    return list(_to_triangulation_boundary(triangulation))
+
+
+def _to_triangulation_boundary(triangulation: triangular.Triangulation
+                               ) -> Iterable[QuadEdge]:
+    # boundary is traversed in counterclockwise direction
+    start = triangulation.left_edge
+    edge = start
+    while True:
+        yield edge
+        if edge.right_from_end is start:
+            break
+        edge = edge.right_from_end
+
+
+def to_edge_neighbours(edge: QuadEdge) -> Set[QuadEdge]:
+    return set(_to_edge_neighbours(edge))
+
+
+def _to_edge_neighbours(edge: QuadEdge) -> Iterable[QuadEdge]:
+    candidate = edge.left_from_start
+    if (edge.orientation_with(candidate.end)
+            is Orientation.COUNTERCLOCKWISE):
+        yield candidate
+        yield candidate.right_from_end
 
 
 def shrink_collinear_vertices(contour: Contour) -> Contour:
