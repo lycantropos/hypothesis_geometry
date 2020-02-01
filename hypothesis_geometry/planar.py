@@ -42,6 +42,25 @@ def contours(coordinates: Strategy[Coordinate],
                               max_size=max_size))
 
 
+def concave_contours(coordinates: Strategy[Coordinate],
+                     *,
+                     min_size: int = MIN_CONCAVE_CONTOUR_SIZE,
+                     max_size: Optional[int] = None) -> Strategy[Contour]:
+    _validate_sizes(min_size, max_size, MIN_CONCAVE_CONTOUR_SIZE)
+    return (strategies.lists(points(coordinates),
+                             min_size=min_size,
+                             max_size=max_size,
+                             unique=True)
+            .filter(points_do_not_lie_on_the_same_line)
+            .map(triangular.delaunay)
+            .map(triangulation_to_concave_contour)
+            .filter(partial(_contour_has_valid_size,
+                            min_size=min_size,
+                            max_size=max_size))
+            .filter(is_contour_non_convex)
+            .filter(is_non_self_intersecting_contour))
+
+
 def convex_contours(coordinates: Strategy[Coordinate],
                     *,
                     min_size: int = TRIANGLE_SIZE,
@@ -70,25 +89,6 @@ def triangular_contours(coordinates: Strategy[Coordinate]
                                       times=3))
             .filter(is_contour_strict)
             .map(list))
-
-
-def concave_contours(coordinates: Strategy[Coordinate],
-                     *,
-                     min_size: int = MIN_CONCAVE_CONTOUR_SIZE,
-                     max_size: Optional[int] = None) -> Strategy[Contour]:
-    _validate_sizes(min_size, max_size, MIN_CONCAVE_CONTOUR_SIZE)
-    return (strategies.lists(points(coordinates),
-                             min_size=min_size,
-                             max_size=max_size,
-                             unique=True)
-            .filter(points_do_not_lie_on_the_same_line)
-            .map(triangular.delaunay)
-            .map(triangulation_to_concave_contour)
-            .filter(partial(_contour_has_valid_size,
-                            min_size=min_size,
-                            max_size=max_size))
-            .filter(is_contour_non_convex)
-            .filter(is_non_self_intersecting_contour))
 
 
 def _validate_sizes(min_size: int, max_size: Optional[int],
