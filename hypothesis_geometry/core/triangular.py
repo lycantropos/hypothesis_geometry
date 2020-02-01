@@ -73,11 +73,6 @@ class Triangulation:
                     visited_vertices.add(vertices)
                     yield contour
 
-    @staticmethod
-    def to_non_adjacent_vertices(edge: QuadEdge) -> Set[Point]:
-        return {neighbour.end
-                for neighbour in Triangulation._to_incidents(edge)}
-
     def to_edges(self) -> Set[QuadEdge]:
         result = {self.right_edge, self.left_edge}
         queue = [self.right_edge.left_from_start,
@@ -91,36 +86,6 @@ class Triangulation:
                 queue.extend((edge.left_from_start, edge.left_from_end,
                               edge.right_from_start, edge.right_from_end))
         return result
-
-    def to_boundary_edges(self) -> List[QuadEdge]:
-        return list(self._to_boundary_edges())
-
-    def _to_boundary_edges(self) -> Iterable[QuadEdge]:
-        start = self.left_edge
-        edge = start
-        while True:
-            yield edge
-            if edge.right_from_end is start:
-                break
-            edge = edge.right_from_end
-
-    @staticmethod
-    def to_neighbours(edge: QuadEdge) -> Set[QuadEdge]:
-        return set(Triangulation._to_neighbours(edge))
-
-    @staticmethod
-    def _to_neighbours(edge: QuadEdge) -> Iterable[QuadEdge]:
-        yield from Triangulation._to_incidents(edge)
-        yield from Triangulation._to_incidents(edge.opposite)
-
-    @staticmethod
-    def _to_incidents(edge: QuadEdge) -> Iterable[QuadEdge]:
-        if (edge.orientation_with(edge.right_from_start.end)
-                is Orientation.CLOCKWISE):
-            yield edge.right_from_start
-        if (edge.orientation_with(edge.left_from_start.end)
-                is Orientation.COUNTERCLOCKWISE):
-            yield edge.left_from_start
 
     def delete(self, edge: QuadEdge) -> None:
         if edge is self._right_edge or edge.opposite is self._right_edge:
