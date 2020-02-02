@@ -1,13 +1,9 @@
-from typing import (Iterable,
-                    List,
-                    Optional,
-                    Sequence,
-                    Set)
+from typing import (Optional,
+                    Sequence)
 
 from reprit.base import generate_repr
 
-from hypothesis_geometry.hints import (Contour,
-                                       Point)
+from hypothesis_geometry.hints import Point
 from .contracts import is_point_inside_circumcircle
 from .subdivisional import QuadEdge
 from .utils import (Orientation,
@@ -53,39 +49,6 @@ class Triangulation:
         if other._left_edge.start == other._right_edge.start:
             other._right_edge = base_edge
         return base_edge
-
-    def to_triangles(self) -> List[Contour]:
-        return list(self._to_triangles())
-
-    def _to_triangles(self) -> Iterable[Contour]:
-        visited_vertices = set()
-        edges = self.to_edges()
-        edges_endpoints = {frozenset((edge.start, edge.end)) for edge in edges}
-        for edge in edges:
-            if (edge.orientation_with(edge.left_from_start.end)
-                    is Orientation.COUNTERCLOCKWISE):
-                contour = (edge.start, edge.end, edge.left_from_start.end)
-                vertices = frozenset(contour)
-                if vertices not in visited_vertices:
-                    if (frozenset((edge.end, edge.left_from_start.end))
-                            not in edges_endpoints):
-                        continue
-                    visited_vertices.add(vertices)
-                    yield contour
-
-    def to_edges(self) -> Set[QuadEdge]:
-        result = {self.right_edge, self.left_edge}
-        queue = [self.right_edge.left_from_start,
-                 self.right_edge.left_from_end,
-                 self.right_edge.right_from_start,
-                 self.right_edge.right_from_end]
-        while queue:
-            edge = queue.pop()
-            if edge not in result:
-                result.update((edge, edge.opposite))
-                queue.extend((edge.left_from_start, edge.left_from_end,
-                              edge.right_from_start, edge.right_from_end))
-        return result
 
     def delete(self, edge: QuadEdge) -> None:
         if edge is self._right_edge or edge.opposite is self._right_edge:
