@@ -53,6 +53,13 @@ def concave_contours(coordinates: Strategy[Coordinate],
                      *,
                      min_size: int = MIN_CONCAVE_CONTOUR_SIZE,
                      max_size: Optional[int] = None) -> Strategy[Contour]:
+    """
+    Returns a strategy for concave contours.
+
+    :param coordinates: strategy for vertices' coordinates.
+    :param min_size: lower bound for contour size.
+    :param max_size: upper bound for contour size, ``None`` for unbound.
+    """
     _validate_sizes(min_size, max_size, MIN_CONCAVE_CONTOUR_SIZE)
     return (strategies.lists(points(coordinates),
                              min_size=min_size,
