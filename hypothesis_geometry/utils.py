@@ -1,7 +1,6 @@
 from typing import (Iterable,
                     List,
-                    Sequence,
-                    Set)
+                    Sequence)
 
 from dendroid import red_black
 from dendroid.hints import Sortable
@@ -67,8 +66,8 @@ def _to_triangulation_boundary(triangulation: triangular.Triangulation
         edge = edge.right_from_end
 
 
-def to_edge_neighbours(edge: QuadEdge) -> Set[QuadEdge]:
-    return set(_to_edge_neighbours(edge))
+def to_edge_neighbours(edge: QuadEdge) -> Sequence[QuadEdge]:
+    return tuple(_to_edge_neighbours(edge))
 
 
 def _to_edge_neighbours(edge: QuadEdge) -> Iterable[QuadEdge]:
