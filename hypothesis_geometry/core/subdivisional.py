@@ -1,7 +1,5 @@
 from reprlib import recursive_repr
-from typing import (FrozenSet,
-                    Iterable,
-                    Optional)
+from typing import Optional
 
 from reprit.base import generate_repr
 
@@ -121,16 +119,3 @@ class QuadEdge:
 
     def orientation_with(self, point: Point) -> Orientation:
         return to_orientation(self.end, self.start, point)
-
-
-def edge_to_endpoints(edge: QuadEdge) -> FrozenSet[Point]:
-    return frozenset((edge.start, edge.end))
-
-
-def edge_to_ring(edge: QuadEdge) -> Iterable[QuadEdge]:
-    start = edge
-    while True:
-        yield edge
-        edge = edge.left_from_start
-        if edge is start:
-            break
