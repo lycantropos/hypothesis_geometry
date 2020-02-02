@@ -106,6 +106,11 @@ def convex_contours(coordinates: Strategy[Coordinate],
 
 def triangular_contours(coordinates: Strategy[Coordinate]
                         ) -> Strategy[Contour]:
+    """
+    Returns a strategy for triangular contours.
+
+    :param coordinates: strategy for vertices' coordinates.
+    """
     return (strategies.tuples(*repeat(points(coordinates),
                                       times=3))
             .filter(is_contour_strict)
