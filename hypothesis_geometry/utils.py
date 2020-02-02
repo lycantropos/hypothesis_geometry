@@ -3,11 +3,15 @@ from typing import (Iterable,
                     Sequence,
                     Set)
 
+from dendroid import red_black
+from dendroid.hints import Sortable
+
 from .core import triangular
 from .core.subdivisional import QuadEdge
 from .core.utils import (Orientation,
                          to_orientation)
 from .hints import (Contour,
+                    Coordinate,
                     Point)
 
 
@@ -19,17 +23,28 @@ def triangulation_to_concave_contour(triangulation: triangular.Triangulation
     def is_mouth(edge: QuadEdge) -> bool:
         return edge.left_from_start.end not in boundary_vertices
 
-    candidates = {edge: to_edge_neighbours(edge)
-                  for edge in boundary
-                  if is_mouth(edge)}
+    edges_neighbours = {edge: to_edge_neighbours(edge)
+                        for edge in boundary}
+
+    def edge_key(edge: QuadEdge) -> Sortable:
+        return to_squared_edge_length(edge), edge.start, edge.end
+
+    def to_squared_edge_length(edge: QuadEdge) -> Coordinate:
+        (start_x, start_y), (end_x, end_y) = edge.start, edge.end
+        delta_x, delta_y = start_x - end_x, start_y - end_y
+        return delta_x * delta_x + delta_y * delta_y
+
+    candidates = red_black.tree(*filter(is_mouth, boundary),
+                                key=edge_key)
     while candidates:
-        edge, neighbours = candidates.popitem()
+        edge = candidates.popmax()
         if not is_mouth(edge):
             continue
         boundary_vertices.add(edge.left_from_start.end)
         triangulation.delete(edge)
-        candidates.update((edge, to_edge_neighbours(edge))
-                          for edge in neighbours)
+        for neighbour in edges_neighbours.pop(edge):
+            edges_neighbours[neighbour] = to_edge_neighbours(neighbour)
+            candidates.add(neighbour)
     boundary_endpoints = [edge.start
                           for edge in to_triangulation_boundary(triangulation)]
     return shrink_collinear_vertices(boundary_endpoints)
