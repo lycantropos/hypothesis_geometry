@@ -31,8 +31,8 @@ def is_contour_non_convex(contour: Contour) -> bool:
     base_orientation = next(orientations)
     # orientation change means
     # that internal angle is greater than 180 degrees
-    return not all(orientation == base_orientation
-                   for orientation in orientations)
+    return any(orientation is not base_orientation
+               for orientation in orientations)
 
 
 def points_do_not_lie_on_the_same_line(points: Sequence[Point]) -> bool:
