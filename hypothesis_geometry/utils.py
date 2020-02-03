@@ -14,8 +14,8 @@ from .hints import (Contour,
                     Point)
 
 
-def triangulation_to_concave_contour(triangulation: triangular.Triangulation
-                                     ) -> Contour:
+def to_concave_contour(triangulation: triangular.Triangulation
+                       ) -> Contour:
     boundary = triangular.to_boundary(triangulation)
     boundary_vertices = {edge.start for edge in boundary}
 
