@@ -1,12 +1,12 @@
-from typing import (Iterable,
-                    List,
+from typing import (List,
                     Sequence)
 
 from dendroid import red_black
 from dendroid.hints import Sortable
 
 from .core import triangular
-from .core.subdivisional import QuadEdge
+from .core.subdivisional import (QuadEdge,
+                                 to_edge_neighbours)
 from .core.utils import (Orientation,
                          to_orientation)
 from .hints import (Contour,
@@ -16,7 +16,7 @@ from .hints import (Contour,
 
 def triangulation_to_concave_contour(triangulation: triangular.Triangulation
                                      ) -> Contour:
-    boundary = to_triangulation_boundary(triangulation)
+    boundary = triangular.to_boundary(triangulation)
     boundary_vertices = {edge.start for edge in boundary}
 
     def is_mouth(edge: QuadEdge) -> bool:
@@ -45,7 +45,7 @@ def triangulation_to_concave_contour(triangulation: triangular.Triangulation
             edges_neighbours[neighbour] = to_edge_neighbours(neighbour)
             candidates.add(neighbour)
     boundary_endpoints = [edge.start
-                          for edge in to_triangulation_boundary(triangulation)]
+                          for edge in triangular.to_boundary(triangulation)]
     return shrink_collinear_vertices(boundary_endpoints)
 
 
