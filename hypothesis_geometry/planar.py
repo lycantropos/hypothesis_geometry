@@ -16,8 +16,8 @@ from .hints import (Contour,
                     Coordinate,
                     Point,
                     Strategy)
-from .utils import (to_convex_hull,
-                    triangulation_to_concave_contour)
+from .utils import (to_concave_contour,
+                    to_convex_hull)
 
 TRIANGLE_SIZE = 3
 MIN_CONCAVE_CONTOUR_SIZE = 4
@@ -87,7 +87,7 @@ def concave_contours(x_coordinates: Strategy[Coordinate],
                              unique=True)
             .filter(points_do_not_lie_on_the_same_line)
             .map(triangular.delaunay)
-            .map(triangulation_to_concave_contour)
+            .map(to_concave_contour)
             .filter(partial(_contour_has_valid_size,
                             min_size=min_size,
                             max_size=max_size))
