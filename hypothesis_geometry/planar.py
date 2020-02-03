@@ -23,45 +23,65 @@ TRIANGLE_SIZE = 3
 MIN_CONCAVE_CONTOUR_SIZE = 4
 
 
-def points(coordinates: Strategy[Coordinate]) -> Strategy[Point]:
-    return strategies.tuples(coordinates, coordinates)
+def points(x_coordinates: Strategy[Coordinate],
+           y_coordinates: Optional[Strategy[Coordinate]] = None,
+           ) -> Strategy[Point]:
+    """
+    Returns a strategy for points.
+
+    :param x_coordinates: strategy for points' x-coordinates.
+    :param y_coordinates:
+        strategy for points' y-coordinates,
+        ``None`` for reusing x-coordinates strategy.
+    """
+    if y_coordinates is None:
+        y_coordinates = x_coordinates
+    return strategies.tuples(x_coordinates, y_coordinates)
 
 
-def contours(coordinates: Strategy[Coordinate],
+def contours(x_coordinates: Strategy[Coordinate],
+             y_coordinates: Optional[Strategy[Coordinate]] = None,
              *,
              min_size: int = TRIANGLE_SIZE,
              max_size: Optional[int] = None) -> Strategy[Contour]:
     """
     Returns a strategy for contours.
 
-    :param coordinates: strategy for vertices' coordinates.
+    :param x_coordinates: strategy for vertices' x-coordinates.
+    :param y_coordinates:
+        strategy for vertices' y-coordinates,
+        ``None`` for reusing x-coordinates strategy.
     :param min_size: lower bound for contour size.
     :param max_size: upper bound for contour size, ``None`` for unbound.
     """
     _validate_sizes(min_size, max_size)
     if max_size is not None and max_size == TRIANGLE_SIZE:
-        return triangular_contours(coordinates)
-    return (concave_contours(coordinates,
+        return triangular_contours(x_coordinates, y_coordinates)
+    return (concave_contours(x_coordinates, y_coordinates,
                              min_size=min_size,
                              max_size=max_size)
-            | convex_contours(coordinates,
+            | convex_contours(x_coordinates, y_coordinates,
                               min_size=min_size,
                               max_size=max_size))
 
 
-def concave_contours(coordinates: Strategy[Coordinate],
+def concave_contours(x_coordinates: Strategy[Coordinate],
+                     y_coordinates: Optional[Strategy[Coordinate]] = None,
                      *,
                      min_size: int = MIN_CONCAVE_CONTOUR_SIZE,
                      max_size: Optional[int] = None) -> Strategy[Contour]:
     """
     Returns a strategy for concave contours.
 
-    :param coordinates: strategy for vertices' coordinates.
+    :param x_coordinates: strategy for vertices' x-coordinates.
+    :param y_coordinates:
+        strategy for vertices' y-coordinates,
+        ``None`` for reusing x-coordinates strategy.
     :param min_size: lower bound for contour size.
     :param max_size: upper bound for contour size, ``None`` for unbound.
     """
     _validate_sizes(min_size, max_size, MIN_CONCAVE_CONTOUR_SIZE)
-    return (strategies.lists(points(coordinates),
+    return (strategies.lists(points(x_coordinates, y_coordinates),
                              min_size=min_size,
                              max_size=max_size,
                              unique=True)
@@ -75,22 +95,26 @@ def concave_contours(coordinates: Strategy[Coordinate],
             .filter(is_non_self_intersecting_contour))
 
 
-def convex_contours(coordinates: Strategy[Coordinate],
+def convex_contours(x_coordinates: Strategy[Coordinate],
+                    y_coordinates: Optional[Strategy[Coordinate]] = None,
                     *,
                     min_size: int = TRIANGLE_SIZE,
                     max_size: Optional[int] = None) -> Strategy[Contour]:
     """
     Returns a strategy for convex contours.
 
-    :param coordinates: strategy for vertices' coordinates.
+    :param x_coordinates: strategy for vertices' x-coordinates.
+    :param y_coordinates:
+        strategy for vertices' y-coordinates,
+        ``None`` for reusing x-coordinates strategy.
     :param min_size: lower bound for contour size.
     :param max_size: upper bound for contour size, ``None`` for unbound.
     """
     _validate_sizes(min_size, max_size)
     if max_size is not None and max_size == TRIANGLE_SIZE:
-        return triangular_contours(coordinates)
+        return triangular_contours(x_coordinates, y_coordinates)
     min_size = max(min_size, TRIANGLE_SIZE)
-    result = (strategies.lists(points(coordinates),
+    result = (strategies.lists(points(x_coordinates, y_coordinates),
                                min_size=min_size,
                                unique=True)
               .map(to_convex_hull)
@@ -99,19 +123,23 @@ def convex_contours(coordinates: Strategy[Coordinate],
                               min_size=min_size,
                               max_size=max_size))
               .filter(is_contour_strict))
-    return (triangular_contours(coordinates) | result
+    return (triangular_contours(x_coordinates, y_coordinates) | result
             if min_size <= TRIANGLE_SIZE
             else result)
 
 
-def triangular_contours(coordinates: Strategy[Coordinate]
+def triangular_contours(x_coordinates: Strategy[Coordinate],
+                        y_coordinates: Optional[Strategy[Coordinate]] = None,
                         ) -> Strategy[Contour]:
     """
     Returns a strategy for triangular contours.
 
-    :param coordinates: strategy for vertices' coordinates.
+    :param x_coordinates: strategy for vertices' x-coordinates.
+    :param y_coordinates:
+        strategy for vertices' x-coordinates,
+        ``None`` for reusing x-coordinates strategy.
     """
-    return (strategies.tuples(*repeat(points(coordinates),
+    return (strategies.tuples(*repeat(points(x_coordinates, y_coordinates),
                                       times=3))
             .filter(is_contour_strict)
             .map(list))
