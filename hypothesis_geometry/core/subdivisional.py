@@ -1,5 +1,7 @@
 from reprlib import recursive_repr
-from typing import Optional
+from typing import (Iterable,
+                    Optional,
+                    Sequence)
 
 from reprit.base import generate_repr
 
@@ -119,3 +121,15 @@ class QuadEdge:
 
     def orientation_with(self, point: Point) -> Orientation:
         return to_orientation(self.end, self.start, point)
+
+
+def to_edge_neighbours(edge: QuadEdge) -> Sequence[QuadEdge]:
+    return tuple(_to_edge_neighbours(edge))
+
+
+def _to_edge_neighbours(edge: QuadEdge) -> Iterable[QuadEdge]:
+    candidate = edge.left_from_start
+    if (edge.orientation_with(candidate.end)
+            is Orientation.COUNTERCLOCKWISE):
+        yield candidate
+        yield candidate.right_from_end

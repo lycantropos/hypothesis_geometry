@@ -1,4 +1,6 @@
-from typing import (Optional,
+from typing import (Iterable,
+                    List,
+                    Optional,
                     Sequence)
 
 from reprit.base import generate_repr
@@ -146,3 +148,19 @@ def _to_right_candidate(base_edge: QuadEdge) -> Optional[QuadEdge]:
         result.delete()
         result = next_candidate
     return result
+
+
+def to_boundary(triangulation: Triangulation) -> List[QuadEdge]:
+    return list(_to_boundary(triangulation))
+
+
+def _to_boundary(triangulation: Triangulation
+                 ) -> Iterable[QuadEdge]:
+    # boundary is traversed in counterclockwise direction
+    start = triangulation.left_edge
+    edge = start
+    while True:
+        yield edge
+        if edge.right_from_end is start:
+            break
+        edge = edge.right_from_end
