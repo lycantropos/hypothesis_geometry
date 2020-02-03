@@ -10,7 +10,9 @@ from hypothesis import strategies
 from hypothesis_geometry.hints import (Coordinate,
                                        Strategy)
 from tests.utils import (Limits,
-                         SizesPair)
+                         SizesPair,
+                         identity,
+                         to_pairs)
 
 data = strategies.data()
 
@@ -84,8 +86,13 @@ def to_coordinates_strategies_with_limits_and_types(
                              strategies.just(type_))
 
 
-coordinates_strategies_with_limits_and_types = coordinates_types.flatmap(
-        to_coordinates_strategies_with_limits_and_types)
-coordinates_strategies_limits_types_with_sizes_pairs = (
-    strategies.tuples(coordinates_strategies_with_limits_and_types,
-                      sizes_pairs))
+coordinates_strategies_with_limits_and_types_strategies = (
+    coordinates_types.map(to_coordinates_strategies_with_limits_and_types))
+coordinates_strategies_with_limits_and_types = (
+    coordinates_strategies_with_limits_and_types_strategies.flatmap(identity))
+coordinates_strategy_with_limit_and_type_pairs = (
+    coordinates_strategies_with_limits_and_types_strategies.flatmap(to_pairs))
+coordinates_strategies_limits_types_with_sizes_pairs = strategies.tuples(
+        coordinates_strategies_with_limits_and_types, sizes_pairs)
+coordinates_strategy_limits_type_pairs_with_sizes_pairs = strategies.tuples(
+        coordinates_strategy_with_limit_and_type_pairs, sizes_pairs)
