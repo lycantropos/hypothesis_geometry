@@ -1,5 +1,7 @@
+from math import atan2
 from typing import (List,
-                    Sequence)
+                    Sequence,
+                    Tuple)
 
 from dendroid import red_black
 from dendroid.hints import Sortable
@@ -10,8 +12,7 @@ from .core.subdivisional import (QuadEdge,
 from .core.utils import (Orientation,
                          to_orientation)
 from .hints import (Contour,
-                    Coordinate,
-                    Point)
+                    Coordinate)
 
 
 def to_concave_contour(triangulation: triangular.Triangulation
@@ -49,33 +50,54 @@ def to_concave_contour(triangulation: triangular.Triangulation
     return shrink_collinear_vertices(boundary_endpoints)
 
 
-def to_triangulation_boundary(triangulation: triangular.Triangulation
-                              ) -> List[QuadEdge]:
-    return list(_to_triangulation_boundary(triangulation))
+def to_convex_contour(coordinates_with_flags_and_permutation
+                      : Tuple[List[Tuple[Coordinate, Coordinate, bool, bool]],
+                              Sequence[int]]) -> Contour:
+    (coordinates_with_flags,
+     permutation) = coordinates_with_flags_and_permutation
+    xs, ys, x_flags, y_flags = zip(*coordinates_with_flags)
+    xs, ys = sorted(xs), sorted(ys)
+    min_x, *xs, max_x = xs
+    min_y, *ys, max_y = ys
 
+    def to_vectors_coordinates(coordinates: List[Coordinate],
+                               flags: List[bool],
+                               min_coordinate: Coordinate,
+                               max_coordinate: Coordinate) -> List[Coordinate]:
+        last_min = last_max = min_coordinate
+        result = []
+        for flag, coordinate in zip(flags, coordinates):
+            if flag:
+                result.append(coordinate - last_min)
+                last_min = coordinate
+            else:
+                result.append(last_max - coordinate)
+                last_max = coordinate
+        result.extend((max_coordinate - last_min, last_max - max_coordinate))
+        return result
 
-def _to_triangulation_boundary(triangulation: triangular.Triangulation
-                               ) -> Iterable[QuadEdge]:
-    # boundary is traversed in counterclockwise direction
-    start = triangulation.left_edge
-    edge = start
-    while True:
-        yield edge
-        if edge.right_from_end is start:
-            break
-        edge = edge.right_from_end
+    vectors_xs = to_vectors_coordinates(xs, x_flags, min_x, max_x)
+    vectors_ys = to_vectors_coordinates(ys, y_flags, min_y, max_y)
+    vectors_ys = [vectors_ys[index] for index in permutation]
 
+    def to_vector_angle(vector: Tuple[Coordinate, Coordinate]) -> Sortable:
+        x, y = vector
+        return atan2(y, x)
 
-def to_edge_neighbours(edge: QuadEdge) -> Sequence[QuadEdge]:
-    return tuple(_to_edge_neighbours(edge))
-
-
-def _to_edge_neighbours(edge: QuadEdge) -> Iterable[QuadEdge]:
-    candidate = edge.left_from_start
-    if (edge.orientation_with(candidate.end)
-            is Orientation.COUNTERCLOCKWISE):
-        yield candidate
-        yield candidate.right_from_end
+    vectors = sorted(zip(vectors_xs, vectors_ys),
+                     key=to_vector_angle)
+    point_x = point_y = 0
+    min_polygon_x = min_polygon_y = 0
+    points = []
+    for vector_x, vector_y in vectors:
+        points.append((point_x, point_y))
+        point_x += vector_x
+        point_y += vector_y
+        min_polygon_x = min(min_polygon_x, point_x)
+        min_polygon_y = min(min_polygon_y, point_y)
+    shift_x, shift_y = min_x - min_polygon_x, min_y - min_polygon_y
+    return shrink_collinear_vertices([(point_x + shift_x, point_y + shift_y)
+                                      for point_x, point_y in points])
 
 
 def shrink_collinear_vertices(contour: Contour) -> Contour:
@@ -92,24 +114,4 @@ def shrink_collinear_vertices(contour: Contour) -> Contour:
                                    result[index])
                     is Orientation.COLLINEAR)):
             del result[index - 1]
-    return result
-
-
-def to_convex_hull(points: Sequence[Point]) -> List[Point]:
-    points = sorted(points)
-    lower = _to_sub_hull(points)
-    upper = _to_sub_hull(reversed(points))
-    return lower[:-1] + upper[:-1]
-
-
-def _to_sub_hull(points: Iterable[Point]) -> List[Point]:
-    result = []
-    for point in points:
-        while len(result) >= 2:
-            if (to_orientation(result[-1], result[-2], point)
-                    is not Orientation.COUNTERCLOCKWISE):
-                del result[-1]
-            else:
-                break
-        result.append(point)
     return result

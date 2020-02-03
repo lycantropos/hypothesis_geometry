@@ -1,8 +1,9 @@
 import warnings
 from functools import partial
 from itertools import repeat
-from operator import itemgetter
-from typing import Optional
+from typing import (Optional,
+                    Sequence,
+                    Tuple)
 
 from hypothesis import strategies
 from hypothesis.errors import HypothesisWarning
@@ -17,7 +18,7 @@ from .hints import (Contour,
                     Point,
                     Strategy)
 from .utils import (to_concave_contour,
-                    to_convex_hull)
+                    to_convex_contour)
 
 TRIANGLE_SIZE = 3
 MIN_CONCAVE_CONTOUR_SIZE = 4
@@ -114,15 +115,29 @@ def convex_contours(x_coordinates: Strategy[Coordinate],
     if max_size is not None and max_size == TRIANGLE_SIZE:
         return triangular_contours(x_coordinates, y_coordinates)
     min_size = max(min_size, TRIANGLE_SIZE)
-    result = (strategies.lists(points(x_coordinates, y_coordinates),
+
+    def to_coordinates_with_flags_and_permutations(
+            coordinates_with_flags: Sequence[Tuple[Coordinate, Coordinate,
+                                                   bool, bool]]
+    ) -> Strategy[Tuple[Sequence[Tuple[Point, bool, bool]], Sequence[int]]]:
+        indices = range(len(coordinates_with_flags))
+        return strategies.tuples(strategies.just(coordinates_with_flags),
+                                 strategies.permutations(indices))
+
+    result = (strategies.lists(strategies.tuples(x_coordinates,
+                                                 x_coordinates
+                                                 if y_coordinates is None
+                                                 else y_coordinates,
+                                                 strategies.booleans(),
+                                                 strategies.booleans()),
                                min_size=min_size,
+                               max_size=max_size,
                                unique=True)
-              .map(to_convex_hull)
-              .map(itemgetter(slice(0, max_size)))
+              .flatmap(to_coordinates_with_flags_and_permutations)
+              .map(to_convex_contour)
               .filter(partial(_contour_has_valid_size,
                               min_size=min_size,
-                              max_size=max_size))
-              .filter(is_contour_strict))
+                              max_size=max_size)))
     return (triangular_contours(x_coordinates, y_coordinates) | result
             if min_size <= TRIANGLE_SIZE
             else result)
