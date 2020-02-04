@@ -123,6 +123,21 @@ True
 ```
 also `planar.concave_contours` & `planar.convex_contours` options are available.
 
+#### Caveats
+- Strategies may be slow depending on domain,
+so it may be necessary to add `HealthCheck.filter_too_much`, `HealthCheck.too_slow`
+in [`suppress_health_check`](https://hypothesis.readthedocs.io/en/latest/settings.html#hypothesis.settings.suppress_health_check) 
+and set [`deadline`](https://hypothesis.readthedocs.io/en/latest/settings.html#hypothesis.settings.deadline) to `None`.
+
+- Unbounded floating point strategies for coordinates 
+(like [`hypothesis.strategies.floats`](https://hypothesis.readthedocs.io/en/latest/data.html#hypothesis.strategies.floats)
+or [`hypothesis.strategies.decimals`](https://hypothesis.readthedocs.io/en/latest/data.html#hypothesis.strategies.decimals)
+with unset `min_value`/`max_value`) do not play well with bounded sizes 
+and may cause a lot of searching iterations with no success,
+so it is recommended to use bounded floating point coordinates with bounded sizes
+or unbounded coordinates with unbounded sizes.
+---
+
 Development
 -----------
 
