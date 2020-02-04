@@ -9,6 +9,7 @@ from hypothesis import strategies
 
 from hypothesis_geometry.hints import (Coordinate,
                                        Strategy)
+from hypothesis_geometry.planar import TRIANGLE_SIZE
 from tests.utils import (Limits,
                          SizesPair,
                          identity,
@@ -37,17 +38,10 @@ coordinates_strategies = strategies.sampled_from(
 
 
 def to_sizes_pairs() -> Strategy[SizesPair]:
-    sizes = strategies.integers(min_value=0,
-                                max_value=10)
+    sizes = strategies.integers(TRIANGLE_SIZE, 100)
     return (strategies.tuples(sizes, strategies.none())
             | (strategies.tuples(sizes, sizes)
-               .filter(are_pair_coordinates_sparse)
                .map(sort_pair)))
-
-
-def are_pair_coordinates_sparse(pair: Tuple[Any, Any]) -> bool:
-    first, second = pair
-    return abs(first - second) >= 10
 
 
 def sort_pair(pair: Tuple[Any, Any]) -> Tuple[Any, Any]:
@@ -84,6 +78,11 @@ def to_coordinates_strategies_with_limits_and_types(
     return strategies.tuples(strategies.builds(to_strategy_with_limits,
                                                to_limits(strategy_factory())),
                              strategies.just(type_))
+
+
+def are_pair_coordinates_sparse(pair: Tuple[Coordinate, Coordinate]) -> bool:
+    first, second = pair
+    return abs(first - second) >= 10
 
 
 coordinates_strategies_with_limits_and_types_strategies = (
