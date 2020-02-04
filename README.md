@@ -136,7 +136,6 @@ with unset `min_value`/`max_value`) do not play well with bounded sizes
 and may cause a lot of searching iterations with no success,
 so it is recommended to use bounded floating point coordinates with bounded sizes
 or unbounded coordinates with unbounded sizes.
----
 
 Development
 -----------
