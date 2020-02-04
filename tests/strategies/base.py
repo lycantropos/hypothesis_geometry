@@ -3,6 +3,7 @@ from fractions import Fraction
 from functools import partial
 from operator import ne
 from typing import (Any,
+                    Optional,
                     Tuple,
                     Type)
 
@@ -10,7 +11,8 @@ from hypothesis import strategies
 
 from hypothesis_geometry.hints import (Coordinate,
                                        Strategy)
-from hypothesis_geometry.planar import TRIANGLE_SIZE
+from hypothesis_geometry.planar import (MIN_CONCAVE_CONTOUR_SIZE,
+                                        TRIANGLE_SIZE)
 from tests.utils import (Limits,
                          identity,
                          to_pairs)
@@ -36,8 +38,23 @@ coordinates_types = strategies.sampled_from(
 coordinates_strategies = strategies.sampled_from(
         [factory() for factory in coordinates_strategies_factories.values()])
 
-sizes = strategies.integers(TRIANGLE_SIZE, 100)
-invalid_sizes = strategies.integers(max_value=TRIANGLE_SIZE - 1)
+
+def to_sizes_pairs(min_size: int) -> Strategy[Tuple[int, Optional[int]]]:
+    sizes = strategies.integers(min_size, 30)
+    return (strategies.tuples(sizes, strategies.none())
+            | strategies.tuples(sizes, sizes).map(sort_pair))
+
+
+def to_invalid_sizes_pairs(max_invalid_size: int
+                           ) -> Strategy[Tuple[int, Optional[int]]]:
+    invalid_sizes = strategies.integers(max_value=max_invalid_size)
+    valid_sizes = strategies.integers(max_invalid_size)
+    return ((strategies.tuples(valid_sizes, valid_sizes)
+             .filter(lambda sizes_pair: ne(*sizes_pair))
+             .map(sort_pair)
+             .map(reversed)
+             .map(tuple))
+            | strategies.tuples(invalid_sizes, invalid_sizes).map(sort_pair))
 
 
 def sort_pair(pair: Tuple[Any, Any]) -> Tuple[Any, Any]:
@@ -45,17 +62,10 @@ def sort_pair(pair: Tuple[Any, Any]) -> Tuple[Any, Any]:
     return (first, second) if first < second else (second, first)
 
 
-sizes_pairs = (strategies.tuples(sizes, strategies.none())
-               | strategies.tuples(sizes, sizes).map(sort_pair))
-invalid_sizes_pairs = ((strategies.tuples(sizes, sizes)
-                        .filter(lambda sizes_pair: ne(*sizes_pair))
-                        .map(sort_pair)
-                        .map(reversed)
-                        .map(tuple))
-                       | (strategies.tuples(invalid_sizes, invalid_sizes)
-                          .map(sort_pair)))
-coordinates_strategies_with_sizes_pairs = strategies.tuples(
-        coordinates_strategies, sizes_pairs)
+concave_sizes_pairs = to_sizes_pairs(MIN_CONCAVE_CONTOUR_SIZE)
+convex_sizes_pairs = to_sizes_pairs(TRIANGLE_SIZE)
+invalid_concave_sizes_pairs = to_invalid_sizes_pairs(TRIANGLE_SIZE)
+invalid_convex_sizes_pairs = to_invalid_sizes_pairs(TRIANGLE_SIZE - 1)
 
 
 def to_coordinates_strategies_with_limits_and_types(
@@ -95,9 +105,3 @@ coordinates_strategies_with_limits_and_types = (
     coordinates_strategies_with_limits_and_types_strategies.flatmap(identity))
 coordinates_strategy_with_limit_and_type_pairs = (
     coordinates_strategies_with_limits_and_types_strategies.flatmap(to_pairs))
-coordinates_strategies_limits_types_with_sizes_pairs = strategies.tuples(
-        coordinates_strategies_with_limits_and_types, sizes_pairs)
-coordinates_strategy_limits_type_pairs_with_sizes_pairs = strategies.tuples(
-        coordinates_strategy_with_limit_and_type_pairs, sizes_pairs)
-coordinates_strategies_with_invalid_sizes_pairs = strategies.tuples(
-        coordinates_strategies, invalid_sizes_pairs)
