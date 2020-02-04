@@ -19,10 +19,10 @@ from tests.utils import (CoordinatesLimitsType,
                          point_has_valid_size)
 
 
-@given(strategies.coordinates_strategies_with_sizes_pairs)
-def test_basic(coordinates_with_sizes_pair: Tuple[Strategy[Coordinate],
-                                                  SizesPair]) -> None:
-    coordinates, (min_size, max_size) = coordinates_with_sizes_pair
+@given(strategies.coordinates_strategies, strategies.convex_sizes_pairs)
+def test_basic(coordinates: Strategy[Coordinate],
+               sizes_pair: SizesPair) -> None:
+    min_size, max_size = sizes_pair
 
     result = contours(coordinates,
                       min_size=min_size,
@@ -32,18 +32,19 @@ def test_basic(coordinates_with_sizes_pair: Tuple[Strategy[Coordinate],
 
 
 @given(strategies.data,
-       strategies.coordinates_strategy_limits_type_pairs_with_sizes_pairs)
-def test_properties(
-        data: DataObject,
-        coordinates_limits_type_pair_with_sizes_pair
-        : Tuple[Tuple[CoordinatesLimitsType, CoordinatesLimitsType], SizesPair]
-) -> None:
-    ((x_coordinates_limits_type, y_coordinates_limits_type),
-     (min_size, max_size)) = coordinates_limits_type_pair_with_sizes_pair
+       strategies.coordinates_strategy_with_limit_and_type_pairs,
+       strategies.convex_sizes_pairs)
+def test_properties(data: DataObject,
+                    coordinates_limits_type_pair: Tuple[CoordinatesLimitsType,
+                                                        CoordinatesLimitsType],
+                    sizes_pair: SizesPair) -> None:
+    (x_coordinates_limits_type,
+     y_coordinates_limits_type) = coordinates_limits_type_pair
     ((x_coordinates, (min_x_value, max_x_value)),
      x_type) = x_coordinates_limits_type
     ((y_coordinates, (min_y_value, max_y_value)),
      y_type) = y_coordinates_limits_type
+    min_size, max_size = sizes_pair
 
     strategy = contours(x_coordinates, y_coordinates,
                         min_size=min_size,
@@ -72,14 +73,13 @@ def test_properties(
 
 
 @given(strategies.data,
-       strategies.coordinates_strategies_limits_types_with_sizes_pairs)
-def test_same_coordinates(
-        data: DataObject,
-        coordinates_limits_type_with_sizes_pair: Tuple[CoordinatesLimitsType,
-                                                       SizesPair]) -> None:
-    (coordinates_limits_type,
-     (min_size, max_size)) = coordinates_limits_type_with_sizes_pair
+       strategies.coordinates_strategies_with_limits_and_types,
+       strategies.convex_sizes_pairs)
+def test_same_coordinates(data: DataObject,
+                          coordinates_limits_type: CoordinatesLimitsType,
+                          sizes_pair: SizesPair) -> None:
     (coordinates, (min_value, max_value)), type_ = coordinates_limits_type
+    min_size, max_size = sizes_pair
 
     strategy = contours(coordinates,
                         min_size=min_size,
@@ -107,11 +107,11 @@ def test_same_coordinates(
     assert is_non_self_intersecting_contour(result)
 
 
-@given(strategies.coordinates_strategies_with_invalid_sizes_pairs)
-def test_invalid_sizes(
-        coordinates_with_invalid_sizes_pair: Tuple[Strategy[Coordinate],
-                                                   SizesPair]) -> None:
-    coordinates, (min_size, max_size) = coordinates_with_invalid_sizes_pair
+@given(strategies.coordinates_strategies,
+       strategies.invalid_convex_sizes_pairs)
+def test_invalid_sizes(coordinates: Strategy[Coordinate],
+                       invalid_sizes_pair: SizesPair) -> None:
+    min_size, max_size = invalid_sizes_pair
 
     with pytest.raises(ValueError):
         contours(coordinates,
