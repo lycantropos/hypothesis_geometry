@@ -1,5 +1,6 @@
 from typing import Tuple
 
+import pytest
 from hypothesis import given
 from hypothesis.strategies import DataObject
 
@@ -107,3 +108,15 @@ def test_same_coordinates(
     assert is_contour_strict(result)
     assert not is_contour_non_convex(result)
     assert is_non_self_intersecting_contour(result)
+
+
+@given(strategies.coordinates_strategies_with_invalid_sizes_pairs)
+def test_invalid_sizes(
+        coordinates_with_invalid_sizes_pair: Tuple[Strategy[Coordinate],
+                                                   SizesPair]) -> None:
+    coordinates, (min_size, max_size) = coordinates_with_invalid_sizes_pair
+
+    with pytest.raises(ValueError):
+        convex_contours(coordinates,
+                        min_size=min_size,
+                        max_size=max_size)
