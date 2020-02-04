@@ -18,7 +18,8 @@ from .hints import (Contour,
                     Point,
                     Strategy)
 from .utils import (to_concave_contour,
-                    to_convex_contour)
+                    to_convex_contour,
+                    to_convex_hull)
 
 TRIANGLE_SIZE = 3
 MIN_CONCAVE_CONTOUR_SIZE = 4
@@ -135,6 +136,7 @@ def convex_contours(x_coordinates: Strategy[Coordinate],
                                unique=True)
               .flatmap(to_coordinates_with_flags_and_permutations)
               .map(to_convex_contour)
+              .map(to_convex_hull)
               .filter(partial(_contour_has_valid_size,
                               min_size=min_size,
                               max_size=max_size)))
