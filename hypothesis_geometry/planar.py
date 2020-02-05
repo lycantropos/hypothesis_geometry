@@ -154,7 +154,7 @@ def triangular_contours(x_coordinates: Strategy[Coordinate],
 
     :param x_coordinates: strategy for vertices' x-coordinates.
     :param y_coordinates:
-        strategy for vertices' x-coordinates,
+        strategy for vertices' y-coordinates,
         ``None`` for reusing x-coordinates strategy.
     """
     return (strategies.tuples(*repeat(points(x_coordinates, y_coordinates),
