@@ -16,6 +16,7 @@ from .core.contracts import (is_contour_non_convex,
 from .hints import (Contour,
                     Coordinate,
                     Point,
+                    Segment,
                     Strategy)
 from .utils import (to_concave_contour,
                     to_convex_contour,
@@ -160,6 +161,27 @@ def triangular_contours(x_coordinates: Strategy[Coordinate],
                                       times=3))
             .filter(is_contour_strict)
             .map(list))
+
+
+def segments(x_coordinates: Strategy[Coordinate],
+             y_coordinates: Optional[Strategy[Coordinate]] = None
+             ) -> Strategy[Segment]:
+    """
+    Returns a strategy for segments.
+
+    :param x_coordinates: strategy for endpoints' x-coordinates.
+    :param y_coordinates:
+        strategy for endpoints' y-coordinates,
+        ``None`` for reusing x-coordinates strategy.
+    """
+
+    def non_degenerate_segment(segment: Segment) -> bool:
+        start, end = segment
+        return start != end
+
+    points_strategy = points(x_coordinates, y_coordinates)
+    return (strategies.tuples(points_strategy, points_strategy)
+            .filter(non_degenerate_segment))
 
 
 def _validate_sizes(min_size: int, max_size: Optional[int],
