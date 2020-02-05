@@ -56,7 +56,7 @@ def contours(x_coordinates: Strategy[Coordinate],
     :param min_size: lower bound for contour size.
     :param max_size: upper bound for contour size, ``None`` for unbound.
     """
-    _validate_sizes(min_size, max_size)
+    _validate_sizes(min_size, max_size, TRIANGLE_SIZE)
     if max_size is not None and max_size == TRIANGLE_SIZE:
         return triangular_contours(x_coordinates, y_coordinates)
     return (convex_contours(x_coordinates, y_coordinates,
@@ -112,7 +112,7 @@ def convex_contours(x_coordinates: Strategy[Coordinate],
     :param min_size: lower bound for contour size.
     :param max_size: upper bound for contour size, ``None`` for unbound.
     """
-    _validate_sizes(min_size, max_size)
+    _validate_sizes(min_size, max_size, TRIANGLE_SIZE)
     if max_size is not None and max_size == TRIANGLE_SIZE:
         return triangular_contours(x_coordinates, y_coordinates)
     min_size = max(min_size, TRIANGLE_SIZE)
@@ -163,11 +163,11 @@ def triangular_contours(x_coordinates: Strategy[Coordinate],
 
 
 def _validate_sizes(min_size: int, max_size: Optional[int],
-                    min_expected_size: int = TRIANGLE_SIZE) -> None:
+                    min_expected_size: int) -> None:
     if max_size is None:
-        return
+        pass
     elif max_size < min_expected_size:
-        raise ValueError('Contours should have at least {expected} vertices, '
+        raise ValueError('Should have at least {expected} vertices, '
                          'but requested {actual}.'
                          .format(expected=min_expected_size,
                                  actual=max_size))
@@ -176,7 +176,7 @@ def _validate_sizes(min_size: int, max_size: Optional[int],
                          'but found {min_size}, {max_size}.'
                          .format(min_size=min_size,
                                  max_size=max_size))
-    elif min_size < min_expected_size:
+    if min_size < min_expected_size:
         warnings.warn('`min_size` is expected to be not less than {expected}, '
                       'but found {actual}.'
                       .format(expected=min_expected_size,
