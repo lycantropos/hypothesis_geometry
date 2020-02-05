@@ -10,3 +10,4 @@ Strategy = SearchStrategy
 Coordinate = TypeVar('Coordinate', Real, Decimal)
 Point = Tuple[Coordinate, Coordinate]
 Contour = Sequence[Point]
+Segment = Tuple[Point, Point]

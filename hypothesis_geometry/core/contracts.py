@@ -1,5 +1,4 @@
-from typing import (Sequence,
-                    Tuple)
+from typing import Sequence
 
 from bentley_ottmann.base import edges_intersect
 from robust import cocircular
@@ -10,8 +9,6 @@ from .utils import (Orientation,
                     _is_real_point,
                     _to_real_point,
                     to_orientations)
-
-Segment = Tuple[Point, Point]
 
 
 def is_point_inside_circumcircle(first_vertex: Point,
