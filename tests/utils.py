@@ -1,4 +1,6 @@
-from typing import (Optional,
+from itertools import groupby
+from typing import (Iterable,
+                    Optional,
                     Tuple,
                     Type,
                     TypeVar)
@@ -59,3 +61,12 @@ def point_has_coordinates_types(point: Point,
                                 y_type: Type[Coordinate]) -> bool:
     x, y = point
     return isinstance(x, x_type) and isinstance(y, y_type)
+
+
+def has_no_consecutive_repetitions(iterable: Iterable[Domain]) -> bool:
+    return any(capacity(group) == 1
+               for _, group in groupby(iterable))
+
+
+def capacity(iterable: Iterable[Domain]) -> int:
+    return sum(1 for _ in iterable)

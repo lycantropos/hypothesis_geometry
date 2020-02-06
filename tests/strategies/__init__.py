@@ -5,4 +5,6 @@ from .base import (concave_contours_sizes_pairs,
                    coordinates_strategy_with_limit_and_type_pairs,
                    data,
                    invalid_concave_contours_sizes_pairs,
-                   invalid_convex_contours_sizes_pairs)
+                   invalid_convex_contours_sizes_pairs,
+                   invalid_polylines_sizes_pairs,
+                   polylines_sizes_pairs)

@@ -12,6 +12,7 @@ from hypothesis import strategies
 from hypothesis_geometry.hints import (Coordinate,
                                        Strategy)
 from hypothesis_geometry.planar import (MIN_CONCAVE_CONTOUR_SIZE,
+                                        MIN_POLYLINE_SIZE,
                                         TRIANGLE_SIZE)
 from tests.utils import (Limits,
                          identity,
@@ -64,8 +65,10 @@ def sort_pair(pair: Tuple[Any, Any]) -> Tuple[Any, Any]:
 
 concave_contours_sizes_pairs = to_sizes_pairs(MIN_CONCAVE_CONTOUR_SIZE)
 convex_contours_sizes_pairs = to_sizes_pairs(TRIANGLE_SIZE)
+polylines_sizes_pairs = to_sizes_pairs(MIN_POLYLINE_SIZE)
 invalid_concave_contours_sizes_pairs = to_invalid_sizes_pairs(TRIANGLE_SIZE)
 invalid_convex_contours_sizes_pairs = to_invalid_sizes_pairs(TRIANGLE_SIZE - 1)
+invalid_polylines_sizes_pairs = to_invalid_sizes_pairs(MIN_POLYLINE_SIZE - 1)
 
 
 def to_coordinates_strategies_with_limits_and_types(
