@@ -1,9 +1,5 @@
 from itertools import groupby
-from typing import (Iterable,
-                    Optional,
-                    Tuple,
-                    Type,
-                    TypeVar)
+from typing import (Hashable, Iterable, Optional, Tuple, Type, TypeVar)
 
 from hypothesis import strategies
 
@@ -70,3 +66,13 @@ def has_no_consecutive_repetitions(iterable: Iterable[Domain]) -> bool:
 
 def capacity(iterable: Iterable[Domain]) -> int:
     return sum(1 for _ in iterable)
+
+
+def all_unique(iterable: Iterable[Hashable]) -> bool:
+    seen = set()
+    seen_add = seen.add
+    for element in iterable:
+        if element in seen:
+            return False
+        seen_add(element)
+    return True
