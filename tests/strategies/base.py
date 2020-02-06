@@ -62,10 +62,10 @@ def sort_pair(pair: Tuple[Any, Any]) -> Tuple[Any, Any]:
     return (first, second) if first < second else (second, first)
 
 
-concave_sizes_pairs = to_sizes_pairs(MIN_CONCAVE_CONTOUR_SIZE)
-convex_sizes_pairs = to_sizes_pairs(TRIANGLE_SIZE)
-invalid_concave_sizes_pairs = to_invalid_sizes_pairs(TRIANGLE_SIZE)
-invalid_convex_sizes_pairs = to_invalid_sizes_pairs(TRIANGLE_SIZE - 1)
+concave_contours_sizes_pairs = to_sizes_pairs(MIN_CONCAVE_CONTOUR_SIZE)
+convex_contours_sizes_pairs = to_sizes_pairs(TRIANGLE_SIZE)
+invalid_concave_contours_sizes_pairs = to_invalid_sizes_pairs(TRIANGLE_SIZE)
+invalid_convex_contours_sizes_pairs = to_invalid_sizes_pairs(TRIANGLE_SIZE - 1)
 
 
 def to_coordinates_strategies_with_limits_and_types(

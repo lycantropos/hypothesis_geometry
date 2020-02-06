@@ -20,7 +20,8 @@ from tests.utils import (CoordinatesLimitsType,
                          point_has_valid_size)
 
 
-@given(strategies.coordinates_strategies, strategies.concave_sizes_pairs)
+@given(strategies.coordinates_strategies,
+       strategies.concave_contours_sizes_pairs)
 def test_basic(coordinates: Strategy[Coordinate],
                sizes_pair: SizesPair) -> None:
     min_size, max_size = sizes_pair
@@ -34,7 +35,7 @@ def test_basic(coordinates: Strategy[Coordinate],
 
 @given(strategies.data,
        strategies.coordinates_strategy_with_limit_and_type_pairs,
-       strategies.concave_sizes_pairs)
+       strategies.concave_contours_sizes_pairs)
 def test_properties(data: DataObject,
                     coordinates_limits_type_pair: Tuple[CoordinatesLimitsType,
                                                         CoordinatesLimitsType],
@@ -76,7 +77,7 @@ def test_properties(data: DataObject,
 
 @given(strategies.data,
        strategies.coordinates_strategies_with_limits_and_types,
-       strategies.concave_sizes_pairs)
+       strategies.concave_contours_sizes_pairs)
 def test_same_coordinates(data: DataObject,
                           coordinates_limits_type: CoordinatesLimitsType,
                           sizes_pair: SizesPair) -> None:
@@ -111,7 +112,7 @@ def test_same_coordinates(data: DataObject,
 
 
 @given(strategies.coordinates_strategies,
-       strategies.invalid_concave_sizes_pairs)
+       strategies.invalid_concave_contours_sizes_pairs)
 def test_invalid_sizes(coordinates: Strategy[Coordinate],
                        invalid_sizes_pair: SizesPair) -> None:
     min_size, max_size = invalid_sizes_pair
