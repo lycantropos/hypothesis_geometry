@@ -212,6 +212,9 @@ def polylines(x_coordinates: Strategy[Coordinate],
             return polyline + [polyline[0]]
 
         result |= (_polylines(x_coordinates, y_coordinates,
+                              # closing will add a vertex,
+                              # so to stay in bounds
+                              # we should decrement them
                               min_size - 1
                               if min_size > MIN_POLYLINE_SIZE
                               else min_size,
