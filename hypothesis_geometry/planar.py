@@ -204,6 +204,7 @@ def polylines(x_coordinates: Strategy[Coordinate],
     :param max_size: upper bound for polyline size, ``None`` for unbound.
     """
     _validate_sizes(min_size, max_size, MIN_POLYLINE_SIZE)
+    min_size = max(min_size, MIN_POLYLINE_SIZE)
     result = _polylines(x_coordinates, y_coordinates, min_size, max_size)
 
     if max_size is None or max_size > MIN_POLYLINE_SIZE:
