@@ -97,6 +97,54 @@ True
 True
 
 ```
+### Segments
+```python
+>>> segments = planar.segments(coordinates)
+>>> segment = segments.example()
+>>> isinstance(segment, tuple)
+True
+>>> len(segment) == 2
+True
+>>> all(isinstance(endpoint, tuple) for endpoint in segment)
+True
+>>> all(len(endpoint) == 2 for endpoint in segment)
+True
+>>> all(all(isinstance(coordinate, coordinates_type) 
+...         for coordinate in endpoint)
+...     for endpoint in segment)
+True
+>>> all(all(min_coordinate <= coordinate <= max_coordinate 
+...         for coordinate in endpoint)
+...     for endpoint in segment)
+True
+
+```
+
+### Polylines
+```python
+>>> min_size, max_size = 5, 10
+>>> polylines = planar.polylines(coordinates, 
+...                              min_size=min_size,
+...                              max_size=max_size)
+>>> polyline = polylines.example()
+>>> isinstance(polyline, list)
+True
+>>> min_size <= len(polyline) <= max_size
+True
+>>> all(isinstance(vertex, tuple) for vertex in polyline)
+True
+>>> all(len(vertex) == 2 for vertex in polyline)
+True
+>>> all(all(isinstance(coordinate, coordinates_type)
+...         for coordinate in vertex)
+...     for vertex in polyline)
+True
+>>> all(all(min_coordinate <= coordinate <= max_coordinate 
+...         for coordinate in vertex)
+...     for vertex in polyline)
+True
+
+```
 
 ### Contours
 ```python
@@ -113,10 +161,12 @@ True
 True
 >>> all(len(vertex) == 2 for vertex in contour)
 True
->>> all(all(isinstance(coordinate, coordinates_type) for coordinate in vertex)
+>>> all(all(isinstance(coordinate, coordinates_type)
+...         for coordinate in vertex)
 ...     for vertex in contour)
 True
->>> all(all(min_coordinate <= coordinate <= max_coordinate for coordinate in vertex)
+>>> all(all(min_coordinate <= coordinate <= max_coordinate
+...         for coordinate in vertex)
 ...     for vertex in contour)
 True
 
