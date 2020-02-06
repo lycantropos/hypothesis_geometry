@@ -1,8 +1,10 @@
 import warnings
 from functools import partial
-from itertools import repeat
+from itertools import (groupby,
+                       repeat)
 from typing import (Optional,
                     Sequence,
+                    Sized,
                     Tuple)
 
 from hypothesis import strategies
@@ -16,12 +18,14 @@ from .core.contracts import (is_contour_non_convex,
 from .hints import (Contour,
                     Coordinate,
                     Point,
+                    Polyline,
                     Segment,
                     Strategy)
 from .utils import (to_concave_contour,
                     to_convex_contour,
                     to_convex_hull)
 
+MIN_POLYLINE_SIZE = 2
 TRIANGLE_SIZE = 3
 MIN_CONCAVE_CONTOUR_SIZE = 4
 
@@ -91,7 +95,7 @@ def concave_contours(x_coordinates: Strategy[Coordinate],
             .filter(points_do_not_lie_on_the_same_line)
             .map(triangular.delaunay)
             .map(to_concave_contour)
-            .filter(partial(_contour_has_valid_size,
+            .filter(partial(_has_valid_size,
                             min_size=min_size,
                             max_size=max_size))
             .filter(is_contour_non_convex)
@@ -138,7 +142,7 @@ def convex_contours(x_coordinates: Strategy[Coordinate],
               .flatmap(to_coordinates_with_flags_and_permutations)
               .map(to_convex_contour)
               .map(to_convex_hull)
-              .filter(partial(_contour_has_valid_size,
+              .filter(partial(_has_valid_size,
                               min_size=min_size,
                               max_size=max_size)))
     return (triangular_contours(x_coordinates, y_coordinates) | result
@@ -184,6 +188,55 @@ def segments(x_coordinates: Strategy[Coordinate],
             .filter(non_degenerate_segment))
 
 
+def polylines(x_coordinates: Strategy[Coordinate],
+              y_coordinates: Optional[Strategy[Coordinate]] = None,
+              *,
+              min_size: int = MIN_POLYLINE_SIZE,
+              max_size: Optional[int] = None) -> Strategy[Polyline]:
+    """
+    Returns a strategy for polylines.
+
+    :param x_coordinates: strategy for vertices' x-coordinates.
+    :param y_coordinates:
+        strategy for vertices' y-coordinates,
+        ``None`` for reusing x-coordinates strategy.
+    :param min_size: lower bound for polyline size.
+    :param max_size: upper bound for polyline size, ``None`` for unbound.
+    """
+    _validate_sizes(min_size, max_size, MIN_POLYLINE_SIZE)
+    result = _polylines(x_coordinates, y_coordinates, min_size, max_size)
+
+    if max_size is None or max_size > MIN_POLYLINE_SIZE:
+        def close(polyline: Polyline) -> Polyline:
+            return polyline + [polyline[0]]
+
+        result |= (_polylines(x_coordinates, y_coordinates,
+                              min_size - 1
+                              if min_size > MIN_POLYLINE_SIZE
+                              else min_size,
+                              max_size - 1
+                              if max_size is not None
+                              else max_size)
+                   .map(close))
+    return result
+
+
+def _polylines(x_coordinates: Strategy[Coordinate],
+               y_coordinates: Optional[Strategy[Coordinate]],
+               min_size: int,
+               max_size: Optional[int]) -> Strategy[Polyline]:
+    def to_unique_consecutive_vertices(polyline: Polyline) -> Polyline:
+        return [point for point, _ in groupby(polyline)]
+
+    return (strategies.lists(points(x_coordinates, y_coordinates),
+                             min_size=min_size,
+                             max_size=max_size)
+            .map(to_unique_consecutive_vertices)
+            .filter(partial(_has_valid_size,
+                            min_size=min_size,
+                            max_size=max_size)))
+
+
 def _validate_sizes(min_size: int, max_size: Optional[int],
                     min_expected_size: int) -> None:
     if max_size is None:
@@ -206,9 +259,9 @@ def _validate_sizes(min_size: int, max_size: Optional[int],
                       HypothesisWarning)
 
 
-def _contour_has_valid_size(contour: Contour,
-                            *,
-                            min_size: int,
-                            max_size: Optional[int]) -> bool:
-    size = len(contour)
+def _has_valid_size(sized: Sized,
+                    *,
+                    min_size: int,
+                    max_size: Optional[int]) -> bool:
+    size = len(sized)
     return min_size <= size and (max_size is None or size <= max_size)
