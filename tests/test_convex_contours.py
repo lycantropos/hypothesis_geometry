@@ -14,7 +14,7 @@ from hypothesis_geometry.planar import convex_contours
 from tests import strategies
 from tests.utils import (CoordinatesLimitsType,
                          SizesPair,
-                         contour_has_valid_size,
+                         has_valid_size,
                          point_has_coordinates_in_range,
                          point_has_coordinates_types,
                          point_has_valid_size)
@@ -54,9 +54,9 @@ def test_properties(data: DataObject,
     result = data.draw(strategy)
 
     assert isinstance(result, list)
-    assert contour_has_valid_size(result,
-                                  min_size=min_size,
-                                  max_size=max_size)
+    assert has_valid_size(result,
+                          min_size=min_size,
+                          max_size=max_size)
     assert all(isinstance(vertex, tuple) for vertex in result)
     assert all(point_has_valid_size(vertex) for vertex in result)
     assert all(point_has_coordinates_types(vertex,
@@ -90,9 +90,9 @@ def test_same_coordinates(data: DataObject,
     result = data.draw(strategy)
 
     assert isinstance(result, list)
-    assert contour_has_valid_size(result,
-                                  min_size=min_size,
-                                  max_size=max_size)
+    assert has_valid_size(result,
+                          min_size=min_size,
+                          max_size=max_size)
     assert all(isinstance(vertex, tuple) for vertex in result)
     assert all(point_has_valid_size(vertex) for vertex in result)
     assert all(point_has_coordinates_types(vertex,
