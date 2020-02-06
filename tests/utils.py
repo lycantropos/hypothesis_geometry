@@ -10,7 +10,7 @@ from hypothesis_geometry.hints import (Coordinate,
                                        Strategy)
 from hypothesis_geometry.planar import _has_valid_size
 
-contour_has_valid_size = _has_valid_size
+has_valid_size = _has_valid_size
 Domain = TypeVar('Domain')
 Limits = Tuple[Coordinate, Optional[Coordinate]]
 CoordinatesLimitsType = Tuple[Tuple[Strategy[Coordinate], Limits],
