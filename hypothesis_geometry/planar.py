@@ -182,6 +182,7 @@ def triangular_contours(x_coordinates: Strategy[Coordinate],
                         ) -> Strategy[Contour]:
     """
     Returns a strategy for triangular contours.
+    Triangular contour defined as a contour that formed by 3 points.
 
     :param x_coordinates: strategy for vertices' x-coordinates.
     :param y_coordinates:
