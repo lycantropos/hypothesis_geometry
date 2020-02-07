@@ -106,6 +106,9 @@ def convex_contours(x_coordinates: Strategy[Coordinate],
                     max_size: Optional[int] = None) -> Strategy[Contour]:
     """
     Returns a strategy for convex contours.
+    Convex contour defined as a contour such that line segment
+    formed by any two points from contour's line segments
+    stays inside the region bounded by the contour.
 
     :param x_coordinates: strategy for vertices' x-coordinates.
     :param y_coordinates:
