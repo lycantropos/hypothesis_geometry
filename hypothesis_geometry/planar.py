@@ -31,6 +31,7 @@ def points(x_coordinates: Strategy[Coordinate],
            ) -> Strategy[Point]:
     """
     Returns a strategy for points.
+    Point defined as a pair of numbers.
 
     :param x_coordinates: strategy for points' x-coordinates.
     :param y_coordinates:
