@@ -2,7 +2,8 @@ import warnings
 from functools import partial
 from itertools import (groupby,
                        repeat)
-from typing import (Optional,
+from typing import (List,
+                    Optional,
                     Sequence,
                     Sized,
                     Tuple)
@@ -20,7 +21,8 @@ from .hints import (Contour,
                     Polyline,
                     Segment,
                     Strategy)
-from .utils import (to_concave_contour,
+from .utils import (pack,
+                    to_concave_contour,
                     to_convex_contour,
                     to_convex_hull)
 
@@ -121,12 +123,24 @@ def convex_contours(x_coordinates: Strategy[Coordinate],
     min_size = max(min_size, TRIANGLE_SIZE)
 
     def to_coordinates_with_flags_and_permutations(
-            coordinates_with_flags: Sequence[Tuple[Coordinate, Coordinate,
-                                                   bool, bool]]
-    ) -> Strategy[Tuple[Sequence[Tuple[Point, bool, bool]], Sequence[int]]]:
+            coordinates_with_flags: List[Tuple[Coordinate, Coordinate,
+                                               bool, bool]]
+    ) -> Strategy[Tuple[List[Tuple[Coordinate, Coordinate, bool, bool]],
+                        Sequence[int]]]:
         indices = range(len(coordinates_with_flags))
         return strategies.tuples(strategies.just(coordinates_with_flags),
                                  strategies.permutations(indices))
+
+    def flatten_arguments(
+            coordinates_with_flags_and_permutation
+            : Tuple[List[Tuple[Coordinate, Coordinate, bool, bool]],
+                    Sequence[int]]
+    ) -> Tuple[List[Coordinate], List[Coordinate],
+               List[bool], List[bool], Sequence[int]]:
+        (coordinates_with_flags,
+         permutation) = coordinates_with_flags_and_permutation
+        xs, ys, x_flags, y_flags = zip(*coordinates_with_flags)
+        return xs, ys, x_flags, y_flags, permutation
 
     result = (strategies.lists(strategies.tuples(x_coordinates,
                                                  x_coordinates
@@ -138,7 +152,8 @@ def convex_contours(x_coordinates: Strategy[Coordinate],
                                max_size=max_size,
                                unique=True)
               .flatmap(to_coordinates_with_flags_and_permutations)
-              .map(to_convex_contour)
+              .map(flatten_arguments)
+              .map(pack(to_convex_contour))
               .map(to_convex_hull)
               .filter(partial(_has_valid_size,
                               min_size=min_size,
