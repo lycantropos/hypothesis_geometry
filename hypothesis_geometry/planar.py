@@ -484,6 +484,66 @@ def triangular_contours(x_coordinates: Strategy[Coordinate],
     :param y_coordinates:
         strategy for vertices' y-coordinates,
         ``None`` for reusing x-coordinates strategy.
+
+    >>> from hypothesis import strategies
+    >>> from hypothesis_geometry import planar
+
+    For same coordinates' domain:
+
+    >>> min_coordinate, max_coordinate = -1., 1.
+    >>> coordinates_type = float
+    >>> coordinates = strategies.floats(min_coordinate, max_coordinate,
+    ...                                 allow_infinity=False,
+    ...                                 allow_nan=False)
+    >>> min_size, max_size = 5, 10
+    >>> contours = planar.triangular_contours(coordinates)
+    >>> contour = contours.example()
+    >>> isinstance(contour, list)
+    True
+    >>> len(contour) == 3
+    True
+    >>> all(isinstance(vertex, tuple) for vertex in contour)
+    True
+    >>> all(len(vertex) == 2 for vertex in contour)
+    True
+    >>> all(all(isinstance(coordinate, coordinates_type)
+    ...         for coordinate in vertex)
+    ...     for vertex in contour)
+    True
+    >>> all(all(min_coordinate <= coordinate <= max_coordinate
+    ...         for coordinate in vertex)
+    ...     for vertex in contour)
+    True
+
+    For different coordinates' domains:
+
+    >>> min_x_coordinate, max_x_coordinate = -1., 1.
+    >>> min_y_coordinate, max_y_coordinate = 10., 100.
+    >>> coordinates_type = float
+    >>> x_coordinates = strategies.floats(min_x_coordinate, max_x_coordinate,
+    ...                                   allow_infinity=False,
+    ...                                   allow_nan=False)
+    >>> y_coordinates = strategies.floats(min_y_coordinate, max_y_coordinate,
+    ...                                   allow_infinity=False,
+    ...                                   allow_nan=False)
+    >>> contours = planar.triangular_contours(x_coordinates, y_coordinates)
+    >>> contour = contours.example()
+    >>> isinstance(contour, list)
+    True
+    >>> len(contour) == 3
+    True
+    >>> all(isinstance(vertex, tuple) for vertex in contour)
+    True
+    >>> all(len(vertex) == 2 for vertex in contour)
+    True
+    >>> all(all(isinstance(coordinate, coordinates_type)
+    ...         for coordinate in vertex)
+    ...     for vertex in contour)
+    True
+    >>> all(min_x_coordinate <= vertex_x <= max_x_coordinate
+    ...     and min_y_coordinate <= vertex_y <= max_y_coordinate
+    ...     for vertex_x, vertex_y in contour)
+    True
     """
     return (strategies.tuples(*repeat(points(x_coordinates, y_coordinates),
                                       times=3))
