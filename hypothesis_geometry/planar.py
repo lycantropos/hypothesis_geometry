@@ -626,7 +626,6 @@ def triangular_contours(x_coordinates: Strategy[Coordinate],
     >>> coordinates = strategies.floats(min_coordinate, max_coordinate,
     ...                                 allow_infinity=False,
     ...                                 allow_nan=False)
-    >>> min_size, max_size = 5, 10
     >>> contours = planar.triangular_contours(coordinates)
     >>> contour = contours.example()
     >>> isinstance(contour, list)
