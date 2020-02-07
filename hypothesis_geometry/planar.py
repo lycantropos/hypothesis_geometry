@@ -391,7 +391,8 @@ def contours(x_coordinates: Strategy[Coordinate],
                             min_size=min_size,
                             max_size=max_size)
             | concave_contours(x_coordinates, y_coordinates,
-                               min_size=min_size,
+                               min_size=max(min_size,
+                                            MIN_CONCAVE_CONTOUR_SIZE),
                                max_size=max_size))
 
 
