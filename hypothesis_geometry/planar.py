@@ -75,6 +75,8 @@ def polylines(x_coordinates: Strategy[Coordinate],
               max_size: Optional[int] = None) -> Strategy[Polyline]:
     """
     Returns a strategy for polylines.
+    Polyline defined as a sequence of points (called polyline's vertices)
+    such that there is no consecutive equal points.
 
     :param x_coordinates: strategy for vertices' x-coordinates.
     :param y_coordinates:
