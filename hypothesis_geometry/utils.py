@@ -1,8 +1,11 @@
+from functools import partial
 from math import atan2
-from typing import (Iterable,
+from typing import (Callable,
+                    Iterable,
                     List,
                     Sequence,
-                    Tuple)
+                    Tuple,
+                    TypeVar)
 
 from dendroid import red_black
 from dendroid.hints import Sortable
@@ -62,9 +65,11 @@ def to_concave_contour(points: Sequence[Point]) -> Contour:
     return shrink_collinear_vertices(boundary_endpoints)
 
 
-def to_convex_contour(coordinates_with_flags_and_permutation
-                      : Tuple[List[Tuple[Coordinate, Coordinate, bool, bool]],
-                              Sequence[int]]) -> Contour:
+def to_convex_contour(x_coordinates: List[Coordinate],
+                      y_coordinates: List[Coordinate],
+                      x_flags: List[bool],
+                      y_flags: List[bool],
+                      permutation: Sequence[int]) -> Contour:
     """
     Based on Valtr algorithm by Sander Verdonschot.
 
@@ -75,12 +80,9 @@ def to_convex_contour(coordinates_with_flags_and_permutation
     Reference:
         http://cglab.ca/~sander/misc/ConvexGeneration/convex.html
     """
-    (coordinates_with_flags,
-     permutation) = coordinates_with_flags_and_permutation
-    xs, ys, x_flags, y_flags = zip(*coordinates_with_flags)
-    xs, ys = sorted(xs), sorted(ys)
-    min_x, *xs, max_x = xs
-    min_y, *ys, max_y = ys
+    sorted_xs, sorted_ys = sorted(x_coordinates), sorted(y_coordinates)
+    min_x, *sorted_xs, max_x = sorted_xs
+    min_y, *sorted_ys, max_y = sorted_ys
 
     def to_vectors_coordinates(coordinates: List[Coordinate],
                                flags: List[bool],
@@ -98,8 +100,8 @@ def to_convex_contour(coordinates_with_flags_and_permutation
         result.extend((max_coordinate - last_min, last_max - max_coordinate))
         return result
 
-    vectors_xs = to_vectors_coordinates(xs, x_flags, min_x, max_x)
-    vectors_ys = to_vectors_coordinates(ys, y_flags, min_y, max_y)
+    vectors_xs = to_vectors_coordinates(sorted_xs, x_flags, min_x, max_x)
+    vectors_ys = to_vectors_coordinates(sorted_ys, y_flags, min_y, max_y)
     vectors_ys = [vectors_ys[index] for index in permutation]
 
     def to_vector_angle(vector: Tuple[Coordinate, Coordinate]) -> Sortable:
@@ -160,3 +162,17 @@ def _to_sub_hull(points: Iterable[Point]) -> List[Point]:
                 break
         result.append(point)
     return result
+
+
+Domain = TypeVar('Domain')
+Range = TypeVar('Range')
+
+
+def pack(function: Callable[..., Range]
+         ) -> Callable[[Iterable[Domain]], Range]:
+    return partial(apply, function)
+
+
+def apply(function: Callable[..., Range],
+          args: Iterable[Domain]) -> Range:
+    return function(*args)
