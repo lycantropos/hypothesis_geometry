@@ -18,6 +18,16 @@ from .hints import (Contour,
 
 
 def to_concave_contour(points: Sequence[Point]) -> Contour:
+    """
+    Based on chi-algorithm by M. Duckham et al.
+
+    Time complexity:
+        ``O(len(points) * log len(points))``
+    Memory complexity:
+        ``O(len(points))``
+    Reference:
+        http://www.geosensor.net/papers/duckham08.PR.pdf
+    """
     triangulation = triangular.delaunay(points)
     boundary = triangular.to_boundary(triangulation)
     boundary_vertices = {edge.start for edge in boundary}
