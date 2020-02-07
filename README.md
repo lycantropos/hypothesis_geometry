@@ -3,6 +3,7 @@ hypothesis_geometry
 
 [![](https://travis-ci.com/lycantropos/hypothesis_geometry.svg?branch=master)](https://travis-ci.com/lycantropos/hypothesis_geometry "Travis CI")
 [![](https://dev.azure.com/lycantropos/hypothesis_geometry/_apis/build/status/lycantropos.hypothesis_geometry?branchName=master)](https://dev.azure.com/lycantropos/hypothesis_geometry/_build/latest?branchName=master "Azure Pipelines")
+[![](https://readthedocs.org/projects/hypothesis_geometry/badge/?version=latest)](https://hypothesis-geometry.readthedocs.io/en/latest "Documentation")
 [![](https://codecov.io/gh/lycantropos/hypothesis_geometry/branch/master/graph/badge.svg)](https://codecov.io/gh/lycantropos/hypothesis_geometry "Codecov")
 [![](https://img.shields.io/github/license/lycantropos/hypothesis_geometry.svg)](https://github.com/lycantropos/hypothesis_geometry/blob/master/LICENSE "License")
 [![](https://badge.fury.io/py/hypothesis-geometry.svg)](https://badge.fury.io/py/hypothesis-geometry "PyPI")
