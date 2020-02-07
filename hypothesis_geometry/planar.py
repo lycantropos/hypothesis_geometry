@@ -103,6 +103,65 @@ def segments(x_coordinates: Strategy[Coordinate],
     :param y_coordinates:
         strategy for endpoints' y-coordinates,
         ``None`` for reusing x-coordinates strategy.
+
+    >>> from hypothesis import strategies
+    >>> from hypothesis_geometry import planar
+
+    For same coordinates' domain:
+
+    >>> min_coordinate, max_coordinate = -1., 1.
+    >>> coordinates_type = float
+    >>> coordinates = strategies.floats(min_coordinate, max_coordinate,
+    ...                                 allow_infinity=False,
+    ...                                 allow_nan=False)
+    >>> segments = planar.segments(coordinates)
+    >>> segment = segments.example()
+    >>> isinstance(segment, tuple)
+    True
+    >>> len(segment) == 2
+    True
+    >>> all(isinstance(endpoint, tuple) for endpoint in segment)
+    True
+    >>> all(len(endpoint) == 2 for endpoint in segment)
+    True
+    >>> all(all(isinstance(coordinate, coordinates_type)
+    ...         for coordinate in endpoint)
+    ...     for endpoint in segment)
+    True
+    >>> all(all(min_coordinate <= coordinate <= max_coordinate
+    ...         for coordinate in endpoint)
+    ...     for endpoint in segment)
+    True
+
+    For different coordinates' domains:
+
+    >>> min_x_coordinate, max_x_coordinate = -1., 1.
+    >>> min_y_coordinate, max_y_coordinate = 10., 100.
+    >>> coordinates_type = float
+    >>> x_coordinates = strategies.floats(min_x_coordinate, max_x_coordinate,
+    ...                                   allow_infinity=False,
+    ...                                   allow_nan=False)
+    >>> y_coordinates = strategies.floats(min_y_coordinate, max_y_coordinate,
+    ...                                   allow_infinity=False,
+    ...                                   allow_nan=False)
+    >>> segments = planar.segments(x_coordinates, y_coordinates)
+    >>> segment = segments.example()
+    >>> isinstance(segment, tuple)
+    True
+    >>> len(segment) == 2
+    True
+    >>> all(isinstance(endpoint, tuple) for endpoint in segment)
+    True
+    >>> all(len(endpoint) == 2 for endpoint in segment)
+    True
+    >>> all(all(isinstance(coordinate, coordinates_type)
+    ...         for coordinate in endpoint)
+    ...     for endpoint in segment)
+    True
+    >>> all(min_x_coordinate <= endpoint_x <= max_x_coordinate
+    ...     and min_y_coordinate <= endpoint_y <= max_y_coordinate
+    ...     for endpoint_x, endpoint_y in segment)
+    True
     """
 
     def non_degenerate_segment(segment: Segment) -> bool:
