@@ -65,6 +65,16 @@ def to_concave_contour(points: Sequence[Point]) -> Contour:
 def to_convex_contour(coordinates_with_flags_and_permutation
                       : Tuple[List[Tuple[Coordinate, Coordinate, bool, bool]],
                               Sequence[int]]) -> Contour:
+    """
+    Based on Valtr algorithm by Sander Verdonschot.
+
+    Time complexity:
+        ``O(len(coordinates) * log len(coordinates))``
+    Memory complexity:
+        ``O(len(coordinates))``
+    Reference:
+        http://cglab.ca/~sander/misc/ConvexGeneration/convex.html
+    """
     (coordinates_with_flags,
      permutation) = coordinates_with_flags_and_permutation
     xs, ys, x_flags, y_flags = zip(*coordinates_with_flags)
