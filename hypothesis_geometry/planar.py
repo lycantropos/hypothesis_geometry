@@ -37,6 +37,55 @@ def points(x_coordinates: Strategy[Coordinate],
     :param y_coordinates:
         strategy for points' y-coordinates,
         ``None`` for reusing x-coordinates strategy.
+
+    >>> from hypothesis import strategies
+    >>> from hypothesis_geometry import planar
+
+    For same coordinates' domain:
+
+    >>> min_coordinate, max_coordinate = -1., 1.
+    >>> coordinates_type = float
+    >>> coordinates = strategies.floats(min_coordinate, max_coordinate, 
+    ...                                 allow_infinity=False,
+    ...                                 allow_nan=False)
+    >>> points = planar.points(coordinates)
+    >>> point = points.example()
+    >>> isinstance(point, tuple)
+    True
+    >>> len(point) == 2
+    True
+    >>> all(isinstance(coordinate, coordinates_type)
+    ...     for coordinate in point)
+    True
+    >>> all(min_coordinate <= coordinate <= max_coordinate
+    ...     for coordinate in point)
+    True
+
+    For different coordinates' domains:
+
+    >>> min_x_coordinate, max_x_coordinate = -1., 1.
+    >>> min_y_coordinate, max_y_coordinate = 10., 100.
+    >>> coordinates_type = float
+    >>> x_coordinates = strategies.floats(min_x_coordinate, max_x_coordinate, 
+    ...                                   allow_infinity=False,
+    ...                                   allow_nan=False)
+    >>> y_coordinates = strategies.floats(min_y_coordinate, max_y_coordinate,
+    ...                                   allow_infinity=False,
+    ...                                   allow_nan=False)
+    >>> points = planar.points(x_coordinates, y_coordinates)
+    >>> point = points.example()
+    >>> isinstance(point, tuple)
+    True
+    >>> len(point) == 2
+    True
+    >>> all(isinstance(coordinate, coordinates_type)
+    ...     for coordinate in point)
+    True
+    >>> point_x, point_y = point
+    >>> min_x_coordinate <= point_x <= max_x_coordinate
+    True
+    >>> min_y_coordinate <= point_y <= max_y_coordinate
+    True
     """
     if y_coordinates is None:
         y_coordinates = x_coordinates
