@@ -76,6 +76,10 @@ def contours(x_coordinates: Strategy[Coordinate],
              max_size: Optional[int] = None) -> Strategy[Contour]:
     """
     Returns a strategy for contours.
+    Contour defined as a sequence of points (called contour's vertices)
+    such that line segments formed by pairs of consecutive points
+    (including the last-first point pair)
+    do not cross/overlap each other.
 
     :param x_coordinates: strategy for vertices' x-coordinates.
     :param y_coordinates:
