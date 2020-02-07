@@ -17,8 +17,8 @@ from .hints import (Contour,
                     Point)
 
 
-def to_concave_contour(triangulation: triangular.Triangulation
-                       ) -> Contour:
+def to_concave_contour(points: Sequence[Point]) -> Contour:
+    triangulation = triangular.delaunay(points)
     boundary = triangular.to_boundary(triangulation)
     boundary_vertices = {edge.start for edge in boundary}
 
