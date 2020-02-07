@@ -48,6 +48,7 @@ def segments(x_coordinates: Strategy[Coordinate],
              ) -> Strategy[Segment]:
     """
     Returns a strategy for segments.
+    Segment defined as a pair of unequal points.
 
     :param x_coordinates: strategy for endpoints' x-coordinates.
     :param y_coordinates:
