@@ -10,7 +10,6 @@ from typing import (Optional,
 from hypothesis import strategies
 from hypothesis.errors import HypothesisWarning
 
-from .core import triangular
 from .core.contracts import (is_contour_non_convex,
                              is_contour_strict,
                              is_non_self_intersecting_contour,
@@ -93,7 +92,6 @@ def concave_contours(x_coordinates: Strategy[Coordinate],
                              max_size=max_size,
                              unique=True)
             .filter(points_do_not_lie_on_the_same_line)
-            .map(triangular.delaunay)
             .map(to_concave_contour)
             .filter(partial(_has_valid_size,
                             min_size=min_size,
