@@ -31,7 +31,7 @@ def points(x_coordinates: Strategy[Coordinate],
            ) -> Strategy[Point]:
     """
     Returns a strategy for points.
-    Point defined as a pair of numbers.
+    Point is a pair of numbers.
 
     :param x_coordinates: strategy for points' x-coordinates.
     :param y_coordinates:
@@ -48,7 +48,7 @@ def segments(x_coordinates: Strategy[Coordinate],
              ) -> Strategy[Segment]:
     """
     Returns a strategy for segments.
-    Segment defined as a pair of unequal points.
+    Segment is a pair of unequal points.
 
     :param x_coordinates: strategy for endpoints' x-coordinates.
     :param y_coordinates:
@@ -75,7 +75,7 @@ def polylines(x_coordinates: Strategy[Coordinate],
               max_size: Optional[int] = None) -> Strategy[Polyline]:
     """
     Returns a strategy for polylines.
-    Polyline defined as a sequence of points (called polyline's vertices)
+    Polyline is a sequence of points (called polyline's vertices)
     such that there is no consecutive equal points.
 
     :param x_coordinates: strategy for vertices' x-coordinates.
@@ -134,7 +134,7 @@ def contours(x_coordinates: Strategy[Coordinate],
              max_size: Optional[int] = None) -> Strategy[Contour]:
     """
     Returns a strategy for contours.
-    Contour defined as a sequence of points (called contour's vertices)
+    Contour is a sequence of points (called contour's vertices)
     such that line segments formed by pairs of consecutive points
     (including the last-first point pair)
     do not cross/overlap each other.
@@ -164,7 +164,7 @@ def convex_contours(x_coordinates: Strategy[Coordinate],
                     max_size: Optional[int] = None) -> Strategy[Contour]:
     """
     Returns a strategy for convex contours.
-    Convex contour defined as a contour such that line segment
+    Convex contour is a contour such that the line segment
     formed by any two points from contour's line segments
     stays inside the region bounded by the contour.
 
@@ -212,7 +212,7 @@ def concave_contours(x_coordinates: Strategy[Coordinate],
                      max_size: Optional[int] = None) -> Strategy[Contour]:
     """
     Returns a strategy for concave contours.
-    Concave contour defined as a contour that is not convex.
+    Concave contour is a contour that is not convex.
 
     :param x_coordinates: strategy for vertices' x-coordinates.
     :param y_coordinates:
@@ -240,7 +240,7 @@ def triangular_contours(x_coordinates: Strategy[Coordinate],
                         ) -> Strategy[Contour]:
     """
     Returns a strategy for triangular contours.
-    Triangular contour defined as a contour that formed by 3 points.
+    Triangular contour is a contour formed by 3 points.
 
     :param x_coordinates: strategy for vertices' x-coordinates.
     :param y_coordinates:
