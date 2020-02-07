@@ -65,8 +65,7 @@ def to_concave_contour(points: Sequence[Point]) -> Contour:
     return shrink_collinear_vertices(boundary_endpoints)
 
 
-def to_convex_contour(x_coordinates: List[Coordinate],
-                      y_coordinates: List[Coordinate],
+def to_convex_contour(points: List[Point],
                       x_flags: List[bool],
                       y_flags: List[bool],
                       permutation: Sequence[int]) -> Contour:
@@ -74,15 +73,16 @@ def to_convex_contour(x_coordinates: List[Coordinate],
     Based on Valtr algorithm by Sander Verdonschot.
 
     Time complexity:
-        ``O(len(coordinates) * log len(coordinates))``
+        ``O(len(points) * log len(points))``
     Memory complexity:
-        ``O(len(coordinates))``
+        ``O(len(points))``
     Reference:
         http://cglab.ca/~sander/misc/ConvexGeneration/convex.html
     """
-    sorted_xs, sorted_ys = sorted(x_coordinates), sorted(y_coordinates)
-    min_x, *sorted_xs, max_x = sorted_xs
-    min_y, *sorted_ys, max_y = sorted_ys
+    xs, ys = zip(*points)
+    xs, ys = sorted(xs), sorted(ys)
+    min_x, *xs, max_x = xs
+    min_y, *ys, max_y = ys
 
     def to_vectors_coordinates(coordinates: List[Coordinate],
                                flags: List[bool],
@@ -100,8 +100,8 @@ def to_convex_contour(x_coordinates: List[Coordinate],
         result.extend((max_coordinate - last_min, last_max - max_coordinate))
         return result
 
-    vectors_xs = to_vectors_coordinates(sorted_xs, x_flags, min_x, max_x)
-    vectors_ys = to_vectors_coordinates(sorted_ys, y_flags, min_y, max_y)
+    vectors_xs = to_vectors_coordinates(xs, x_flags, min_x, max_x)
+    vectors_ys = to_vectors_coordinates(ys, y_flags, min_y, max_y)
     vectors_ys = [vectors_ys[index] for index in permutation]
 
     def to_vector_angle(vector: Tuple[Coordinate, Coordinate]) -> Sortable:
@@ -120,11 +120,10 @@ def to_convex_contour(x_coordinates: List[Coordinate],
         min_polygon_x, min_polygon_y = (min(min_polygon_x, point_x),
                                         min(min_polygon_y, point_y))
     shift_x, shift_y = min_x - min_polygon_x, min_y - min_polygon_y
-    return shrink_collinear_vertices([(min(max(point_x + shift_x,
-                                               min_x), max_x),
-                                       min(max(point_y + shift_y,
-                                               min_y), max_y))
-                                      for point_x, point_y in points])
+    contour = [(min(max(point_x + shift_x, min_x), max_x),
+                min(max(point_y + shift_y, min_y), max_y))
+               for point_x, point_y in points]
+    return to_convex_hull(shrink_collinear_vertices(contour))
 
 
 def shrink_collinear_vertices(contour: Contour) -> Contour:
