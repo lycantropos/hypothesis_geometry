@@ -154,6 +154,7 @@ def concave_contours(x_coordinates: Strategy[Coordinate],
                      max_size: Optional[int] = None) -> Strategy[Contour]:
     """
     Returns a strategy for concave contours.
+    Concave contour defined as a contour that is not convex.
 
     :param x_coordinates: strategy for vertices' x-coordinates.
     :param y_coordinates:
