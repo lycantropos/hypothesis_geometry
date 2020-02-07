@@ -65,6 +65,62 @@ def segments(x_coordinates: Strategy[Coordinate],
             .filter(non_degenerate_segment))
 
 
+MIN_POLYLINE_SIZE = 2
+
+
+def polylines(x_coordinates: Strategy[Coordinate],
+              y_coordinates: Optional[Strategy[Coordinate]] = None,
+              *,
+              min_size: int = MIN_POLYLINE_SIZE,
+              max_size: Optional[int] = None) -> Strategy[Polyline]:
+    """
+    Returns a strategy for polylines.
+
+    :param x_coordinates: strategy for vertices' x-coordinates.
+    :param y_coordinates:
+        strategy for vertices' y-coordinates,
+        ``None`` for reusing x-coordinates strategy.
+    :param min_size: lower bound for polyline size.
+    :param max_size: upper bound for polyline size, ``None`` for unbound.
+    """
+    _validate_sizes(min_size, max_size, MIN_POLYLINE_SIZE)
+    min_size = max(min_size, MIN_POLYLINE_SIZE)
+    result = _polylines(x_coordinates, y_coordinates, min_size, max_size)
+
+    if max_size is None or max_size > MIN_POLYLINE_SIZE:
+        def close_polyline(polyline: Polyline) -> Polyline:
+            return polyline + [polyline[0]]
+
+        result |= (_polylines(x_coordinates, y_coordinates,
+                              # closing will add a vertex,
+                              # so to stay in bounds
+                              # we should decrement them
+                              min_size - 1
+                              if min_size > MIN_POLYLINE_SIZE
+                              else min_size,
+                              max_size - 1
+                              if max_size is not None
+                              else max_size)
+                   .map(close_polyline))
+    return result
+
+
+def _polylines(x_coordinates: Strategy[Coordinate],
+               y_coordinates: Optional[Strategy[Coordinate]],
+               min_size: int,
+               max_size: Optional[int]) -> Strategy[Polyline]:
+    def to_unique_consecutive_vertices(polyline: Polyline) -> Polyline:
+        return [point for point, _ in groupby(polyline)]
+
+    return (strategies.lists(points(x_coordinates, y_coordinates),
+                             min_size=min_size,
+                             max_size=max_size)
+            .map(to_unique_consecutive_vertices)
+            .filter(partial(_has_valid_size,
+                            min_size=min_size,
+                            max_size=max_size)))
+
+
 TRIANGLE_SIZE = 3
 MIN_CONCAVE_CONTOUR_SIZE = 4
 
@@ -193,62 +249,6 @@ def triangular_contours(x_coordinates: Strategy[Coordinate],
                                       times=3))
             .filter(is_contour_strict)
             .map(list))
-
-
-MIN_POLYLINE_SIZE = 2
-
-
-def polylines(x_coordinates: Strategy[Coordinate],
-              y_coordinates: Optional[Strategy[Coordinate]] = None,
-              *,
-              min_size: int = MIN_POLYLINE_SIZE,
-              max_size: Optional[int] = None) -> Strategy[Polyline]:
-    """
-    Returns a strategy for polylines.
-
-    :param x_coordinates: strategy for vertices' x-coordinates.
-    :param y_coordinates:
-        strategy for vertices' y-coordinates,
-        ``None`` for reusing x-coordinates strategy.
-    :param min_size: lower bound for polyline size.
-    :param max_size: upper bound for polyline size, ``None`` for unbound.
-    """
-    _validate_sizes(min_size, max_size, MIN_POLYLINE_SIZE)
-    min_size = max(min_size, MIN_POLYLINE_SIZE)
-    result = _polylines(x_coordinates, y_coordinates, min_size, max_size)
-
-    if max_size is None or max_size > MIN_POLYLINE_SIZE:
-        def close_polyline(polyline: Polyline) -> Polyline:
-            return polyline + [polyline[0]]
-
-        result |= (_polylines(x_coordinates, y_coordinates,
-                              # closing will add a vertex,
-                              # so to stay in bounds
-                              # we should decrement them
-                              min_size - 1
-                              if min_size > MIN_POLYLINE_SIZE
-                              else min_size,
-                              max_size - 1
-                              if max_size is not None
-                              else max_size)
-                   .map(close_polyline))
-    return result
-
-
-def _polylines(x_coordinates: Strategy[Coordinate],
-               y_coordinates: Optional[Strategy[Coordinate]],
-               min_size: int,
-               max_size: Optional[int]) -> Strategy[Polyline]:
-    def to_unique_consecutive_vertices(polyline: Polyline) -> Polyline:
-        return [point for point, _ in groupby(polyline)]
-
-    return (strategies.lists(points(x_coordinates, y_coordinates),
-                             min_size=min_size,
-                             max_size=max_size)
-            .map(to_unique_consecutive_vertices)
-            .filter(partial(_has_valid_size,
-                            min_size=min_size,
-                            max_size=max_size)))
 
 
 def _validate_sizes(min_size: int, max_size: Optional[int],
