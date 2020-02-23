@@ -32,7 +32,7 @@ def to_concave_contour(points: Sequence[Point]) -> Contour:
         http://www.geosensor.net/papers/duckham08.PR.pdf
     """
     triangulation = triangular.delaunay(points)
-    boundary = triangular.to_boundary(triangulation)
+    boundary = triangular.to_boundary_edges(triangulation)
     boundary_vertices = {edge.start for edge in boundary}
 
     def is_mouth(edge: QuadEdge) -> bool:
@@ -60,9 +60,10 @@ def to_concave_contour(points: Sequence[Point]) -> Contour:
         for neighbour in edges_neighbours.pop(edge):
             edges_neighbours[neighbour] = to_edge_neighbours(neighbour)
             candidates.add(neighbour)
-    boundary_endpoints = [edge.start
-                          for edge in triangular.to_boundary(triangulation)]
-    return shrink_collinear_vertices(boundary_endpoints)
+    result = [edge.start for edge in
+              triangular.to_boundary_edges(triangulation)]
+    shrink_collinear_vertices(result)
+    return result
 
 
 def to_convex_contour(points: List[Point],
@@ -123,24 +124,17 @@ def to_convex_contour(points: List[Point],
     contour = [(min(max(point_x + shift_x, min_x), max_x),
                 min(max(point_y + shift_y, min_y), max_y))
                for point_x, point_y in points]
-    return to_convex_hull(shrink_collinear_vertices(contour))
+    shrink_collinear_vertices(contour)
+    return to_convex_hull(contour)
 
 
-def shrink_collinear_vertices(contour: Contour) -> Contour:
-    result = [contour[0], contour[1]]
-    for vertex in contour[2:]:
-        while (len(result) > 2
-               and (to_orientation(result[-2], result[-1], vertex)
+def shrink_collinear_vertices(contour: Contour) -> None:
+    for index in range(len(contour)):
+        while (max(index, 2) < len(contour)
+               and (to_orientation(contour[index - 2], contour[index - 1],
+                                   contour[index])
                     is Orientation.COLLINEAR)):
-            del result[-1]
-        result.append(vertex)
-    for index in range(len(result)):
-        while (max(index, 2) < len(result)
-               and (to_orientation(result[index - 2], result[index - 1],
-                                   result[index])
-                    is Orientation.COLLINEAR)):
-            del result[index - 1]
-    return result
+            del contour[index - 1]
 
 
 def to_convex_hull(points: Sequence[Point]) -> Contour:

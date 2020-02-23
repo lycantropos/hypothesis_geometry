@@ -150,12 +150,11 @@ def _to_right_candidate(base_edge: QuadEdge) -> Optional[QuadEdge]:
     return result
 
 
-def to_boundary(triangulation: Triangulation) -> List[QuadEdge]:
-    return list(_to_boundary(triangulation))
+def to_boundary_edges(triangulation: Triangulation) -> List[QuadEdge]:
+    return list(_to_boundary_edges(triangulation))
 
 
-def _to_boundary(triangulation: Triangulation
-                 ) -> Iterable[QuadEdge]:
+def _to_boundary_edges(triangulation: Triangulation) -> Iterable[QuadEdge]:
     # boundary is traversed in counterclockwise direction
     start = triangulation.left_edge
     edge = start
