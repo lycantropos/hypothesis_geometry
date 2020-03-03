@@ -1,5 +1,3 @@
-from enum import (IntEnum,
-                  unique)
 from itertools import chain
 from numbers import Real
 from typing import (Iterator,
@@ -7,24 +5,14 @@ from typing import (Iterator,
                     Sequence,
                     TypeVar)
 
-from robust import parallelogram
+from robust.angular import (Orientation,
+                            orientation)
 from robust.hints import Point as RealPoint
 
 from hypothesis_geometry.hints import (Contour,
                                        Point)
 
 Domain = TypeVar('Domain')
-
-
-def to_sign(value: Real) -> int:
-    if value > 0:
-        return 1
-    elif value < 0:
-        return -1
-    else:
-        return 0
-
-
 flatten = chain.from_iterable
 
 
@@ -37,11 +25,7 @@ def split(sequence: Sequence[Domain],
             for number in range(size)]
 
 
-@unique
-class Orientation(IntEnum):
-    CLOCKWISE = -1
-    COLLINEAR = 0
-    COUNTERCLOCKWISE = 1
+Orientation = Orientation
 
 
 def to_orientation(first_ray_point: Point,
@@ -51,8 +35,7 @@ def to_orientation(first_ray_point: Point,
         first_ray_point, vertex, second_ray_point = (
             _to_real_point(first_ray_point), _to_real_point(vertex),
             _to_real_point(second_ray_point))
-    return Orientation(to_sign(parallelogram.signed_area(
-            vertex, first_ray_point, vertex, second_ray_point)))
+    return orientation(first_ray_point, vertex, second_ray_point)
 
 
 def to_orientations(contour: Contour) -> Iterator[Orientation]:
