@@ -1,5 +1,5 @@
-bentley_ottmann>=0.1.0
+bentley_ottmann>=0.2.0
 dendroid>=0.4.0
 hypothesis>=4.55.0
 reprit>=0.2.0
-robust>=0.0.1
+robust>=0.1.0
