@@ -15,48 +15,40 @@ from .utils import (Orientation,
 
 
 class Triangulation:
-    __slots__ = ('_left_edge', '_right_edge')
+    __slots__ = ('left_edge', 'right_edge')
 
     def __init__(self, left_edge: QuadEdge, right_edge: QuadEdge) -> None:
-        self._left_edge = left_edge
-        self._right_edge = right_edge
+        self.left_edge = left_edge
+        self.right_edge = right_edge
 
     __repr__ = generate_repr(__init__)
 
-    @property
-    def left_edge(self) -> QuadEdge:
-        return self._left_edge
-
-    @property
-    def right_edge(self) -> QuadEdge:
-        return self._right_edge
-
     def merge_with(self, other: 'Triangulation') -> 'Triangulation':
         _merge(self._find_base_edge(other))
-        return Triangulation(self._left_edge, other._right_edge)
+        return Triangulation(self.left_edge, other.right_edge)
 
     def _find_base_edge(self, other: 'Triangulation') -> QuadEdge:
         while True:
-            if (self._right_edge.orientation_with(other._left_edge.start)
+            if (self.right_edge.orientation_with(other.left_edge.start)
                     is Orientation.COUNTERCLOCKWISE):
-                self._right_edge = self._right_edge.left_from_end
-            elif (other._left_edge.orientation_with(self._right_edge.start)
+                self.right_edge = self.right_edge.left_from_end
+            elif (other.left_edge.orientation_with(self.right_edge.start)
                   is Orientation.CLOCKWISE):
-                other._left_edge = other._left_edge.right_from_end
+                other.left_edge = other.left_edge.right_from_end
             else:
                 break
-        base_edge = other._left_edge.opposite.connect(self._right_edge)
-        if self._right_edge.start == self._left_edge.start:
-            self._left_edge = base_edge.opposite
-        if other._left_edge.start == other._right_edge.start:
-            other._right_edge = base_edge
+        base_edge = other.left_edge.opposite.connect(self.right_edge)
+        if self.right_edge.start == self.left_edge.start:
+            self.left_edge = base_edge.opposite
+        if other.left_edge.start == other.right_edge.start:
+            other.right_edge = base_edge
         return base_edge
 
     def delete(self, edge: QuadEdge) -> None:
-        if edge is self._right_edge or edge.opposite is self._right_edge:
-            self._right_edge = self._right_edge.right_from_end.opposite
-        if edge is self._left_edge or edge.opposite is self._left_edge:
-            self._left_edge = self._left_edge.left_from_start
+        if edge is self.right_edge or edge.opposite is self.right_edge:
+            self.right_edge = self.right_edge.right_from_end.opposite
+        if edge is self.left_edge or edge.opposite is self.left_edge:
+            self.left_edge = self.left_edge.left_from_start
         edge.delete()
 
 
