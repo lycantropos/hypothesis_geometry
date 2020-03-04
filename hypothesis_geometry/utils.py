@@ -129,12 +129,21 @@ def to_convex_contour(points: List[Point],
 
 
 def shrink_collinear_vertices(contour: Contour) -> None:
-    for index in range(len(contour)):
-        while (max(index, 2) < len(contour)
+    index = -len(contour) + 1
+    while index < 0:
+        while (max(2, -index) < len(contour)
+               and (to_orientation(contour[index + 2], contour[index + 1],
+                                   contour[index])
+                    is Orientation.COLLINEAR)):
+            del contour[index + 1]
+        index += 1
+    while index < len(contour):
+        while (max(2, index) < len(contour)
                and (to_orientation(contour[index - 2], contour[index - 1],
                                    contour[index])
                     is Orientation.COLLINEAR)):
             del contour[index - 1]
+        index += 1
 
 
 def to_convex_hull(points: Sequence[Point]) -> Contour:
