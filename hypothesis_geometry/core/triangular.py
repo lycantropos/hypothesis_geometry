@@ -54,8 +54,10 @@ class Triangulation:
 
 def delaunay(points: Sequence[Point]) -> Triangulation:
     result = [tuple(sorted(points))]
-    while max(map(len, result)) > max(_initializers):
-        result = list(flatten(split(part) if len(part) > max(_initializers)
+    max_initializer_size = max(_initializers)
+    while max(map(len, result)) > max_initializer_size:
+        result = list(flatten(split(part)
+                              if len(part) > max_initializer_size
                               else [part]
                               for part in result))
     result = [_initialize_triangulation(points) for points in result]
