@@ -60,8 +60,8 @@ def to_concave_contour(points: Sequence[Point]) -> Contour:
         for neighbour in edges_neighbours.pop(edge):
             edges_neighbours[neighbour] = to_edge_neighbours(neighbour)
             candidates.add(neighbour)
-    result = [edge.start for edge in
-              triangular.to_boundary_edges(triangulation)]
+    result = [edge.start
+              for edge in triangular.to_boundary_edges(triangulation)]
     shrink_collinear_vertices(result)
     return result
 
