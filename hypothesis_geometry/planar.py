@@ -696,6 +696,154 @@ def polygons(x_coordinates: Strategy[Coordinate],
              max_holes_size: Optional[int] = None,
              min_hole_size: int = TRIANGLE_SIZE,
              max_hole_size: Optional[int] = None) -> Strategy[Polygon]:
+    """
+    Returns a strategy for polygons.
+    Polygon is a pair of contour (called polygon’s border)
+    and possibly empty sequence of non-overlapping contours
+    which lie within the border (called polygon’s holes).
+
+    :param x_coordinates: strategy for vertices' x-coordinates.
+    :param y_coordinates:
+        strategy for vertices' y-coordinates,
+        ``None`` for reusing x-coordinates strategy.
+    :param min_size: lower bound for border size.
+    :param max_size: upper bound for border size, ``None`` for unbound.
+    :param min_holes_size: lower bound for holes count.
+    :param max_holes_size: upper bound for holes count, ``None`` for countless.
+    :param min_hole_size: lower bound for hole size.
+    :param max_hole_size: upper bound for hole size, ``None`` for unbound.
+
+    >>> from hypothesis import strategies
+    >>> from hypothesis_geometry import planar
+
+    For same coordinates' domain:
+
+    >>> min_coordinate, max_coordinate = -1., 1.
+    >>> coordinates_type = float
+    >>> coordinates = strategies.floats(min_coordinate, max_coordinate,
+    ...                                 allow_infinity=False,
+    ...                                 allow_nan=False)
+    >>> min_size, max_size = 5, 10
+    >>> min_holes_size, max_holes_size = 1, 4
+    >>> min_hole_size, max_hole_size = 3, 5
+    >>> polygons = planar.polygons(coordinates,
+    ...                            min_size=min_size,
+    ...                            max_size=max_size,
+    ...                            min_holes_size=min_holes_size,
+    ...                            max_holes_size=max_holes_size,
+    ...                            min_hole_size=min_hole_size,
+    ...                            max_hole_size=max_hole_size)
+    >>> polygon = polygons.example()
+    >>> isinstance(polygon, tuple)
+    True
+    >>> len(polygon) == 2
+    True
+    >>> border, holes = polygon
+    >>> isinstance(border, list)
+    True
+    >>> isinstance(holes, list)
+    True
+    >>> all(isinstance(hole, list) for hole in holes)
+    True
+    >>> min_size <= len(border) <= max_size
+    True
+    >>> min_holes_size <= len(holes) <= max_holes_size
+    True
+    >>> all(min_hole_size <= len(hole) <= max_hole_size for hole in holes)
+    True
+    >>> all(isinstance(vertex, tuple) for vertex in border)
+    True
+    >>> all(isinstance(vertex, tuple) for hole in holes for vertex in hole)
+    True
+    >>> all(len(vertex) == 2 for vertex in border)
+    True
+    >>> all(len(vertex) == 2 for hole in holes for vertex in hole)
+    True
+    >>> all(all(isinstance(coordinate, coordinates_type)
+    ...         for coordinate in vertex)
+    ...     for vertex in border)
+    True
+    >>> all(all(isinstance(coordinate, coordinates_type)
+    ...         for coordinate in vertex)
+    ...     for hole in holes
+    ...     for vertex in hole)
+    True
+    >>> all(all(min_coordinate <= coordinate <= max_coordinate
+    ...         for coordinate in vertex)
+    ...     for vertex in border)
+    True
+    >>> all(all(min_coordinate <= coordinate <= max_coordinate
+    ...         for coordinate in vertex)
+    ...     for hole in holes
+    ...     for vertex in hole)
+    True
+
+    For different coordinates' domains:
+
+    >>> min_x_coordinate, max_x_coordinate = -1., 1.
+    >>> min_y_coordinate, max_y_coordinate = 10., 100.
+    >>> coordinates_type = float
+    >>> x_coordinates = strategies.floats(min_x_coordinate, max_x_coordinate,
+    ...                                   allow_infinity=False,
+    ...                                   allow_nan=False)
+    >>> y_coordinates = strategies.floats(min_y_coordinate, max_y_coordinate,
+    ...                                   allow_infinity=False,
+    ...                                   allow_nan=False)
+    >>> min_size, max_size = 5, 10
+    >>> min_holes_size, max_holes_size = 1, 4
+    >>> min_hole_size, max_hole_size = 3, 5
+    >>> polygons = planar.polygons(x_coordinates, y_coordinates,
+    ...                            min_size=min_size,
+    ...                            max_size=max_size,
+    ...                            min_holes_size=min_holes_size,
+    ...                            max_holes_size=max_holes_size,
+    ...                            min_hole_size=min_hole_size,
+    ...                            max_hole_size=max_hole_size)
+    >>> polygon = polygons.example()
+    >>> isinstance(polygon, tuple)
+    True
+    >>> len(polygon) == 2
+    True
+    >>> border, holes = polygon
+    >>> isinstance(border, list)
+    True
+    >>> isinstance(holes, list)
+    True
+    >>> all(isinstance(hole, list) for hole in holes)
+    True
+    >>> min_size <= len(border) <= max_size
+    True
+    >>> min_holes_size <= len(holes) <= max_holes_size
+    True
+    >>> all(min_hole_size <= len(hole) <= max_hole_size for hole in holes)
+    True
+    >>> all(isinstance(vertex, tuple) for vertex in border)
+    True
+    >>> all(isinstance(vertex, tuple) for hole in holes for vertex in hole)
+    True
+    >>> all(len(vertex) == 2 for vertex in border)
+    True
+    >>> all(len(vertex) == 2 for hole in holes for vertex in hole)
+    True
+    >>> all(all(isinstance(coordinate, coordinates_type)
+    ...         for coordinate in vertex)
+    ...     for vertex in border)
+    True
+    >>> all(all(isinstance(coordinate, coordinates_type)
+    ...         for coordinate in vertex)
+    ...     for hole in holes
+    ...     for vertex in hole)
+    True
+    >>> all(min_x_coordinate <= vertex_x <= max_x_coordinate
+    ...     and min_y_coordinate <= vertex_y <= max_y_coordinate
+    ...     for vertex_x, vertex_y in border)
+    True
+    >>> all(min_x_coordinate <= vertex_x <= max_x_coordinate
+    ...     and min_y_coordinate <= vertex_y <= max_y_coordinate
+    ...     for hole in holes
+    ...     for vertex_x, vertex_y in hole)
+    True
+    """
     _validate_sizes(min_size, max_size, TRIANGLE_SIZE)
     _validate_sizes(min_holes_size, max_holes_size, EMPTY_HOLES_SIZE,
                     'min_holes_size', 'max_holes_size')
