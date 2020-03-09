@@ -17,7 +17,8 @@ from .core.utils import (Orientation,
                          to_orientation)
 from .hints import (Contour,
                     Coordinate,
-                    Point)
+                    Point,
+                    Polygon)
 
 
 def to_concave_contour(points: Sequence[Point]) -> Contour:
@@ -32,25 +33,16 @@ def to_concave_contour(points: Sequence[Point]) -> Contour:
         http://www.geosensor.net/papers/duckham08.PR.pdf
     """
     triangulation = triangular.delaunay(points)
-    boundary = triangular.to_boundary_edges(triangulation)
-    boundary_vertices = {edge.start for edge in boundary}
+    boundary_edges = triangular.to_boundary_edges(triangulation)
+    boundary_vertices = {edge.start for edge in boundary_edges}
 
     def is_mouth(edge: QuadEdge) -> bool:
         return edge.left_from_start.end not in boundary_vertices
 
     edges_neighbours = {edge: to_edge_neighbours(edge)
-                        for edge in boundary}
-
-    def edge_key(edge: QuadEdge) -> Sortable:
-        return to_squared_edge_length(edge), edge.start, edge.end
-
-    def to_squared_edge_length(edge: QuadEdge) -> Coordinate:
-        (start_x, start_y), (end_x, end_y) = edge.start, edge.end
-        delta_x, delta_y = start_x - end_x, start_y - end_y
-        return delta_x * delta_x + delta_y * delta_y
-
-    candidates = red_black.tree(*filter(is_mouth, boundary),
-                                key=edge_key)
+                        for edge in boundary_edges}
+    candidates = red_black.tree(*filter(is_mouth, boundary_edges),
+                                key=_edge_key)
     while candidates:
         edge = candidates.popmax()
         if not is_mouth(edge):
@@ -64,6 +56,52 @@ def to_concave_contour(points: Sequence[Point]) -> Contour:
               for edge in triangular.to_boundary_edges(triangulation)]
     shrink_collinear_vertices(result)
     return result
+
+
+def to_polygon(points: Sequence[Point],
+               holes_sizes: List[int]) -> Polygon:
+    triangulation = triangular.delaunay(points)
+    boundary_edges = triangular.to_boundary_edges(triangulation)
+    boundary_vertices = {edge.start for edge in boundary_edges}
+    inner_points = sorted(set(points) - boundary_vertices)
+    start = 0
+    holes = []
+    for hole_size in holes_sizes:
+        hole_points = inner_points[start:start + hole_size]
+        holes.append(to_concave_contour(hole_points))
+        boundary_vertices.update(hole_points)
+        start += hole_size
+
+    def is_mouth(edge: QuadEdge) -> bool:
+        return edge.left_from_start.end not in boundary_vertices
+
+    edges_neighbours = {edge: to_edge_neighbours(edge)
+                        for edge in boundary_edges}
+    candidates = red_black.tree(*filter(is_mouth, boundary_edges),
+                                key=_edge_key)
+    while candidates:
+        edge = candidates.popmax()
+        if not is_mouth(edge):
+            continue
+        boundary_vertices.add(edge.left_from_start.end)
+        triangulation.delete(edge)
+        for neighbour in edges_neighbours.pop(edge):
+            edges_neighbours[neighbour] = to_edge_neighbours(neighbour)
+            candidates.add(neighbour)
+    border = [edge.start
+              for edge in triangular.to_boundary_edges(triangulation)]
+    shrink_collinear_vertices(border)
+    return border, holes
+
+
+def _edge_key(edge: QuadEdge) -> Sortable:
+    return _to_squared_edge_length(edge), edge.start, edge.end
+
+
+def _to_squared_edge_length(edge: QuadEdge) -> Coordinate:
+    (start_x, start_y), (end_x, end_y) = edge.start, edge.end
+    delta_x, delta_y = start_x - end_x, start_y - end_y
+    return delta_x * delta_x + delta_y * delta_y
 
 
 def to_convex_contour(points: List[Point],
