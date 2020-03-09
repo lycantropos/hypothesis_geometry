@@ -9,6 +9,7 @@ from hypothesis.strategies import SearchStrategy
 Strategy = SearchStrategy
 Coordinate = TypeVar('Coordinate', Real, Decimal)
 Point = Tuple[Coordinate, Coordinate]
+Segment = Tuple[Point, Point]
 Contour = List[Point]
 Polyline = List[Point]
-Segment = Tuple[Point, Point]
+Polygon = Tuple[Contour, List[Contour]]

@@ -18,12 +18,15 @@ from .core.contracts import (is_contour_non_convex,
 from .hints import (Contour,
                     Coordinate,
                     Point,
+                    Polygon,
                     Polyline,
                     Segment,
                     Strategy)
 from .utils import (pack,
                     to_concave_contour,
-                    to_convex_contour)
+                    to_convex_contour,
+                    to_convex_hull,
+                    to_polygon)
 
 
 def points(x_coordinates: Strategy[Coordinate],
@@ -681,25 +684,101 @@ def triangular_contours(x_coordinates: Strategy[Coordinate],
             .map(list))
 
 
+EMPTY_HOLES_SIZE = 0
+
+
+def polygons(x_coordinates: Strategy[Coordinate],
+             y_coordinates: Optional[Strategy[Coordinate]] = None,
+             *,
+             min_size: int = TRIANGLE_SIZE,
+             max_size: Optional[int] = None,
+             min_holes_size: int = EMPTY_HOLES_SIZE,
+             max_holes_size: Optional[int] = None,
+             min_hole_size: int = TRIANGLE_SIZE,
+             max_hole_size: Optional[int] = None) -> Strategy[Polygon]:
+    _validate_sizes(min_size, max_size, TRIANGLE_SIZE)
+    _validate_sizes(min_holes_size, max_holes_size, EMPTY_HOLES_SIZE,
+                    'min_holes_size', 'max_holes_size')
+    _validate_sizes(min_hole_size, max_hole_size, TRIANGLE_SIZE,
+                    'min_hole_size', 'max_hole_size')
+
+    def to_points_with_holes_sizes(points: List[Point]
+                                   ) -> Strategy[Tuple[List[Point],
+                                                       List[int]]]:
+        return strategies.tuples(strategies.just(points),
+                                 to_holes_sizes(points))
+
+    def to_holes_sizes(points: List[Point]) -> Strategy[List[int]]:
+        max_hole_size = len(points) - max(len(to_convex_hull(points)),
+                                          min_size)
+        if max_hole_size >= min_hole_size:
+            holes_size_scale = max_hole_size // min_hole_size
+            return (strategies.lists(strategies.integers(min_hole_size,
+                                                         max_hole_size),
+                                     min_size=min_holes_size,
+                                     max_size=(min(max_holes_size,
+                                                   holes_size_scale)
+                                               if max_holes_size is not None
+                                               else holes_size_scale))
+                    .filter(lambda sizes: sum(sizes) <= max_hole_size))
+        else:
+            return strategies.builds(list)
+
+    def has_valid_sizes(polygon: Polygon) -> bool:
+        border, holes = polygon
+        return (_has_valid_size(border,
+                                min_size=min_size,
+                                max_size=max_size)
+                and _has_valid_size(holes,
+                                    min_size=min_holes_size,
+                                    max_size=max_holes_size)
+                and all(_has_valid_size(hole,
+                                        min_size=min_hole_size,
+                                        max_size=max_hole_size)
+                        for hole in holes))
+
+    return (strategies.lists(
+            points(x_coordinates, y_coordinates),
+            min_size=min_size + min_hole_size * min_holes_size,
+            max_size=(max_size
+                      if (max_size is None
+                          or max_holes_size is None
+                          or max_hole_size is None)
+                      else max_size + max_hole_size * max_holes_size),
+            unique=True)
+            .flatmap(to_points_with_holes_sizes)
+            .map(pack(to_polygon))
+            .filter(has_valid_sizes))
+
+
 def _validate_sizes(min_size: int, max_size: Optional[int],
-                    min_expected_size: int) -> None:
+                    min_expected_size: int,
+                    min_size_name: str = 'min_size',
+                    max_size_name: str = 'max_size') -> None:
     if max_size is None:
         pass
     elif max_size < min_expected_size:
-        raise ValueError('Should have at least {expected} vertices, '
-                         'but requested {actual}.'
-                         .format(expected=min_expected_size,
-                                 actual=max_size))
+        raise ValueError('`{max_size_name}` '
+                         'should not be less than {min_expected_size}, '
+                         'but found {max_size}.'
+                         .format(max_size_name=max_size_name,
+                                 min_expected_size=min_expected_size,
+                                 max_size=max_size))
     elif min_size > max_size:
-        raise ValueError('`min_size` should not be greater than `max_size`, '
+        raise ValueError('`{min_size_name}` '
+                         'should not be greater than `{max_size_name}`, '
                          'but found {min_size}, {max_size}.'
-                         .format(min_size=min_size,
+                         .format(min_size_name=min_size_name,
+                                 max_size_name=max_size_name,
+                                 min_size=min_size,
                                  max_size=max_size))
     if min_size < min_expected_size:
-        warnings.warn('`min_size` is expected to be not less than {expected}, '
-                      'but found {actual}.'
-                      .format(expected=min_expected_size,
-                              actual=min_size),
+        warnings.warn('`{min_size_name}` is expected to be '
+                      'not less than {min_expected_size}, '
+                      'but found {min_size}.'
+                      .format(min_size_name=min_size_name,
+                              min_expected_size=min_expected_size,
+                              min_size=min_size),
                       HypothesisWarning)
 
 
