@@ -1,0 +1,218 @@
+from typing import Tuple
+
+import pytest
+from hypothesis import given
+from hypothesis.strategies import DataObject
+
+from hypothesis_geometry.core.contracts import (
+    is_contour_strict,
+    is_non_self_intersecting_contour)
+from hypothesis_geometry.hints import (Coordinate,
+                                       Strategy)
+from hypothesis_geometry.planar import polygons
+from tests import strategies
+from tests.utils import (CoordinatesLimitsType,
+                         SizesPair,
+                         has_valid_size,
+                         is_polygon,
+                         point_has_coordinates_in_range,
+                         point_has_coordinates_types)
+
+
+@given(strategies.coordinates_strategies,
+       strategies.concave_contours_sizes_pairs,
+       strategies.holes_lists_sizes_pairs,
+       strategies.convex_contours_sizes_pairs)
+def test_basic(coordinates: Strategy[Coordinate],
+               sizes_pair: SizesPair,
+               holes_list_sizes_pair: SizesPair,
+               holes_sizes_pair: SizesPair) -> None:
+    min_size, max_size = sizes_pair
+    min_holes_size, max_holes_size = holes_list_sizes_pair
+    min_hole_size, max_hole_size = holes_sizes_pair
+
+    result = polygons(coordinates,
+                      min_size=min_size,
+                      max_size=max_size,
+                      min_holes_size=min_holes_size,
+                      max_holes_size=max_holes_size,
+                      min_hole_size=min_hole_size,
+                      max_hole_size=max_hole_size)
+
+    assert isinstance(result, Strategy)
+
+
+@given(strategies.data,
+       strategies.coordinates_strategy_with_limit_and_type_pairs,
+       strategies.concave_contours_sizes_pairs,
+       strategies.holes_lists_sizes_pairs,
+       strategies.convex_contours_sizes_pairs)
+def test_properties(data: DataObject,
+                    coordinates_limits_type_pair: Tuple[CoordinatesLimitsType,
+                                                        CoordinatesLimitsType],
+                    sizes_pair: SizesPair,
+                    holes_list_sizes_pair: SizesPair,
+                    holes_sizes_pair: SizesPair) -> None:
+    (x_coordinates_limits_type,
+     y_coordinates_limits_type) = coordinates_limits_type_pair
+    ((x_coordinates, (min_x_value, max_x_value)),
+     x_type) = x_coordinates_limits_type
+    ((y_coordinates, (min_y_value, max_y_value)),
+     y_type) = y_coordinates_limits_type
+    min_size, max_size = sizes_pair
+    min_holes_size, max_holes_size = holes_list_sizes_pair
+    min_hole_size, max_hole_size = holes_sizes_pair
+
+    strategy = polygons(x_coordinates, y_coordinates,
+                        min_size=min_size,
+                        max_size=max_size,
+                        min_holes_size=min_holes_size,
+                        max_holes_size=max_holes_size,
+                        min_hole_size=min_hole_size,
+                        max_hole_size=max_hole_size)
+
+    result = data.draw(strategy)
+
+    assert is_polygon(result)
+    assert has_valid_size(result[0],
+                          min_size=min_size,
+                          max_size=max_size)
+    assert has_valid_size(result[1],
+                          min_size=min_holes_size,
+                          max_size=max_holes_size)
+    assert all(has_valid_size(hole,
+                              min_size=min_hole_size,
+                              max_size=max_hole_size)
+               for hole in result[1])
+    assert all(point_has_coordinates_types(vertex,
+                                           x_type=x_type,
+                                           y_type=y_type)
+               for vertex in result[0])
+    assert all(point_has_coordinates_types(vertex,
+                                           x_type=x_type,
+                                           y_type=y_type)
+               for hole in result[1]
+               for vertex in hole)
+    assert all(point_has_coordinates_in_range(vertex,
+                                              min_x_value=min_x_value,
+                                              max_x_value=max_x_value,
+                                              min_y_value=min_y_value,
+                                              max_y_value=max_y_value)
+               for vertex in result[0])
+    assert all(point_has_coordinates_in_range(vertex,
+                                              min_x_value=min_x_value,
+                                              max_x_value=max_x_value,
+                                              min_y_value=min_y_value,
+                                              max_y_value=max_y_value)
+               for hole in result[1]
+               for vertex in hole)
+    assert is_contour_strict(result[0])
+    assert all(is_contour_strict(hole)
+               for hole in result[1])
+    assert is_non_self_intersecting_contour(result[0])
+    assert all(is_non_self_intersecting_contour(hole)
+               for hole in result[1])
+
+
+@given(strategies.data,
+       strategies.coordinates_strategies_with_limits_and_types,
+       strategies.concave_contours_sizes_pairs,
+       strategies.holes_lists_sizes_pairs,
+       strategies.convex_contours_sizes_pairs)
+def test_same_coordinates(data: DataObject,
+                          coordinates_limits_type: CoordinatesLimitsType,
+                          sizes_pair: SizesPair,
+                          holes_list_sizes_pair: SizesPair,
+                          holes_sizes_pair: SizesPair) -> None:
+    (coordinates, (min_value, max_value)), type_ = coordinates_limits_type
+    min_size, max_size = sizes_pair
+    min_holes_size, max_holes_size = holes_list_sizes_pair
+    min_hole_size, max_hole_size = holes_sizes_pair
+
+    strategy = polygons(coordinates,
+                        min_size=min_size,
+                        max_size=max_size,
+                        min_holes_size=min_holes_size,
+                        max_holes_size=max_holes_size,
+                        min_hole_size=min_hole_size,
+                        max_hole_size=max_hole_size)
+
+    result = data.draw(strategy)
+
+    assert is_polygon(result)
+    assert has_valid_size(result[0],
+                          min_size=min_size,
+                          max_size=max_size)
+    assert has_valid_size(result[1],
+                          min_size=min_holes_size,
+                          max_size=max_holes_size)
+    assert all(has_valid_size(hole,
+                              min_size=min_hole_size,
+                              max_size=max_hole_size)
+               for hole in result[1])
+    assert all(point_has_coordinates_types(vertex,
+                                           x_type=type_,
+                                           y_type=type_)
+               for vertex in result[0])
+    assert all(point_has_coordinates_types(vertex,
+                                           x_type=type_,
+                                           y_type=type_)
+               for hole in result[1]
+               for vertex in hole)
+    assert all(point_has_coordinates_in_range(vertex,
+                                              min_x_value=min_value,
+                                              max_x_value=max_value,
+                                              min_y_value=min_value,
+                                              max_y_value=max_value)
+               for vertex in result[0])
+    assert all(point_has_coordinates_in_range(vertex,
+                                              min_x_value=min_value,
+                                              max_x_value=max_value,
+                                              min_y_value=min_value,
+                                              max_y_value=max_value)
+               for hole in result[1]
+               for vertex in hole)
+    assert is_contour_strict(result[0])
+    assert all(is_contour_strict(hole)
+               for hole in result[1])
+    assert is_non_self_intersecting_contour(result[0])
+    assert all(is_non_self_intersecting_contour(hole)
+               for hole in result[1])
+
+
+@given(strategies.coordinates_strategies,
+       strategies.invalid_convex_contours_sizes_pairs)
+def test_invalid_border_sizes(coordinates: Strategy[Coordinate],
+                              invalid_sizes_pair: SizesPair) -> None:
+    min_size, max_size = invalid_sizes_pair
+
+    with pytest.raises(ValueError):
+        polygons(coordinates,
+                 min_size=min_size,
+                 max_size=max_size)
+
+
+@given(strategies.coordinates_strategies,
+       strategies.invalid_holes_list_sizes_pairs)
+def test_invalid_holes_list_sizes(coordinates: Strategy[Coordinate],
+                                  invalid_holes_list_sizes_pair: SizesPair
+                                  ) -> None:
+    min_holes_size, max_holes_size = invalid_holes_list_sizes_pair
+
+    with pytest.raises(ValueError):
+        polygons(coordinates,
+                 min_holes_size=min_holes_size,
+                 max_holes_size=max_holes_size)
+
+
+@given(strategies.coordinates_strategies,
+       strategies.invalid_convex_contours_sizes_pairs)
+def test_invalid_holes_sizes(coordinates: Strategy[Coordinate],
+                             invalid_holes_sizes_pair: SizesPair
+                             ) -> None:
+    min_hole_size, max_hole_size = invalid_holes_sizes_pair
+
+    with pytest.raises(ValueError):
+        polygons(coordinates,
+                 min_hole_size=min_hole_size,
+                 max_hole_size=max_hole_size)
