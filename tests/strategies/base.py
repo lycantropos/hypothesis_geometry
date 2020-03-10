@@ -48,6 +48,14 @@ def to_sizes_pairs(min_size: int, max_size: int = 10
             | strategies.tuples(sizes, sizes).map(sort_pair))
 
 
+def to_non_valid_sizes_pairs(min_valid_size: int
+                             ) -> Strategy[Tuple[int, Optional[int]]]:
+    return (strategies.tuples(strategies.integers(0, min_valid_size - 1),
+                              strategies.integers(min_valid_size))
+            .filter(lambda sizes_pair: ne(*sizes_pair))
+            .map(sort_pair))
+
+
 def to_invalid_sizes_pairs(min_valid_size: int
                            ) -> Strategy[Tuple[int, Optional[int]]]:
     max_invalid_size = min_valid_size - 1
@@ -61,14 +69,6 @@ def to_invalid_sizes_pairs(min_valid_size: int
             | strategies.tuples(invalid_sizes, invalid_sizes).map(sort_pair))
 
 
-def to_non_valid_sizes_pairs(min_valid_size: int
-                             ) -> Strategy[Tuple[int, Optional[int]]]:
-    return (strategies.tuples(strategies.integers(0, min_valid_size - 1),
-                              strategies.integers(min_valid_size))
-            .filter(lambda sizes_pair: ne(*sizes_pair))
-            .map(sort_pair))
-
-
 def sort_pair(pair: Tuple[Any, Any]) -> Tuple[Any, Any]:
     first, second = pair
     return (first, second) if first < second else (second, first)
@@ -78,6 +78,9 @@ concave_contours_sizes_pairs = to_sizes_pairs(MIN_CONCAVE_CONTOUR_SIZE)
 convex_contours_sizes_pairs = to_sizes_pairs(TRIANGLE_SIZE)
 holes_lists_sizes_pairs = to_sizes_pairs(EMPTY_HOLES_SIZE, 5)
 polylines_sizes_pairs = to_sizes_pairs(MIN_POLYLINE_SIZE)
+non_valid_concave_contours_sizes_pairs = to_non_valid_sizes_pairs(
+        MIN_CONCAVE_CONTOUR_SIZE)
+non_valid_convex_contours_sizes_pairs = to_non_valid_sizes_pairs(TRIANGLE_SIZE)
 invalid_concave_contours_sizes_pairs = to_invalid_sizes_pairs(
         MIN_CONCAVE_CONTOUR_SIZE)
 invalid_convex_contours_sizes_pairs = to_invalid_sizes_pairs(TRIANGLE_SIZE)
