@@ -961,6 +961,12 @@ def _validate_sizes(min_size: int, max_size: Optional[int],
                                  max_size_name=max_size_name,
                                  min_size=min_size,
                                  max_size=max_size))
+    elif min_size < 0:
+        raise ValueError('`{min_size_name}` '
+                         'should not be less than 0, '
+                         'but found {min_size}.'
+                         .format(min_size_name=min_size_name,
+                                 min_size=min_size))
     if min_size < min_expected_size:
         warnings.warn('`{min_size_name}` is expected to be '
                       'not less than {min_expected_size}, '
