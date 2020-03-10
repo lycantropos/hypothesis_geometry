@@ -99,6 +99,13 @@ def is_polyline(object_: Any) -> bool:
             and all(map(is_point, object_)))
 
 
+def is_segment(object_: Any) -> bool:
+    return (isinstance(object_, tuple)
+            and len(object_) == 2
+            and all(map(is_point, object_))
+            and len(set(object_)) == 2)
+
+
 def is_point(object_: Any) -> bool:
     return (isinstance(object_, tuple)
             and len(object_) == 2

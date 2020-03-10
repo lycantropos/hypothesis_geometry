@@ -9,9 +9,9 @@ from hypothesis_geometry.planar import segments
 from tests import strategies
 from tests.utils import (CoordinatesLimitsType,
                          all_unique,
+                         is_segment,
                          point_has_coordinates_in_range,
-                         point_has_coordinates_types,
-                         point_has_valid_size)
+                         point_has_coordinates_types)
 
 
 @given(strategies.coordinates_strategies)
@@ -38,10 +38,7 @@ def test_properties(data: DataObject,
 
     result = data.draw(strategy)
 
-    assert isinstance(result, tuple)
-    assert len(result) == 2
-    assert all(isinstance(endpoint, tuple) for endpoint in result)
-    assert all(point_has_valid_size(endpoint) for endpoint in result)
+    assert is_segment(result)
     assert all(point_has_coordinates_types(endpoint,
                                            x_type=x_type,
                                            y_type=y_type)
@@ -66,10 +63,7 @@ def test_same_coordinates(data: DataObject,
 
     result = data.draw(strategy)
 
-    assert isinstance(result, tuple)
-    assert len(result) == 2
-    assert all(isinstance(endpoint, tuple) for endpoint in result)
-    assert all(point_has_valid_size(endpoint) for endpoint in result)
+    assert is_segment(result)
     assert all(point_has_coordinates_types(endpoint,
                                            x_type=type_,
                                            y_type=type_)
