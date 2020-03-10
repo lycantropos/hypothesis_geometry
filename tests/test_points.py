@@ -8,9 +8,9 @@ from hypothesis_geometry.hints import (Coordinate,
 from hypothesis_geometry.planar import points
 from tests import strategies
 from tests.utils import (CoordinatesLimitsType,
+                         is_point,
                          point_has_coordinates_in_range,
-                         point_has_coordinates_types,
-                         point_has_valid_size)
+                         point_has_coordinates_types)
 
 
 @given(strategies.coordinates_strategies)
@@ -37,9 +37,10 @@ def test_properties(data: DataObject,
 
     result = data.draw(strategy)
 
-    assert isinstance(result, tuple)
-    assert point_has_valid_size(result)
-    assert point_has_coordinates_types(result, x_type=x_type, y_type=y_type)
+    assert is_point(result)
+    assert point_has_coordinates_types(result,
+                                       x_type=x_type,
+                                       y_type=y_type)
     assert point_has_coordinates_in_range(result,
                                           min_x_value=min_x_value,
                                           max_x_value=max_x_value,
@@ -58,9 +59,10 @@ def test_same_coordinates(data: DataObject,
 
     result = data.draw(strategy)
 
-    assert isinstance(result, tuple)
-    assert point_has_valid_size(result)
-    assert point_has_coordinates_types(result, x_type=type_, y_type=type_)
+    assert is_point(result)
+    assert point_has_coordinates_types(result,
+                                       x_type=type_,
+                                       y_type=type_)
     assert point_has_coordinates_in_range(result,
                                           min_x_value=min_value,
                                           max_x_value=max_value,
