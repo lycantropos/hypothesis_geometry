@@ -174,6 +174,56 @@ True
 ```
 also `planar.concave_contours` & `planar.convex_contours` options are available.
 
+### Contours
+```python
+>>> min_size, max_size = 5, 10
+>>> min_holes_size, max_holes_size = 1, 3
+>>> min_hole_size, max_hole_size = 4, 8
+>>> polygons = planar.polygons(coordinates, 
+...                            min_size=min_size,
+...                            max_size=max_size,
+...                            min_holes_size=min_holes_size,
+...                            max_holes_size=max_holes_size,
+...                            min_hole_size=min_hole_size,
+...                            max_hole_size=max_hole_size)
+>>> polygon = polygons.example()
+>>> isinstance(polygon, tuple)
+True
+>>> len(polygon) == 2
+True
+>>> border, holes = polygon
+>>> isinstance(border, list)
+True
+>>> all(isinstance(hole, list) for hole in holes)
+True
+>>> min_size <= len(border) <= max_size
+True
+>>> min_holes_size <= len(holes) <= max_holes_size
+True
+>>> all(min_hole_size <= len(hole) <= max_hole_size for hole in holes)
+True
+>>> contours = [border, *holes]
+>>> all(isinstance(vertex, tuple)
+...     for contour in contours
+...     for vertex in contour)
+True
+>>> all(len(vertex) == 2
+...     for contour in contours
+...     for vertex in contour)
+True
+>>> all(all(isinstance(coordinate, coordinates_type)
+...         for coordinate in vertex)
+...     for contour in contours
+...     for vertex in contour)
+True
+>>> all(all(min_coordinate <= coordinate <= max_coordinate
+...         for coordinate in vertex)
+...     for contour in contours
+...     for vertex in contour)
+True
+
+```
+
 #### Caveats
 - Strategies may be slow depending on domain,
 so it may be necessary to add `HealthCheck.filter_too_much`, `HealthCheck.too_slow`
