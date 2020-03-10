@@ -14,6 +14,7 @@ from hypothesis_geometry.planar import polygons
 from tests import strategies
 from tests.utils import (CoordinatesLimitsType,
                          SizesPair,
+                         contours_do_not_overlap,
                          has_valid_size,
                          is_polygon,
                          point_has_coordinates_in_range,
@@ -113,6 +114,7 @@ def test_properties(data: DataObject,
     assert is_non_self_intersecting_contour(result[0])
     assert all(is_non_self_intersecting_contour(hole)
                for hole in result[1])
+    assert contours_do_not_overlap(result[1])
 
 
 @given(strategies.data,
@@ -179,6 +181,7 @@ def test_same_coordinates(data: DataObject,
     assert is_non_self_intersecting_contour(result[0])
     assert all(is_non_self_intersecting_contour(hole)
                for hole in result[1])
+    assert contours_do_not_overlap(result[1])
 
 
 @given(strategies.coordinates_strategies,
