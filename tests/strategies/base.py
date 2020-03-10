@@ -48,8 +48,9 @@ def to_sizes_pairs(min_size: int, max_size: int = 10
             | strategies.tuples(sizes, sizes).map(sort_pair))
 
 
-def to_invalid_sizes_pairs(max_invalid_size: int
+def to_invalid_sizes_pairs(min_valid_size: int
                            ) -> Strategy[Tuple[int, Optional[int]]]:
+    max_invalid_size = min_valid_size - 1
     invalid_sizes = strategies.integers(max_value=max_invalid_size)
     valid_sizes = strategies.integers(max_invalid_size)
     return ((strategies.tuples(valid_sizes, valid_sizes)
@@ -58,6 +59,14 @@ def to_invalid_sizes_pairs(max_invalid_size: int
              .map(reversed)
              .map(tuple))
             | strategies.tuples(invalid_sizes, invalid_sizes).map(sort_pair))
+
+
+def to_non_valid_sizes_pairs(min_valid_size: int
+                             ) -> Strategy[Tuple[int, Optional[int]]]:
+    return (strategies.tuples(strategies.integers(0, min_valid_size - 1),
+                              strategies.integers(min_valid_size))
+            .filter(lambda sizes_pair: ne(*sizes_pair))
+            .map(sort_pair))
 
 
 def sort_pair(pair: Tuple[Any, Any]) -> Tuple[Any, Any]:
@@ -69,10 +78,11 @@ concave_contours_sizes_pairs = to_sizes_pairs(MIN_CONCAVE_CONTOUR_SIZE)
 convex_contours_sizes_pairs = to_sizes_pairs(TRIANGLE_SIZE)
 holes_lists_sizes_pairs = to_sizes_pairs(EMPTY_HOLES_SIZE, 5)
 polylines_sizes_pairs = to_sizes_pairs(MIN_POLYLINE_SIZE)
-invalid_concave_contours_sizes_pairs = to_invalid_sizes_pairs(TRIANGLE_SIZE)
-invalid_convex_contours_sizes_pairs = to_invalid_sizes_pairs(TRIANGLE_SIZE - 1)
-invalid_holes_list_sizes_pairs = to_invalid_sizes_pairs(EMPTY_HOLES_SIZE - 1)
-invalid_polylines_sizes_pairs = to_invalid_sizes_pairs(MIN_POLYLINE_SIZE - 1)
+invalid_concave_contours_sizes_pairs = to_invalid_sizes_pairs(
+        MIN_CONCAVE_CONTOUR_SIZE)
+invalid_convex_contours_sizes_pairs = to_invalid_sizes_pairs(TRIANGLE_SIZE)
+invalid_holes_list_sizes_pairs = to_invalid_sizes_pairs(EMPTY_HOLES_SIZE)
+invalid_polylines_sizes_pairs = to_invalid_sizes_pairs(MIN_POLYLINE_SIZE)
 
 
 def to_coordinates_strategies_with_limits_and_types(
