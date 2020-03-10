@@ -33,10 +33,6 @@ def to_pairs(strategy: Strategy[Domain]) -> Strategy[Tuple[Domain, Domain]]:
     return strategies.tuples(strategy, strategy)
 
 
-def point_has_valid_size(point: Point) -> bool:
-    return len(point) == 2
-
-
 def point_has_coordinates_in_range(point: Point,
                                    *,
                                    min_x_value: Coordinate,
