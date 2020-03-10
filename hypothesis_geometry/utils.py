@@ -59,8 +59,8 @@ def to_concave_contour(points: Sequence[Point]) -> Contour:
 
 
 def to_polygon(points: Sequence[Point],
+               triangulation: triangular.Triangulation,
                holes_sizes: List[int]) -> Polygon:
-    triangulation = triangular.delaunay(points)
     boundary_edges = triangular.to_boundary_edges(triangulation)
     boundary_vertices = {edge.start for edge in boundary_edges}
     inner_points = sorted(set(points) - boundary_vertices)

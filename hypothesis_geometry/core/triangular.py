@@ -3,6 +3,7 @@ from typing import (Iterable,
                     Optional,
                     Sequence)
 
+from dendroid.utils import capacity
 from reprit.base import generate_repr
 
 from hypothesis_geometry.hints import Point
@@ -142,6 +143,10 @@ def _to_right_candidate(base_edge: QuadEdge) -> Optional[QuadEdge]:
         result.delete()
         result = next_candidate
     return result
+
+
+def to_boundary_edges_count(triangulation: Triangulation) -> int:
+    return capacity(_to_boundary_edges(triangulation))
 
 
 def to_boundary_edges(triangulation: Triangulation) -> List[QuadEdge]:
