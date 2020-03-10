@@ -391,6 +391,7 @@ def contours(x_coordinates: Strategy[Coordinate],
     _validate_sizes(min_size, max_size, TRIANGLE_SIZE)
     if max_size is not None and max_size == TRIANGLE_SIZE:
         return triangular_contours(x_coordinates, y_coordinates)
+    min_size = max(min_size, TRIANGLE_SIZE)
     return (convex_contours(x_coordinates, y_coordinates,
                             min_size=min_size,
                             max_size=max_size)
