@@ -13,7 +13,8 @@ from hypothesis import strategies
 from hypothesis_geometry.hints import (Coordinate,
                                        Point,
                                        Strategy)
-from hypothesis_geometry.planar import _has_valid_size
+from hypothesis_geometry.planar import (TRIANGLE_SIZE,
+                                        _has_valid_size)
 
 has_valid_size = _has_valid_size
 Domain = TypeVar('Domain')
@@ -87,7 +88,7 @@ def all_unique(iterable: Iterable[Hashable]) -> bool:
 
 def is_contour(object_: Any) -> bool:
     return (isinstance(object_, list)
-            and len(object_) >= 3
+            and len(object_) >= TRIANGLE_SIZE
             and all(map(is_point, object_)))
 
 
