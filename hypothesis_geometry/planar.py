@@ -851,6 +851,8 @@ def polygons(x_coordinates: Strategy[Coordinate],
                     'min_holes_size', 'max_holes_size')
     _validate_sizes(min_hole_size, max_hole_size, TRIANGLE_SIZE,
                     'min_hole_size', 'max_hole_size')
+    min_size, min_hole_size = (max(min_size, TRIANGLE_SIZE),
+                               max(min_hole_size, TRIANGLE_SIZE))
 
     def to_points_with_triangulation(points: List[Point]
                                      ) -> Tuple[List[Point],
