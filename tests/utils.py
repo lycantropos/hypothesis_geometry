@@ -83,6 +83,14 @@ def all_unique(iterable: Iterable[Hashable]) -> bool:
     return True
 
 
+def is_polygon(object_: Any) -> bool:
+    return (isinstance(object_, tuple)
+            and len(object_) == 2
+            and is_contour(object_[0])
+            and isinstance(object_[1], list)
+            and all(map(is_contour, object_[1])))
+
+
 def is_contour(object_: Any) -> bool:
     return (isinstance(object_, list)
             and len(object_) >= TRIANGLE_SIZE
