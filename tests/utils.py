@@ -13,7 +13,8 @@ from hypothesis import strategies
 from hypothesis_geometry.hints import (Coordinate,
                                        Point,
                                        Strategy)
-from hypothesis_geometry.planar import (TRIANGLE_SIZE,
+from hypothesis_geometry.planar import (MIN_POLYLINE_SIZE,
+                                        TRIANGLE_SIZE,
                                         _has_valid_size)
 
 has_valid_size = _has_valid_size
@@ -89,6 +90,12 @@ def all_unique(iterable: Iterable[Hashable]) -> bool:
 def is_contour(object_: Any) -> bool:
     return (isinstance(object_, list)
             and len(object_) >= TRIANGLE_SIZE
+            and all(map(is_point, object_)))
+
+
+def is_polyline(object_: Any) -> bool:
+    return (isinstance(object_, list)
+            and len(object_) >= MIN_POLYLINE_SIZE
             and all(map(is_point, object_)))
 
 
