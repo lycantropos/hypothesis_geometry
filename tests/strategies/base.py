@@ -81,6 +81,7 @@ polylines_sizes_pairs = to_sizes_pairs(MIN_POLYLINE_SIZE)
 non_valid_concave_contours_sizes_pairs = to_non_valid_sizes_pairs(
         MIN_CONCAVE_CONTOUR_SIZE)
 non_valid_convex_contours_sizes_pairs = to_non_valid_sizes_pairs(TRIANGLE_SIZE)
+non_valid_polylines_sizes_pairs = to_non_valid_sizes_pairs(MIN_POLYLINE_SIZE)
 invalid_concave_contours_sizes_pairs = to_invalid_sizes_pairs(
         MIN_CONCAVE_CONTOUR_SIZE)
 invalid_convex_contours_sizes_pairs = to_invalid_sizes_pairs(TRIANGLE_SIZE)
