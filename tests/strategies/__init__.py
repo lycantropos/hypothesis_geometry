@@ -11,4 +11,5 @@ from .base import (concave_contours_sizes_pairs,
                    invalid_polylines_sizes_pairs,
                    non_valid_concave_contours_sizes_pairs,
                    non_valid_convex_contours_sizes_pairs,
+                   non_valid_polylines_sizes_pairs,
                    polylines_sizes_pairs)
