@@ -1,5 +1,12 @@
 from itertools import groupby
-from typing import (Hashable, Iterable, Optional, Tuple, Type, TypeVar)
+from numbers import Number
+from typing import (Any,
+                    Hashable,
+                    Iterable,
+                    Optional,
+                    Tuple,
+                    Type,
+                    TypeVar)
 
 from hypothesis import strategies
 
@@ -76,3 +83,17 @@ def all_unique(iterable: Iterable[Hashable]) -> bool:
             return False
         seen_add(element)
     return True
+
+
+def is_contour(object_: Any) -> bool:
+    return (isinstance(object_, list)
+            and len(object_) >= 3
+            and all(map(is_point, object_)))
+
+
+def is_point(object_: Any) -> bool:
+    return (isinstance(object_, tuple)
+            and len(object_) == 2
+            and all(isinstance(coordinate, Number)
+                    for coordinate in object_)
+            and len(set(map(type, object_))) == 1)
