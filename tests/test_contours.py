@@ -2,6 +2,7 @@ from typing import Tuple
 
 import pytest
 from hypothesis import given
+from hypothesis.errors import HypothesisWarning
 from hypothesis.strategies import DataObject
 
 from hypothesis_geometry.core.contracts import (
@@ -114,3 +115,17 @@ def test_invalid_sizes(coordinates: Strategy[Coordinate],
         contours(coordinates,
                  min_size=min_size,
                  max_size=max_size)
+
+
+@given(strategies.coordinates_strategies,
+       strategies.non_valid_convex_contours_sizes_pairs)
+def test_non_valid_sizes(coordinates: Strategy[Coordinate],
+                         non_valid_sizes_pair: SizesPair) -> None:
+    min_size, max_size = non_valid_sizes_pair
+
+    with pytest.warns(HypothesisWarning) as warnings:
+        contours(coordinates,
+                 min_size=min_size,
+                 max_size=max_size)
+
+    assert len(warnings) == 1
