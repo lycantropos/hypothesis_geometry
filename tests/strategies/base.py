@@ -60,8 +60,9 @@ def to_invalid_sizes_pairs(min_valid_size: int
                            ) -> Strategy[Tuple[int, Optional[int]]]:
     max_invalid_size = min_valid_size - 1
     invalid_sizes = strategies.integers(max_value=max_invalid_size)
-    valid_sizes = strategies.integers(max_invalid_size)
-    return (strategies.tuples(invalid_sizes, invalid_sizes).map(sort_pair)
+    valid_sizes = strategies.integers(min_valid_size)
+    return (strategies.tuples(strategies.integers(max_value=-1), valid_sizes)
+            | strategies.tuples(invalid_sizes, invalid_sizes).map(sort_pair)
             | (strategies.tuples(valid_sizes, valid_sizes)
                .filter(lambda sizes_pair: ne(*sizes_pair))
                .map(sort_pair)
