@@ -3,15 +3,19 @@ from numbers import Number
 from typing import (Any,
                     Hashable,
                     Iterable,
+                    List,
                     Optional,
                     Tuple,
                     Type,
                     TypeVar)
 
+from bentley_ottmann.planar import segments_overlap
 from hypothesis import strategies
 
-from hypothesis_geometry.hints import (Coordinate,
+from hypothesis_geometry.hints import (Contour,
+                                       Coordinate,
                                        Point,
+                                       Segment,
                                        Strategy)
 from hypothesis_geometry.planar import (MIN_POLYLINE_SIZE,
                                         TRIANGLE_SIZE,
@@ -116,3 +120,14 @@ def is_point(object_: Any) -> bool:
             and all(isinstance(coordinate, Number)
                     for coordinate in object_)
             and len(set(map(type, object_))) == 1)
+
+
+def contours_do_not_overlap(contours: List[Contour]) -> bool:
+    return not segments_overlap(sum([contour_to_segments(contour)
+                                     for contour in contours],
+                                    []))
+
+
+def contour_to_segments(contour: Contour) -> List[Segment]:
+    return [(contour[index - 1], contour[index])
+            for index in range(len(contour))]
