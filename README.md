@@ -232,11 +232,14 @@ and set [`deadline`](https://hypothesis.readthedocs.io/en/latest/settings.html#h
 
 - Unbounded floating point strategies for coordinates 
 (like [`hypothesis.strategies.floats`](https://hypothesis.readthedocs.io/en/latest/data.html#hypothesis.strategies.floats)
-or [`hypothesis.strategies.decimals`](https://hypothesis.readthedocs.io/en/latest/data.html#hypothesis.strategies.decimals)
 with unset `min_value`/`max_value`) do not play well with bounded sizes 
 and may cause a lot of searching iterations with no success,
 so it is recommended to use bounded floating point coordinates with bounded sizes
 or unbounded coordinates with unbounded sizes.
+
+- [`decimal.Decimal`](https://docs.python.org/library/decimal.html) coordinates are not supported, because 
+they seem to be too hard to work with correctly (e.g. sometimes self-intersecting contours arise), 
+so it is suggested to use `float`  or [`fractions.Fraction`](https://docs.python.org/library/fractions.html) instead.
 
 Development
 -----------
