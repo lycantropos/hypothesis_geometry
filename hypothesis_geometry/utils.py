@@ -22,7 +22,7 @@ from .hints import (Contour,
                     Polygon)
 
 
-def to_concave_contour(points: Sequence[Point]) -> Contour:
+def to_concave_contour(points: Sequence[Point], size: int) -> Contour:
     """
     Based on chi-algorithm by M. Duckham et al.
 
@@ -44,10 +44,15 @@ def to_concave_contour(points: Sequence[Point]) -> Contour:
                         for edge in boundary_edges}
     candidates = red_black.tree(*filter(is_mouth, boundary_edges),
                                 key=_edge_key)
-    while candidates:
-        edge = candidates.popmax()
+    current_size = len(to_strict_convex_hull(points))
+    while current_size < size:
+        try:
+            edge = candidates.popmax()
+        except KeyError:
+            break
         if not is_mouth(edge):
             continue
+        size += 1
         boundary_vertices.add(edge.left_from_start.end)
         triangulation.delete(edge)
         for neighbour in edges_neighbours.pop(edge):
@@ -70,7 +75,7 @@ def to_polygon(points: Sequence[Point],
     holes = []
     for hole_size in holes_sizes:
         hole_points = inner_points[start:start + hole_size]
-        holes.append(to_concave_contour(hole_points))
+        holes.append(to_concave_contour(hole_points, hole_size))
         boundary_vertices.update(hole_points)
         start += hole_size
 
