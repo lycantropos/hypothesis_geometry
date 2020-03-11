@@ -1,6 +1,4 @@
 from functools import partial
-from itertools import (chain,
-                       islice)
 from math import atan2
 from typing import (Callable,
                     Iterable,
@@ -116,15 +114,20 @@ def constrict_convex_hull_size(points: List[Point],
                                max_size: Optional[int]) -> List[Point]:
     if max_size is None:
         return points
-    convex_hull = to_convex_hull(points)
+    convex_hull = to_strict_convex_hull(points)
     if len(convex_hull) <= max_size:
         return points
     sorted_convex_hull = sorted(
             convex_hull,
             key=partial(_to_squared_points_distance, convex_hull[0]))
-    new_border = to_convex_hull(list(islice(chain.from_iterable(
-            zip(sorted_convex_hull, reversed(sorted_convex_hull))),
-            max_size)))
+    new_border_points = []
+    for index in range(max_size):
+        quotient, remainder = divmod(index, 2)
+        if remainder:
+            new_border_points.append(sorted_convex_hull[-quotient - 1])
+        else:
+            new_border_points.append(sorted_convex_hull[quotient])
+    new_border = to_convex_hull(new_border_points)
     new_border_extra_segments = tuple(
             {(new_border[index - 1], new_border[index])
              for index in range(len(new_border))}
