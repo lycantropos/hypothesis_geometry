@@ -81,13 +81,15 @@ def to_polygon(points: Sequence[Point],
                         for edge in boundary_edges}
     candidates = red_black.tree(*filter(is_mouth, boundary_edges),
                                 key=_edge_key)
-    for _ in range(size - len(boundary_edges)):
+    current_size = len(to_strict_convex_hull(points))
+    while current_size < size:
         try:
             edge = candidates.popmax()
         except KeyError:
-            return [], holes
+            break
         if not is_mouth(edge):
             continue
+        current_size += 1
         boundary_vertices.add(edge.left_from_start.end)
         triangulation.delete(edge)
         for neighbour in edges_neighbours.pop(edge):
