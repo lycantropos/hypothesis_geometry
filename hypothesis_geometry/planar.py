@@ -12,7 +12,6 @@ from typing import (List,
 from hypothesis import strategies
 from hypothesis.errors import HypothesisWarning
 
-from .core import triangular
 from .core.contracts import (is_contour_non_convex,
                              is_contour_strict,
                              is_non_self_intersecting_contour,
@@ -24,9 +23,11 @@ from .hints import (Contour,
                     Polyline,
                     Segment,
                     Strategy)
-from .utils import (pack,
+from .utils import (constrict_convex_hull_size,
+                    pack,
                     to_concave_contour,
                     to_convex_contour,
+                    to_convex_hull,
                     to_polygon)
 
 
@@ -855,34 +856,33 @@ def polygons(x_coordinates: Strategy[Coordinate],
     min_size, min_hole_size = (max(min_size, TRIANGLE_SIZE),
                                max(min_hole_size, TRIANGLE_SIZE))
 
-    def to_points_with_triangulation(points: List[Point]
-                                     ) -> Tuple[List[Point],
-                                                triangular.Triangulation]:
-        return points, triangular.delaunay(points)
+    def to_points_with_sizes(points: List[Point]
+                             ) -> Strategy[Tuple[List[Point], int, List[int]]]:
+        max_border_points_count = len(points) - min_inner_points_count
+        border_sizes = strategies.integers(min_size,
+                                           max_border_points_count
+                                           if max_size is None
+                                           else min(max_size,
+                                                    max_border_points_count))
+        return border_sizes.flatmap(partial(to_holes_sizes,
+                                            points=points))
 
-    def to_points_with_triangulation_and_holes_sizes(
-            points_with_triangulation: Tuple[List[Point],
-                                             triangular.Triangulation]
-    ) -> Strategy[Tuple[List[Point], triangular.Triangulation, List[int]]]:
-        points, triangulation = points_with_triangulation
-        return strategies.tuples(strategies.just(points),
-                                 strategies.just(triangulation),
-                                 to_holes_sizes(points, triangulation))
-
-    def to_holes_sizes(points: List[Point],
-                       triangulation: triangular.Triangulation
-                       ) -> Strategy[List[int]]:
-        start_border_size = triangular.to_boundary_edges_count(triangulation)
-        inner_points_count = len(points) - start_border_size
-        holes_size_scale = inner_points_count // min_hole_size
-        return (strategies.integers(min_holes_size,
-                                    (min(max_holes_size, holes_size_scale)
-                                     if max_holes_size is not None
-                                     else holes_size_scale))
-                .flatmap(partial(_to_holes_sizes,
-                                 min_hole_size=min_hole_size,
-                                 max_hole_size=inner_points_count))
-                if inner_points_count >= min_hole_size
+    def to_holes_sizes(size: int,
+                       points: List[Point]) -> Strategy[Tuple[List[Point],
+                                                              int, List[int]]]:
+        max_inner_points_count = len(points) - size
+        holes_size_scale = max_inner_points_count // min_hole_size
+        return strategies.tuples(
+                strategies.just(points),
+                strategies.just(size),
+                (strategies.integers(min_holes_size,
+                                     (min(max_holes_size, holes_size_scale)
+                                      if max_holes_size is not None
+                                      else holes_size_scale))
+                 .flatmap(partial(_to_holes_sizes,
+                                  min_hole_size=min_hole_size,
+                                  max_hole_size=max_inner_points_count)))
+                if max_inner_points_count >= min_hole_size
                 else strategies.builds(list))
 
     def _to_holes_sizes(holes_size: int,
@@ -916,29 +916,25 @@ def polygons(x_coordinates: Strategy[Coordinate],
                                         max_size=max_hole_size)
                         for hole in holes))
 
-    min_holes_points_size = min_hole_size * min_holes_size
+    min_inner_points_count = min_hole_size * min_holes_size
 
-    def triangulation_has_valid_size(
-            points_with_triangulation: Tuple[List[Point],
-                                             triangular.Triangulation]
-    ) -> bool:
-        points, triangulation = points_with_triangulation
-        start_border_size = triangular.to_boundary_edges_count(triangulation)
-        return ((max_size is None or start_border_size <= max_size)
-                and len(points) - start_border_size >= min_holes_points_size)
+    def has_valid_inner_points_count(points: List[Point]) -> bool:
+        return (len(points) - len(to_convex_hull(points))
+                >= min_inner_points_count)
 
     return (strategies.lists(
             points(x_coordinates, y_coordinates),
-            min_size=min_size + min_holes_points_size,
+            min_size=min_size + min_inner_points_count,
             max_size=(None
                       if (max_size is None
                           or max_holes_size is None
                           or max_hole_size is None)
                       else max_size + max_hole_size * max_holes_size),
             unique=True)
-            .map(to_points_with_triangulation)
-            .filter(triangulation_has_valid_size)
-            .flatmap(to_points_with_triangulation_and_holes_sizes)
+            .map(partial(constrict_convex_hull_size,
+                         max_size=max_size))
+            .filter(has_valid_inner_points_count)
+            .flatmap(to_points_with_sizes)
             .map(pack(to_polygon))
             .filter(has_valid_sizes))
 
