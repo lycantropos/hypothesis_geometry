@@ -1,3 +1,4 @@
+import sys
 from decimal import Decimal
 from fractions import Fraction
 from functools import partial
@@ -26,6 +27,7 @@ MIN_VALUE = -MAX_VALUE
 coordinates_strategies_factories = {Decimal: partial(strategies.decimals,
                                                      min_value=MIN_VALUE,
                                                      max_value=MAX_VALUE,
+                                                     places=sys.float_info.dig,
                                                      allow_nan=False,
                                                      allow_infinity=False),
                                     float: partial(strategies.floats,
