@@ -28,7 +28,8 @@ from .utils import (constrict_convex_hull_size,
                     to_concave_contour,
                     to_convex_contour,
                     to_convex_hull,
-                    to_polygon)
+                    to_polygon,
+                    to_strict_convex_hull)
 
 
 def points(x_coordinates: Strategy[Coordinate],
@@ -859,30 +860,25 @@ def polygons(x_coordinates: Strategy[Coordinate],
     def to_points_with_sizes(points: List[Point]
                              ) -> Strategy[Tuple[List[Point], int, List[int]]]:
         max_border_points_count = len(points) - min_inner_points_count
-        border_sizes = strategies.integers(max(min_size,
-                                               len(to_convex_hull(points))),
-                                           max_border_points_count
-                                           if max_size is None
-                                           else min(max_size,
-                                                    max_border_points_count))
-        return border_sizes.flatmap(partial(to_holes_sizes,
-                                            points=points))
+        min_border_size = max(min_size, len(to_strict_convex_hull(points)))
+        max_border_size = (max_border_points_count
+                           if max_size is None
+                           else min(max_size, max_border_points_count))
+        return strategies.tuples(strategies.just(points),
+                                 strategies.integers(min_border_size,
+                                                     max_border_size),
+                                 to_holes_sizes(points))
 
-    def to_holes_sizes(size: int,
-                       points: List[Point]) -> Strategy[Tuple[List[Point],
-                                                              int, List[int]]]:
-        max_inner_points_count = len(points) - size
+    def to_holes_sizes(points: List[Point]) -> Strategy[List[int]]:
+        max_inner_points_count = len(points) - len(to_convex_hull(points))
         holes_size_scale = max_inner_points_count // min_hole_size
-        return strategies.tuples(
-                strategies.just(points),
-                strategies.just(size),
-                (strategies.integers(min_holes_size,
-                                     (min(max_holes_size, holes_size_scale)
-                                      if max_holes_size is not None
-                                      else holes_size_scale))
-                 .flatmap(partial(_to_holes_sizes,
-                                  min_hole_size=min_hole_size,
-                                  max_hole_size=max_inner_points_count)))
+        points_max_hole_size = (holes_size_scale
+                                if max_holes_size is None
+                                else min(max_holes_size, holes_size_scale))
+        return (strategies.integers(min_holes_size, points_max_hole_size)
+                .flatmap(partial(_to_holes_sizes,
+                                 min_hole_size=min_hole_size,
+                                 max_hole_size=max_inner_points_count))
                 if max_inner_points_count >= min_hole_size
                 else strategies.builds(list))
 
@@ -920,8 +916,10 @@ def polygons(x_coordinates: Strategy[Coordinate],
     min_inner_points_count = min_hole_size * min_holes_size
 
     def has_valid_inner_points_count(points: List[Point]) -> bool:
-        return (len(points) - len(to_convex_hull(points))
-                >= min_inner_points_count)
+        return ((max_size is None
+                 or len(to_strict_convex_hull(points)) <= max_size)
+                and (len(points) - len(to_convex_hull(points))
+                     >= min_inner_points_count))
 
     return (strategies.lists(
             points(x_coordinates, y_coordinates),
