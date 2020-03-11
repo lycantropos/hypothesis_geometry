@@ -1,5 +1,3 @@
-import sys
-from decimal import Decimal
 from fractions import Fraction
 from functools import partial
 from operator import ne
@@ -24,13 +22,7 @@ data = strategies.data()
 
 MAX_VALUE = 10 ** 15
 MIN_VALUE = -MAX_VALUE
-coordinates_strategies_factories = {Decimal: partial(strategies.decimals,
-                                                     min_value=MIN_VALUE,
-                                                     max_value=MAX_VALUE,
-                                                     places=sys.float_info.dig,
-                                                     allow_nan=False,
-                                                     allow_infinity=False),
-                                    float: partial(strategies.floats,
+coordinates_strategies_factories = {float: partial(strategies.floats,
                                                    min_value=MIN_VALUE,
                                                    max_value=MAX_VALUE,
                                                    allow_nan=False,
@@ -110,7 +102,7 @@ def to_coordinates_strategies_with_limits_and_types(
                   .filter(are_pair_coordinates_sparse)
                   .map(sort_pair))
         return (strategies.tuples(coordinates, strategies.none()) | result
-                if type_ is not float and type_ is not Decimal
+                if type_ is not float
                 else result)
 
     return strategies.tuples(strategies.builds(to_strategy_with_limits,
