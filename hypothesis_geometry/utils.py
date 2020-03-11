@@ -198,11 +198,11 @@ def to_convex_contour(points: List[Point],
         min_polygon_x, min_polygon_y = (min(min_polygon_x, point_x),
                                         min(min_polygon_y, point_y))
     shift_x, shift_y = min_x - min_polygon_x, min_y - min_polygon_y
-    contour = [(min(max(point_x + shift_x, min_x), max_x),
-                min(max(point_y + shift_y, min_y), max_y))
-               for point_x, point_y in points]
+    contour = to_convex_hull([(min(max(point_x + shift_x, min_x), max_x),
+                               min(max(point_y + shift_y, min_y), max_y))
+                              for point_x, point_y in points])
     shrink_collinear_vertices(contour)
-    return to_convex_hull(contour)
+    return contour
 
 
 def shrink_collinear_vertices(contour: Contour) -> None:
