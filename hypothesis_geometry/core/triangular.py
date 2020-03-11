@@ -10,8 +10,8 @@ from .contracts import is_point_inside_circumcircle
 from .subdivisional import QuadEdge
 from .utils import (Orientation,
                     flatten,
-                    split,
-                    to_orientation)
+                    orientation,
+                    split)
 
 
 class Triangulation:
@@ -79,11 +79,11 @@ def _triangulate_three_points(sorted_points: Sequence[Point]) -> Triangulation:
     first_edge, second_edge = (QuadEdge.factory(left_point, mid_point),
                                QuadEdge.factory(mid_point, right_point))
     first_edge.opposite.splice(second_edge)
-    orientation = to_orientation(left_point, mid_point, right_point)
-    if orientation is Orientation.COUNTERCLOCKWISE:
+    angle_orientation = orientation(left_point, mid_point, right_point)
+    if angle_orientation is Orientation.COUNTERCLOCKWISE:
         third_edge = second_edge.connect(first_edge)
         return Triangulation(third_edge.opposite, third_edge)
-    elif orientation is Orientation.CLOCKWISE:
+    elif angle_orientation is Orientation.CLOCKWISE:
         second_edge.connect(first_edge)
         return Triangulation(first_edge, second_edge.opposite)
     else:

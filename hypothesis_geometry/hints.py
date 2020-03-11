@@ -1,13 +1,11 @@
-from decimal import Decimal
 from numbers import Real
 from typing import (List,
-                    Tuple,
-                    TypeVar)
+                    Tuple)
 
 from hypothesis.strategies import SearchStrategy
 
 Strategy = SearchStrategy
-Coordinate = TypeVar('Coordinate', Real, Decimal)
+Coordinate = Real
 Point = Tuple[Coordinate, Coordinate]
 Segment = Tuple[Point, Point]
 Contour = List[Point]

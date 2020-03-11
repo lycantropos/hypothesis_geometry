@@ -6,7 +6,7 @@ from reprit.base import generate_repr
 
 from hypothesis_geometry.hints import Point
 from .utils import (Orientation,
-                    to_orientation)
+                    orientation)
 
 
 class QuadEdge:
@@ -119,7 +119,7 @@ class QuadEdge:
         self.opposite.splice(self.opposite.right_from_start)
 
     def orientation_with(self, point: Point) -> Orientation:
-        return to_orientation(self.end, self.start, point)
+        return orientation(self.end, self.start, point)
 
 
 def to_edge_neighbours(edge: QuadEdge) -> Sequence[QuadEdge]:
