@@ -174,7 +174,7 @@ True
 ```
 also `planar.concave_contours` & `planar.convex_contours` options are available.
 
-### Contours
+### Polygons
 ```python
 >>> min_size, max_size = 5, 10
 >>> min_holes_size, max_holes_size = 1, 3
