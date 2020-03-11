@@ -14,7 +14,6 @@ from hypothesis.errors import HypothesisWarning
 
 from .core.contracts import (is_contour_non_convex,
                              is_contour_strict,
-                             is_non_self_intersecting_contour,
                              points_do_not_lie_on_the_same_line)
 from .hints import (Contour,
                     Coordinate,
@@ -599,17 +598,26 @@ def concave_contours(x_coordinates: Strategy[Coordinate],
     """
     _validate_sizes(min_size, max_size, MIN_CONCAVE_CONTOUR_SIZE)
     min_size = max(min_size, MIN_CONCAVE_CONTOUR_SIZE)
+
+    def to_points_with_sizes(points: List[Point]
+                             ) -> Strategy[Tuple[List[Point], int]]:
+        sizes = strategies.integers(min_size,
+                                    len(points)
+                                    if max_size is None
+                                    else min(len(points), max_size))
+        return strategies.tuples(strategies.just(points), sizes)
+
     return (strategies.lists(points(x_coordinates, y_coordinates),
                              min_size=min_size,
                              max_size=max_size,
                              unique=True)
             .filter(points_do_not_lie_on_the_same_line)
-            .map(to_concave_contour)
+            .flatmap(to_points_with_sizes)
+            .map(pack(to_concave_contour))
             .filter(partial(_has_valid_size,
                             min_size=min_size,
                             max_size=max_size))
-            .filter(is_contour_non_convex)
-            .filter(is_non_self_intersecting_contour))
+            .filter(is_contour_non_convex))
 
 
 def triangular_contours(x_coordinates: Strategy[Coordinate],
