@@ -12,7 +12,6 @@ from typing import (Callable,
 
 from dendroid import red_black
 from dendroid.hints import Sortable
-from robust.angular import orientation
 
 from .core import triangular
 from .core.subdivisional import (QuadEdge,
@@ -134,7 +133,7 @@ def constrict_convex_hull_size(points: List[Point],
     return (new_border
             + [point
                for point in set(points) - set(convex_hull)
-               if all(orientation(end, start, point)
+               if all(to_orientation(end, start, point)
                       is Orientation.COUNTERCLOCKWISE
                       for start, end in new_border_extra_segments)])
 
