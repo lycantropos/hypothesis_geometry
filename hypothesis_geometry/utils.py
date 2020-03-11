@@ -235,7 +235,7 @@ def _to_sub_hull(points: Iterable[Point]) -> List[Point]:
     for point in points:
         while len(result) >= 2:
             if (to_orientation(result[-1], result[-2], point)
-                    is not Orientation.COUNTERCLOCKWISE):
+                    is Orientation.CLOCKWISE):
                 del result[-1]
             else:
                 break
