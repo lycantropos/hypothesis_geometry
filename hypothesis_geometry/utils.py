@@ -15,7 +15,7 @@ from .core import triangular
 from .core.subdivisional import (QuadEdge,
                                  to_edge_neighbours)
 from .core.utils import (Orientation,
-                         to_orientation)
+                         orientation)
 from .hints import (Contour,
                     Coordinate,
                     Point,
@@ -143,7 +143,7 @@ def constrict_convex_hull_size(points: List[Point],
     return (new_border
             + [point
                for point in set(points) - set(convex_hull)
-               if all(to_orientation(end, start, point)
+               if all(orientation(end, start, point)
                       is Orientation.COUNTERCLOCKWISE
                       for start, end in new_border_extra_segments)])
 
@@ -217,15 +217,15 @@ def shrink_collinear_vertices(contour: Contour) -> None:
     index = -len(contour) + 1
     while index < 0:
         while (max(2, -index) < len(contour)
-               and (to_orientation(contour[index + 2], contour[index + 1],
-                                   contour[index])
+               and (orientation(contour[index + 2], contour[index + 1],
+                                contour[index])
                     is Orientation.COLLINEAR)):
             del contour[index + 1]
         index += 1
     while index < len(contour):
         while (max(2, index) < len(contour)
-               and (to_orientation(contour[index - 2], contour[index - 1],
-                                   contour[index])
+               and (orientation(contour[index - 2], contour[index - 1],
+                                contour[index])
                     is Orientation.COLLINEAR)):
             del contour[index - 1]
         index += 1
@@ -242,7 +242,7 @@ def _to_sub_hull(points: Iterable[Point]) -> List[Point]:
     result = []
     for point in points:
         while len(result) >= 2:
-            if (to_orientation(result[-1], result[-2], point)
+            if (orientation(result[-1], result[-2], point)
                     is Orientation.CLOCKWISE):
                 del result[-1]
             else:
@@ -264,7 +264,7 @@ def _to_strict_sub_hull(points: Iterable[Point]) -> List[Point]:
     result = []
     for point in points:
         while len(result) >= 2:
-            if (to_orientation(result[-1], result[-2], point)
+            if (orientation(result[-1], result[-2], point)
                     is not Orientation.COUNTERCLOCKWISE):
                 del result[-1]
             else:

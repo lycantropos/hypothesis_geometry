@@ -5,9 +5,7 @@ from hypothesis import given
 from hypothesis.errors import HypothesisWarning
 from hypothesis.strategies import DataObject
 
-from hypothesis_geometry.core.contracts import (
-    is_contour_strict,
-    is_non_self_intersecting_contour)
+from hypothesis_geometry.core.contracts import is_contour_strict
 from hypothesis_geometry.hints import (Coordinate,
                                        Strategy)
 from hypothesis_geometry.planar import polygons
@@ -16,6 +14,7 @@ from tests.utils import (CoordinatesLimitsType,
                          SizesPair,
                          contours_do_not_overlap,
                          has_valid_size,
+                         is_non_self_intersecting_contour,
                          is_polygon,
                          point_has_coordinates_in_range,
                          point_has_coordinates_types)

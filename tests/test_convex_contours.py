@@ -5,10 +5,8 @@ from hypothesis import given
 from hypothesis.errors import HypothesisWarning
 from hypothesis.strategies import DataObject
 
-from hypothesis_geometry.core.contracts import (
-    is_contour_non_convex,
-    is_contour_strict,
-    is_non_self_intersecting_contour)
+from hypothesis_geometry.core.contracts import (is_contour_non_convex,
+                                                is_contour_strict)
 from hypothesis_geometry.hints import (Coordinate,
                                        Strategy)
 from hypothesis_geometry.planar import convex_contours
@@ -17,6 +15,7 @@ from tests.utils import (CoordinatesLimitsType,
                          SizesPair,
                          has_valid_size,
                          is_contour,
+                         is_non_self_intersecting_contour,
                          point_has_coordinates_in_range,
                          point_has_coordinates_types)
 

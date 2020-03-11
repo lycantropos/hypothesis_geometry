@@ -9,7 +9,8 @@ from typing import (Any,
                     Type,
                     TypeVar)
 
-from bentley_ottmann.planar import segments_overlap
+from bentley_ottmann.planar import (edges_intersect,
+                                    segments_overlap)
 from hypothesis import strategies
 
 from hypothesis_geometry.hints import (Contour,
@@ -120,6 +121,11 @@ def is_point(object_: Any) -> bool:
             and all(isinstance(coordinate, Number)
                     for coordinate in object_)
             and len(set(map(type, object_))) == 1)
+
+
+def is_non_self_intersecting_contour(contour: Contour) -> bool:
+    return not edges_intersect(contour,
+                               accurate=False)
 
 
 def contours_do_not_overlap(contours: List[Contour]) -> bool:
