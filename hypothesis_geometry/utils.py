@@ -1,14 +1,18 @@
 from functools import partial
+from itertools import (chain,
+                       islice)
 from math import atan2
 from typing import (Callable,
                     Iterable,
                     List,
+                    Optional,
                     Sequence,
                     Tuple,
                     TypeVar)
 
 from dendroid import red_black
 from dendroid.hints import Sortable
+from robust.angular import orientation
 
 from .core import triangular
 from .core.subdivisional import (QuadEdge,
@@ -59,8 +63,9 @@ def to_concave_contour(points: Sequence[Point]) -> Contour:
 
 
 def to_polygon(points: Sequence[Point],
-               triangulation: triangular.Triangulation,
+               size: int,
                holes_sizes: List[int]) -> Polygon:
+    triangulation = triangular.delaunay(points)
     boundary_edges = triangular.to_boundary_edges(triangulation)
     boundary_vertices = {edge.start for edge in boundary_edges}
     inner_points = sorted(set(points) - boundary_vertices)
@@ -79,8 +84,11 @@ def to_polygon(points: Sequence[Point],
                         for edge in boundary_edges}
     candidates = red_black.tree(*filter(is_mouth, boundary_edges),
                                 key=_edge_key)
-    while candidates:
-        edge = candidates.popmax()
+    for _ in range(size - len(boundary_edges)):
+        try:
+            edge = candidates.popmax()
+        except KeyError:
+            return [], holes
         if not is_mouth(edge):
             continue
         boundary_vertices.add(edge.left_from_start.end)
@@ -102,6 +110,38 @@ def _to_squared_edge_length(edge: QuadEdge) -> Coordinate:
     (start_x, start_y), (end_x, end_y) = edge.start, edge.end
     delta_x, delta_y = start_x - end_x, start_y - end_y
     return delta_x * delta_x + delta_y * delta_y
+
+
+def constrict_convex_hull_size(points: List[Point],
+                               *,
+                               max_size: Optional[int]) -> List[Point]:
+    if max_size is None:
+        return points
+    convex_hull = to_convex_hull(points)
+    if len(convex_hull) <= max_size:
+        return points
+    sorted_convex_hull = sorted(
+            convex_hull,
+            key=partial(_to_squared_points_distance, convex_hull[0]))
+    new_border = to_convex_hull(list(islice(chain.from_iterable(
+            zip(sorted_convex_hull, reversed(sorted_convex_hull))),
+            max_size)))
+    new_border_extra_segments = tuple(
+            {(new_border[index - 1], new_border[index])
+             for index in range(len(new_border))}
+            - {(convex_hull[index], convex_hull[index - 1])
+               for index in range(len(convex_hull))})
+    return (new_border
+            + [point
+               for point in set(points) - set(convex_hull)
+               if all(orientation(end, start, point)
+                      is Orientation.COUNTERCLOCKWISE
+                      for start, end in new_border_extra_segments)])
+
+
+def _to_squared_points_distance(left: Point, right: Point) -> Coordinate:
+    (left_x, left_y), (right_x, right_y) = left, right
+    return (left_x - right_x) ** 2 + (left_y - right_y) ** 2
 
 
 def to_convex_contour(points: List[Point],
