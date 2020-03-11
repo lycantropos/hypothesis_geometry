@@ -198,11 +198,11 @@ def to_convex_contour(points: List[Point],
         min_polygon_x, min_polygon_y = (min(min_polygon_x, point_x),
                                         min(min_polygon_y, point_y))
     shift_x, shift_y = min_x - min_polygon_x, min_y - min_polygon_y
-    contour = to_convex_hull([(min(max(point_x + shift_x, min_x), max_x),
-                               min(max(point_y + shift_y, min_y), max_y))
-                              for point_x, point_y in points])
+    contour = [(min(max(point_x + shift_x, min_x), max_x),
+                min(max(point_y + shift_y, min_y), max_y))
+               for point_x, point_y in points]
     shrink_collinear_vertices(contour)
-    return contour
+    return to_strict_convex_hull(contour)
 
 
 def shrink_collinear_vertices(contour: Contour) -> None:
@@ -236,6 +236,26 @@ def _to_sub_hull(points: Iterable[Point]) -> List[Point]:
         while len(result) >= 2:
             if (to_orientation(result[-1], result[-2], point)
                     is Orientation.CLOCKWISE):
+                del result[-1]
+            else:
+                break
+        result.append(point)
+    return result
+
+
+def to_strict_convex_hull(points: Sequence[Point]) -> Contour:
+    points = sorted(points)
+    lower = _to_strict_sub_hull(points)
+    upper = _to_strict_sub_hull(reversed(points))
+    return lower[:-1] + upper[:-1]
+
+
+def _to_strict_sub_hull(points: Iterable[Point]) -> List[Point]:
+    result = []
+    for point in points:
+        while len(result) >= 2:
+            if (to_orientation(result[-1], result[-2], point)
+                    is not Orientation.COUNTERCLOCKWISE):
                 del result[-1]
             else:
                 break
