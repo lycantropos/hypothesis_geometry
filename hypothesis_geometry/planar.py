@@ -303,14 +303,14 @@ def _polylines(x_coordinates: Strategy[Coordinate],
                             max_size=max_size)))
 
 
-TRIANGLE_SIZE = 3
+TRIANGULAR_CONTOUR_SIZE = 3
 MIN_CONCAVE_CONTOUR_SIZE = 4
 
 
 def contours(x_coordinates: Strategy[Coordinate],
              y_coordinates: Optional[Strategy[Coordinate]] = None,
              *,
-             min_size: int = TRIANGLE_SIZE,
+             min_size: int = TRIANGULAR_CONTOUR_SIZE,
              max_size: Optional[int] = None) -> Strategy[Contour]:
     """
     Returns a strategy for contours.
@@ -391,10 +391,10 @@ def contours(x_coordinates: Strategy[Coordinate],
     ...     for vertex_x, vertex_y in contour)
     True
     """
-    _validate_sizes(min_size, max_size, TRIANGLE_SIZE)
-    if max_size is not None and max_size == TRIANGLE_SIZE:
+    _validate_sizes(min_size, max_size, TRIANGULAR_CONTOUR_SIZE)
+    if max_size is not None and max_size == TRIANGULAR_CONTOUR_SIZE:
         return triangular_contours(x_coordinates, y_coordinates)
-    min_size = max(min_size, TRIANGLE_SIZE)
+    min_size = max(min_size, TRIANGULAR_CONTOUR_SIZE)
     return (convex_contours(x_coordinates, y_coordinates,
                             min_size=min_size,
                             max_size=max_size)
@@ -407,7 +407,7 @@ def contours(x_coordinates: Strategy[Coordinate],
 def convex_contours(x_coordinates: Strategy[Coordinate],
                     y_coordinates: Optional[Strategy[Coordinate]] = None,
                     *,
-                    min_size: int = TRIANGLE_SIZE,
+                    min_size: int = TRIANGULAR_CONTOUR_SIZE,
                     max_size: Optional[int] = None) -> Strategy[Contour]:
     """
     Returns a strategy for convex contours.
@@ -487,10 +487,10 @@ def convex_contours(x_coordinates: Strategy[Coordinate],
     ...     for vertex_x, vertex_y in contour)
     True
     """
-    _validate_sizes(min_size, max_size, TRIANGLE_SIZE)
-    if max_size is not None and max_size == TRIANGLE_SIZE:
+    _validate_sizes(min_size, max_size, TRIANGULAR_CONTOUR_SIZE)
+    if max_size is not None and max_size == TRIANGULAR_CONTOUR_SIZE:
         return triangular_contours(x_coordinates, y_coordinates)
-    min_size = max(min_size, TRIANGLE_SIZE)
+    min_size = max(min_size, TRIANGULAR_CONTOUR_SIZE)
 
     def to_points_with_random(points: List[Point]
                               ) -> Strategy[Tuple[List[Point], Random]]:
@@ -509,7 +509,7 @@ def convex_contours(x_coordinates: Strategy[Coordinate],
               if min_size <= RECTANGULAR_CONTOUR_SIZE
               else result)
     return (triangular_contours(x_coordinates, y_coordinates) | result
-            if min_size == TRIANGLE_SIZE
+            if min_size == TRIANGULAR_CONTOUR_SIZE
             else result)
 
 
@@ -869,11 +869,11 @@ EMPTY_HOLES_SIZE = 0
 def polygons(x_coordinates: Strategy[Coordinate],
              y_coordinates: Optional[Strategy[Coordinate]] = None,
              *,
-             min_size: int = TRIANGLE_SIZE,
+             min_size: int = TRIANGULAR_CONTOUR_SIZE,
              max_size: Optional[int] = None,
              min_holes_size: int = EMPTY_HOLES_SIZE,
              max_holes_size: Optional[int] = None,
-             min_hole_size: int = TRIANGLE_SIZE,
+             min_hole_size: int = TRIANGULAR_CONTOUR_SIZE,
              max_hole_size: Optional[int] = None) -> Strategy[Polygon]:
     """
     Returns a strategy for polygons.
@@ -1023,13 +1023,13 @@ def polygons(x_coordinates: Strategy[Coordinate],
     ...     for vertex_x, vertex_y in hole)
     True
     """
-    _validate_sizes(min_size, max_size, TRIANGLE_SIZE)
+    _validate_sizes(min_size, max_size, TRIANGULAR_CONTOUR_SIZE)
     _validate_sizes(min_holes_size, max_holes_size, EMPTY_HOLES_SIZE,
                     'min_holes_size', 'max_holes_size')
-    _validate_sizes(min_hole_size, max_hole_size, TRIANGLE_SIZE,
+    _validate_sizes(min_hole_size, max_hole_size, TRIANGULAR_CONTOUR_SIZE,
                     'min_hole_size', 'max_hole_size')
-    min_size, min_hole_size = (max(min_size, TRIANGLE_SIZE),
-                               max(min_hole_size, TRIANGLE_SIZE))
+    min_size, min_hole_size = (max(min_size, TRIANGULAR_CONTOUR_SIZE),
+                               max(min_hole_size, TRIANGULAR_CONTOUR_SIZE))
 
     def to_points_with_sizes(points: List[Point]
                              ) -> Strategy[Tuple[List[Point], int, List[int]]]:

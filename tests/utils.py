@@ -19,7 +19,7 @@ from hypothesis_geometry.hints import (Contour,
                                        Segment,
                                        Strategy)
 from hypothesis_geometry.planar import (MIN_POLYLINE_SIZE,
-                                        TRIANGLE_SIZE,
+                                        TRIANGULAR_CONTOUR_SIZE,
                                         _has_valid_size)
 
 has_valid_size = _has_valid_size
@@ -98,7 +98,7 @@ def is_polygon(object_: Any) -> bool:
 
 def is_contour(object_: Any) -> bool:
     return (isinstance(object_, list)
-            and len(object_) >= TRIANGLE_SIZE
+            and len(object_) >= TRIANGULAR_CONTOUR_SIZE
             and all(map(is_point, object_)))
 
 
