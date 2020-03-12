@@ -505,8 +505,11 @@ def convex_contours(x_coordinates: Strategy[Coordinate],
               .filter(partial(_has_valid_size,
                               min_size=min_size,
                               max_size=max_size)))
+    result = (rectangular_contours(x_coordinates, y_coordinates) | result
+              if min_size <= RECTANGULAR_CONTOUR_SIZE
+              else result)
     return (triangular_contours(x_coordinates, y_coordinates) | result
-            if min_size <= TRIANGLE_SIZE
+            if min_size == TRIANGLE_SIZE
             else result)
 
 
@@ -690,6 +693,9 @@ def triangular_contours(x_coordinates: Strategy[Coordinate],
                                       times=3))
             .filter(is_contour_strict)
             .map(list))
+
+
+RECTANGULAR_CONTOUR_SIZE = 4
 
 
 def rectangular_contours(x_coordinates: Strategy[Coordinate],
