@@ -108,6 +108,14 @@ def is_polyline(object_: Any) -> bool:
             and all(map(is_point, object_)))
 
 
+def is_bounding_box(object_: Any) -> bool:
+    return (isinstance(object_, tuple)
+            and len(object_) == 4
+            and all(isinstance(coordinate, Number)
+                    for coordinate in object_)
+            and len(set(map(type, object_))) == 1)
+
+
 def is_segment(object_: Any) -> bool:
     return (isinstance(object_, tuple)
             and len(object_) == 2
