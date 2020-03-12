@@ -12,7 +12,7 @@ from hypothesis_geometry.hints import (Coordinate,
 from hypothesis_geometry.planar import (EMPTY_HOLES_SIZE,
                                         MIN_CONCAVE_CONTOUR_SIZE,
                                         MIN_POLYLINE_SIZE,
-                                        TRIANGLE_SIZE)
+                                        TRIANGULAR_CONTOUR_SIZE)
 from hypothesis_geometry.utils import sort_pair
 from tests.utils import (Limits,
                          identity,
@@ -65,16 +65,18 @@ def to_invalid_sizes_pairs(min_valid_size: int
 
 
 concave_contours_sizes_pairs = to_sizes_pairs(MIN_CONCAVE_CONTOUR_SIZE)
-convex_contours_sizes_pairs = to_sizes_pairs(TRIANGLE_SIZE)
+convex_contours_sizes_pairs = to_sizes_pairs(TRIANGULAR_CONTOUR_SIZE)
 holes_lists_sizes_pairs = to_sizes_pairs(EMPTY_HOLES_SIZE, 5)
 polylines_sizes_pairs = to_sizes_pairs(MIN_POLYLINE_SIZE)
 non_valid_concave_contours_sizes_pairs = to_non_valid_sizes_pairs(
         MIN_CONCAVE_CONTOUR_SIZE)
-non_valid_convex_contours_sizes_pairs = to_non_valid_sizes_pairs(TRIANGLE_SIZE)
+non_valid_convex_contours_sizes_pairs = to_non_valid_sizes_pairs(
+        TRIANGULAR_CONTOUR_SIZE)
 non_valid_polylines_sizes_pairs = to_non_valid_sizes_pairs(MIN_POLYLINE_SIZE)
 invalid_concave_contours_sizes_pairs = to_invalid_sizes_pairs(
         MIN_CONCAVE_CONTOUR_SIZE)
-invalid_convex_contours_sizes_pairs = to_invalid_sizes_pairs(TRIANGLE_SIZE)
+invalid_convex_contours_sizes_pairs = to_invalid_sizes_pairs(
+        TRIANGULAR_CONTOUR_SIZE)
 invalid_holes_list_sizes_pairs = to_invalid_sizes_pairs(EMPTY_HOLES_SIZE)
 invalid_polylines_sizes_pairs = to_invalid_sizes_pairs(MIN_POLYLINE_SIZE)
 
