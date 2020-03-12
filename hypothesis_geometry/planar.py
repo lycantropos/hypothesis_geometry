@@ -3,9 +3,9 @@ from functools import partial
 from itertools import (cycle,
                        groupby,
                        repeat)
+from random import Random
 from typing import (List,
                     Optional,
-                    Sequence,
                     Sized,
                     Tuple)
 
@@ -490,22 +490,15 @@ def convex_contours(x_coordinates: Strategy[Coordinate],
         return triangular_contours(x_coordinates, y_coordinates)
     min_size = max(min_size, TRIANGLE_SIZE)
 
-    def to_points_with_flags_and_permutations(
-            points: List[Point]) -> Strategy[Tuple[List[Point],
-                                                   List[bool], List[bool],
-                                                   Sequence[int]]]:
-        flags = strategies.lists(strategies.booleans(),
-                                 min_size=len(points),
-                                 max_size=len(points))
-        return strategies.tuples(strategies.just(points),
-                                 flags, flags,
-                                 strategies.permutations(range(len(points))))
+    def to_points_with_random(points: List[Point]
+                              ) -> Strategy[Tuple[List[Point], Random]]:
+        return strategies.tuples(strategies.just(points), strategies.randoms())
 
     result = (strategies.lists(points(x_coordinates, y_coordinates),
                                min_size=min_size,
                                max_size=max_size,
                                unique=True)
-              .flatmap(to_points_with_flags_and_permutations)
+              .flatmap(to_points_with_random)
               .map(pack(to_convex_contour))
               .filter(partial(_has_valid_size,
                               min_size=min_size,
