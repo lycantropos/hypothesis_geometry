@@ -15,7 +15,8 @@ from hypothesis.errors import HypothesisWarning
 from .core.contracts import (is_contour_non_convex,
                              is_contour_strict,
                              points_do_not_lie_on_the_same_line)
-from .hints import (Contour,
+from .hints import (BoundingBox,
+                    Contour,
                     Coordinate,
                     Point,
                     Polygon,
@@ -24,6 +25,7 @@ from .hints import (Contour,
                     Strategy)
 from .utils import (constrict_convex_hull_size,
                     pack,
+                    sort_pair,
                     to_concave_contour,
                     to_convex_contour,
                     to_convex_hull,
@@ -688,6 +690,91 @@ def triangular_contours(x_coordinates: Strategy[Coordinate],
                                       times=3))
             .filter(is_contour_strict)
             .map(list))
+
+
+def bounding_boxes(x_coordinates: Strategy[Coordinate],
+                   y_coordinates: Optional[Strategy[Coordinate]] = None,
+                   ) -> Strategy[BoundingBox]:
+    """
+    Returns a strategy for bounding boxes.
+    Bounding box is a quadruple of ``x_min``, ``x_max``, ``y_min``, ``y_max``.
+
+    :param x_coordinates: strategy for vertices' x-coordinates.
+    :param y_coordinates:
+        strategy for vertices' y-coordinates,
+        ``None`` for reusing x-coordinates strategy.
+
+    >>> from hypothesis import strategies
+    >>> from hypothesis_geometry import planar
+
+    For same coordinates' domain:
+
+    >>> min_coordinate, max_coordinate = -1., 1.
+    >>> coordinates_type = float
+    >>> coordinates = strategies.floats(min_coordinate, max_coordinate,
+    ...                                 allow_infinity=False,
+    ...                                 allow_nan=False)
+    >>> bounding_boxes = planar.bounding_boxes(coordinates)
+    >>> bounding_box = bounding_boxes.example()
+    >>> isinstance(bounding_box, tuple)
+    True
+    >>> len(bounding_box) == 4
+    True
+    >>> all(isinstance(coordinate, coordinates_type)
+    ...     for coordinate in bounding_box)
+    True
+    >>> all(min_coordinate <= coordinate <= max_coordinate
+    ...     for coordinate in bounding_box)
+    True
+
+    For different coordinates' domains:
+
+    >>> min_x_coordinate, max_x_coordinate = -1., 1.
+    >>> min_y_coordinate, max_y_coordinate = 10., 100.
+    >>> coordinates_type = float
+    >>> x_coordinates = strategies.floats(min_x_coordinate, max_x_coordinate,
+    ...                                   allow_infinity=False,
+    ...                                   allow_nan=False)
+    >>> y_coordinates = strategies.floats(min_y_coordinate, max_y_coordinate,
+    ...                                   allow_infinity=False,
+    ...                                   allow_nan=False)
+    >>> bounding_boxes = planar.bounding_boxes(x_coordinates, y_coordinates)
+    >>> bounding_box = bounding_boxes.example()
+    >>> isinstance(bounding_box, tuple)
+    True
+    >>> len(bounding_box) == 4
+    True
+    >>> all(isinstance(coordinate, coordinates_type)
+    ...     for coordinate in bounding_box)
+    True
+    >>> all(min_x_coordinate <= coordinate_x <= max_x_coordinate
+    ...     for coordinate_x in bounding_box[:2])
+    True
+    >>> all(min_y_coordinate <= coordinate_y <= max_y_coordinate
+    ...     for coordinate_y in bounding_box[2:])
+    True
+    """
+    if y_coordinates is None:
+        y_coordinates = x_coordinates
+
+    def to_bounding_box(x_bounds: Tuple[Coordinate, Coordinate],
+                        y_bounds: Tuple[Coordinate, Coordinate]
+                        ) -> BoundingBox:
+        x_min, x_max = x_bounds
+        y_min, y_max = y_bounds
+        return x_min, x_max, y_min, y_max
+
+    return strategies.builds(to_bounding_box,
+                             strategies.lists(x_coordinates,
+                                              min_size=2,
+                                              max_size=2,
+                                              unique=True)
+                             .map(sort_pair),
+                             strategies.lists(y_coordinates,
+                                              min_size=2,
+                                              max_size=2,
+                                              unique=True)
+                             .map(sort_pair))
 
 
 EMPTY_HOLES_SIZE = 0
