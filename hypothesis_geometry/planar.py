@@ -833,11 +833,11 @@ def bounding_boxes(x_coordinates: Strategy[Coordinate],
     >>> all(isinstance(coordinate, coordinates_type)
     ...     for coordinate in bounding_box)
     True
-    >>> all(min_x_coordinate <= coordinate_x <= max_x_coordinate
-    ...     for coordinate_x in bounding_box[:2])
+    >>> all(min_x_coordinate <= coordinate <= max_x_coordinate
+    ...     for coordinate in bounding_box[:2])
     True
-    >>> all(min_y_coordinate <= coordinate_y <= max_y_coordinate
-    ...     for coordinate_y in bounding_box[2:])
+    >>> all(min_y_coordinate <= coordinate <= max_y_coordinate
+    ...     for coordinate in bounding_box[2:])
     True
     """
     if y_coordinates is None:
