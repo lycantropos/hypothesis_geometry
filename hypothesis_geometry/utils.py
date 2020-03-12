@@ -1,5 +1,6 @@
 from functools import partial
 from math import atan2
+from random import Random
 from typing import (Callable,
                     Iterable,
                     List,
@@ -154,9 +155,7 @@ def _to_squared_points_distance(left: Point, right: Point) -> Coordinate:
 
 
 def to_convex_contour(points: List[Point],
-                      x_flags: List[bool],
-                      y_flags: List[bool],
-                      permutation: Sequence[int]) -> Contour:
+                      random: Random) -> Contour:
     """
     Based on Valtr algorithm by Sander Verdonschot.
 
@@ -173,13 +172,12 @@ def to_convex_contour(points: List[Point],
     min_y, *ys, max_y = ys
 
     def to_vectors_coordinates(coordinates: List[Coordinate],
-                               flags: List[bool],
                                min_coordinate: Coordinate,
                                max_coordinate: Coordinate) -> List[Coordinate]:
         last_min = last_max = min_coordinate
         result = []
-        for flag, coordinate in zip(flags, coordinates):
-            if flag:
+        for coordinate in coordinates:
+            if random.getrandbits(1):
                 result.append(coordinate - last_min)
                 last_min = coordinate
             else:
@@ -188,9 +186,9 @@ def to_convex_contour(points: List[Point],
         result.extend((max_coordinate - last_min, last_max - max_coordinate))
         return result
 
-    vectors_xs = to_vectors_coordinates(xs, x_flags, min_x, max_x)
-    vectors_ys = to_vectors_coordinates(ys, y_flags, min_y, max_y)
-    vectors_ys = [vectors_ys[index] for index in permutation]
+    vectors_xs = to_vectors_coordinates(xs, min_x, max_x)
+    vectors_ys = to_vectors_coordinates(ys, min_y, max_y)
+    random.shuffle(vectors_ys)
 
     def to_vector_angle(vector: Tuple[Coordinate, Coordinate]) -> Sortable:
         x, y = vector
