@@ -1,8 +1,7 @@
 from fractions import Fraction
 from functools import partial
 from operator import ne
-from typing import (Any,
-                    Optional,
+from typing import (Optional,
                     Tuple,
                     Type)
 
@@ -14,6 +13,7 @@ from hypothesis_geometry.planar import (EMPTY_HOLES_SIZE,
                                         MIN_CONCAVE_CONTOUR_SIZE,
                                         MIN_POLYLINE_SIZE,
                                         TRIANGLE_SIZE)
+from hypothesis_geometry.utils import sort_pair
 from tests.utils import (Limits,
                          identity,
                          to_pairs)
@@ -62,11 +62,6 @@ def to_invalid_sizes_pairs(min_valid_size: int
                .map(sort_pair)
                .map(reversed)
                .map(tuple)))
-
-
-def sort_pair(pair: Tuple[Any, Any]) -> Tuple[Any, Any]:
-    first, second = pair
-    return (first, second) if first < second else (second, first)
 
 
 concave_contours_sizes_pairs = to_sizes_pairs(MIN_CONCAVE_CONTOUR_SIZE)

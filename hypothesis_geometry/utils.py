@@ -283,3 +283,8 @@ def pack(function: Callable[..., Range]
 def apply(function: Callable[..., Range],
           args: Iterable[Domain]) -> Range:
     return function(*args)
+
+
+def sort_pair(pair: Sequence[Domain]) -> Tuple[Domain, Domain]:
+    first, second = pair
+    return (first, second) if first < second else (second, first)
