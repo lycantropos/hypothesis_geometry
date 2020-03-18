@@ -16,11 +16,11 @@ from hypothesis import strategies
 from hypothesis_geometry.hints import (Contour,
                                        Coordinate,
                                        Point,
-                                       Segment,
                                        Strategy)
 from hypothesis_geometry.planar import (MIN_POLYLINE_SIZE,
                                         TRIANGULAR_CONTOUR_SIZE,
                                         _has_valid_size)
+from hypothesis_geometry.utils import contour_to_segments
 
 has_valid_size = _has_valid_size
 Domain = TypeVar('Domain')
@@ -140,8 +140,3 @@ def contours_do_not_overlap(contours: List[Contour]) -> bool:
     return not segments_overlap(sum([contour_to_segments(contour)
                                      for contour in contours],
                                     []))
-
-
-def contour_to_segments(contour: Contour) -> List[Segment]:
-    return [(contour[index - 1], contour[index])
-            for index in range(len(contour))]
