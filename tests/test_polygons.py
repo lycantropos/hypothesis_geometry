@@ -75,45 +75,47 @@ def test_properties(data: DataObject,
     result = data.draw(strategy)
 
     assert is_polygon(result)
-    assert has_valid_size(result[0],
+
+    border, holes = result
+    assert has_valid_size(border,
                           min_size=min_size,
                           max_size=max_size)
-    assert has_valid_size(result[1],
+    assert has_valid_size(holes,
                           min_size=min_holes_size,
                           max_size=max_holes_size)
     assert all(has_valid_size(hole,
                               min_size=min_hole_size,
                               max_size=max_hole_size)
-               for hole in result[1])
+               for hole in holes)
     assert all(point_has_coordinates_types(vertex,
                                            x_type=x_type,
                                            y_type=y_type)
-               for vertex in result[0])
+               for vertex in border)
     assert all(point_has_coordinates_types(vertex,
                                            x_type=x_type,
                                            y_type=y_type)
-               for hole in result[1]
+               for hole in holes
                for vertex in hole)
     assert all(point_has_coordinates_in_range(vertex,
                                               min_x_value=min_x_value,
                                               max_x_value=max_x_value,
                                               min_y_value=min_y_value,
                                               max_y_value=max_y_value)
-               for vertex in result[0])
+               for vertex in border)
     assert all(point_has_coordinates_in_range(vertex,
                                               min_x_value=min_x_value,
                                               max_x_value=max_x_value,
                                               min_y_value=min_y_value,
                                               max_y_value=max_y_value)
-               for hole in result[1]
+               for hole in holes
                for vertex in hole)
-    assert is_contour_strict(result[0])
+    assert is_contour_strict(border)
     assert all(is_contour_strict(hole)
-               for hole in result[1])
-    assert is_non_self_intersecting_contour(result[0])
+               for hole in holes)
+    assert is_non_self_intersecting_contour(border)
     assert all(is_non_self_intersecting_contour(hole)
-               for hole in result[1])
-    assert contours_do_not_overlap(result[1])
+               for hole in holes)
+    assert contours_do_not_overlap(holes)
 
 
 @given(strategies.data,
@@ -142,45 +144,47 @@ def test_same_coordinates(data: DataObject,
     result = data.draw(strategy)
 
     assert is_polygon(result)
-    assert has_valid_size(result[0],
+
+    border, holes = result
+    assert has_valid_size(border,
                           min_size=min_size,
                           max_size=max_size)
-    assert has_valid_size(result[1],
+    assert has_valid_size(holes,
                           min_size=min_holes_size,
                           max_size=max_holes_size)
     assert all(has_valid_size(hole,
                               min_size=min_hole_size,
                               max_size=max_hole_size)
-               for hole in result[1])
+               for hole in holes)
     assert all(point_has_coordinates_types(vertex,
                                            x_type=type_,
                                            y_type=type_)
-               for vertex in result[0])
+               for vertex in border)
     assert all(point_has_coordinates_types(vertex,
                                            x_type=type_,
                                            y_type=type_)
-               for hole in result[1]
+               for hole in holes
                for vertex in hole)
     assert all(point_has_coordinates_in_range(vertex,
                                               min_x_value=min_value,
                                               max_x_value=max_value,
                                               min_y_value=min_value,
                                               max_y_value=max_value)
-               for vertex in result[0])
+               for vertex in border)
     assert all(point_has_coordinates_in_range(vertex,
                                               min_x_value=min_value,
                                               max_x_value=max_value,
                                               min_y_value=min_value,
                                               max_y_value=max_value)
-               for hole in result[1]
+               for hole in holes
                for vertex in hole)
-    assert is_contour_strict(result[0])
+    assert is_contour_strict(border)
     assert all(is_contour_strict(hole)
-               for hole in result[1])
-    assert is_non_self_intersecting_contour(result[0])
+               for hole in holes)
+    assert is_non_self_intersecting_contour(border)
     assert all(is_non_self_intersecting_contour(hole)
-               for hole in result[1])
-    assert contours_do_not_overlap(result[1])
+               for hole in holes)
+    assert contours_do_not_overlap(holes)
 
 
 @given(strategies.coordinates_strategies,
