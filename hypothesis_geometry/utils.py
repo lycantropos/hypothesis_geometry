@@ -113,6 +113,10 @@ class SweepLineKey:
             else:
                 # segments are horizontal
                 return start_x < other_start_x
+        start_orientation = orientation(other_end, other_start, start)
+        end_orientation = orientation(other_end, other_start, end)
+        if start_orientation is end_orientation:
+            return start_orientation is Orientation.CLOCKWISE
         elif other_start_orientation is Orientation.COLLINEAR:
             return other_end_orientation is Orientation.COUNTERCLOCKWISE
         else:
