@@ -159,27 +159,28 @@ def to_polygon(points: Sequence[Point],
         neighbour_end = edge.left_from_start.end
         if neighbour_end in boundary_vertices:
             return False
-        segment = sort_pair((edge.start, neighbour_end))
-        if segment in holes_segments:
-            return False
-        holes_segments.add(segment)
-        try:
-            below_hole_segment = holes_segments.prev(segment)
-        except ValueError:
-            pass
-        else:
-            if segments_cross_or_overlap(below_hole_segment, segment):
-                holes_segments.remove(segment)
+        for endpoint in (edge.start, edge.end):
+            segment = sort_pair((endpoint, neighbour_end))
+            if segment in holes_segments:
                 return False
-        try:
-            above_hole_segment = holes_segments.next(segment)
-        except ValueError:
-            pass
-        else:
-            if segments_cross_or_overlap(above_hole_segment, segment):
-                holes_segments.remove(segment)
-                return False
-        holes_segments.remove(segment)
+            holes_segments.add(segment)
+            try:
+                below_hole_segment = holes_segments.prev(segment)
+            except ValueError:
+                pass
+            else:
+                if segments_cross_or_overlap(below_hole_segment, segment):
+                    holes_segments.remove(segment)
+                    return False
+            try:
+                above_hole_segment = holes_segments.next(segment)
+            except ValueError:
+                pass
+            else:
+                if segments_cross_or_overlap(above_hole_segment, segment):
+                    holes_segments.remove(segment)
+                    return False
+            holes_segments.remove(segment)
         return True
 
     def segments_cross_or_overlap(left: Segment, right: Segment) -> bool:
