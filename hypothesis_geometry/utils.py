@@ -11,7 +11,6 @@ from typing import (Callable,
 
 from dendroid import red_black
 from dendroid.hints import Sortable
-from reprit.base import generate_repr
 from robust.linear import (SegmentsRelationship,
                            segments_relationship)
 
@@ -69,109 +68,32 @@ def to_concave_contour(points: Sequence[Point], size: int) -> Contour:
     return result
 
 
-def is_vertical(segment: Segment) -> bool:
-    (start_x, _), (end_x, _) = segment
-    return start_x == end_x
-
-
-class SweepLineKey:
-    __slots__ = 'segment',
-
-    def __init__(self, segment: Segment) -> None:
-        self.segment = segment
-
-    __repr__ = generate_repr(__init__)
-
-    def __lt__(self, other: 'SweepLineKey') -> bool:
-        """
-        Checks if the segment (or at least the point) associated with segment
-        is lower than other's.
-        """
-        segment, other_segment = self.segment, other.segment
-        start, end = segment
-        other_start, other_end = other_segment
-        start_x, start_y = start
-        end_x, end_y = end
-        other_start_x, other_start_y = other_start
-        other_end_x, other_end_y = other_end
-        other_start_orientation = orientation(end, start, other_start)
-        other_end_orientation = orientation(end, start, other_end)
-        if other_start_orientation is other_end_orientation:
-            if other_start_orientation is not Orientation.COLLINEAR:
-                # other segment fully lies on one side
-                return other_start_orientation is Orientation.COUNTERCLOCKWISE
-            # segments are collinear
-            elif start_x == other_start_x:
-                if start_y != other_start_y:
-                    # segments are vertical
-                    return start_y < other_start_y
-                else:
-                    # segments have same start
-                    return end_y < other_end_y
-            elif start_y != other_start_y:
-                return start_y < other_start_y
-            else:
-                # segments are horizontal
-                return start_x < other_start_x
-        start_orientation = orientation(other_end, other_start, start)
-        end_orientation = orientation(other_end, other_start, end)
-        if start_orientation is end_orientation:
-            return start_orientation is Orientation.CLOCKWISE
-        elif other_start_orientation is Orientation.COLLINEAR:
-            return other_end_orientation is Orientation.COUNTERCLOCKWISE
-        else:
-            return other_start_orientation is Orientation.COUNTERCLOCKWISE
-
-
 def to_polygon(points: Sequence[Point],
                size: int,
                holes_sizes: List[int]) -> Polygon:
-    boundary_vertices = set(to_convex_hull(points))
-    points_set = set(points)
-    inner_points = sorted(points_set - boundary_vertices)
+    triangulation = triangular.delaunay(points)
+    boundary_edges = triangular.to_boundary_edges(triangulation)
+    boundary_vertices = {edge.start for edge in boundary_edges}
+    inner_points = sorted(set(points) - boundary_vertices)
     start = 0
     holes = []
-    holes_segments = red_black.tree(key=SweepLineKey)
+    holes_segments = []
     for hole_size in holes_sizes:
         hole_points = inner_points[start:start + hole_size]
         hole = to_concave_contour(hole_points, hole_size)
         holes.append(hole)
-        for hole_segment in contour_to_segments(hole):
-            holes_segments.add(hole_segment)
+        holes_segments.extend(contour_to_segments(hole))
         boundary_vertices.update(hole_points)
-        points_set.difference_update(hole_points)
         start += hole_size
-
-    triangulation = triangular.delaunay(list(points_set))
-    boundary_edges = triangular.to_boundary_edges(triangulation)
 
     def is_mouth(edge: QuadEdge) -> bool:
         neighbour_end = edge.left_from_start.end
-        if neighbour_end in boundary_vertices:
-            return False
-        for endpoint in (edge.start, edge.end):
-            segment = sort_pair((endpoint, neighbour_end))
-            if segment in holes_segments:
-                return False
-            holes_segments.add(segment)
-            try:
-                below_hole_segment = holes_segments.prev(segment)
-            except ValueError:
-                pass
-            else:
-                if segments_cross_or_overlap(below_hole_segment, segment):
-                    holes_segments.remove(segment)
-                    return False
-            try:
-                above_hole_segment = holes_segments.next(segment)
-            except ValueError:
-                pass
-            else:
-                if segments_cross_or_overlap(above_hole_segment, segment):
-                    holes_segments.remove(segment)
-                    return False
-            holes_segments.remove(segment)
-        return True
+        return (neighbour_end not in boundary_vertices
+                and not any(segments_cross_or_overlap((endpoint,
+                                                       neighbour_end),
+                                                      hole_segment)
+                            for hole_segment in holes_segments
+                            for endpoint in (edge.start, edge.end)))
 
     def segments_cross_or_overlap(left: Segment, right: Segment) -> bool:
         relationship = segments_relationship(left, right)
