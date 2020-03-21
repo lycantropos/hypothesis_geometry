@@ -13,6 +13,7 @@ from tests import strategies
 from tests.utils import (CoordinatesLimitsType,
                          has_valid_size,
                          is_contour,
+                         is_counterclockwise_contour,
                          is_non_self_intersecting_contour,
                          point_has_coordinates_in_range,
                          point_has_coordinates_types)
@@ -59,6 +60,7 @@ def test_properties(data: DataObject,
     assert is_contour_strict(result)
     assert not is_contour_non_convex(result)
     assert is_non_self_intersecting_contour(result)
+    assert is_counterclockwise_contour(result)
 
 
 @given(strategies.data,
@@ -89,3 +91,4 @@ def test_same_coordinates(data: DataObject,
     assert is_contour_strict(result)
     assert not is_contour_non_convex(result)
     assert is_non_self_intersecting_contour(result)
+    assert is_counterclockwise_contour(result)
