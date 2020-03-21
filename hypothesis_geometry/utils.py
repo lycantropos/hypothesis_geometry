@@ -80,7 +80,7 @@ def to_polygon(points: Sequence[Point],
     holes_segments = []
     for hole_size in holes_sizes:
         hole_points = inner_points[start:start + hole_size]
-        hole = to_concave_contour(hole_points, hole_size)
+        hole = to_concave_contour(hole_points, hole_size)[::-1]
         holes.append(hole)
         holes_segments.extend(contour_to_segments(hole))
         boundary_vertices.update(hole_points)
