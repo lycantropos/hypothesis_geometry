@@ -14,6 +14,7 @@ from tests.utils import (CoordinatesLimitsType,
                          SizesPair,
                          contours_do_not_overlap,
                          has_valid_size,
+                         is_counterclockwise_contour,
                          is_non_self_intersecting_contour,
                          is_polygon,
                          point_has_coordinates_in_range,
@@ -116,6 +117,9 @@ def test_properties(data: DataObject,
     assert all(is_non_self_intersecting_contour(hole)
                for hole in holes)
     assert contours_do_not_overlap(holes)
+    assert is_counterclockwise_contour(border)
+    assert all(not is_counterclockwise_contour(hole)
+               for hole in holes)
 
 
 @given(strategies.data,
@@ -185,6 +189,9 @@ def test_same_coordinates(data: DataObject,
     assert all(is_non_self_intersecting_contour(hole)
                for hole in holes)
     assert contours_do_not_overlap(holes)
+    assert is_counterclockwise_contour(border)
+    assert all(not is_counterclockwise_contour(hole)
+               for hole in holes)
 
 
 @given(strategies.coordinates_strategies,
