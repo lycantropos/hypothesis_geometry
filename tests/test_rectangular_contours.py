@@ -61,6 +61,7 @@ def test_properties(data: DataObject,
     assert not is_contour_non_convex(result)
     assert is_non_self_intersecting_contour(result)
     assert is_counterclockwise_contour(result)
+    assert result[0] == min(result)
 
 
 @given(strategies.data,
@@ -92,3 +93,4 @@ def test_same_coordinates(data: DataObject,
     assert not is_contour_non_convex(result)
     assert is_non_self_intersecting_contour(result)
     assert is_counterclockwise_contour(result)
+    assert result[0] == min(result)
