@@ -1,6 +1,7 @@
 from itertools import groupby
 from numbers import Number
 from typing import (Any,
+                    Callable,
                     Hashable,
                     Iterable,
                     List,
@@ -12,6 +13,8 @@ from typing import (Any,
 from bentley_ottmann.planar import (edges_intersect,
                                     segments_overlap)
 from hypothesis import strategies
+from robust.angular import (Orientation,
+                            orientation)
 
 from hypothesis_geometry.hints import (Contour,
                                        Coordinate,
@@ -24,6 +27,7 @@ from hypothesis_geometry.utils import contour_to_segments
 
 has_valid_size = _has_valid_size
 Domain = TypeVar('Domain')
+Key = Callable[[Domain], Any]
 Limits = Tuple[Coordinate, Optional[Coordinate]]
 CoordinatesLimitsType = Tuple[Tuple[Strategy[Coordinate], Limits],
                               Type[Coordinate]]
@@ -72,6 +76,30 @@ def point_has_coordinates_types(point: Point,
 def has_no_consecutive_repetitions(iterable: Iterable[Domain]) -> bool:
     return any(capacity(group) == 1
                for _, group in groupby(iterable))
+
+
+def is_counterclockwise_contour(contour: Contour) -> bool:
+    index_min = to_index_min(contour)
+    return (orientation(contour[index_min - 1], contour[index_min],
+                        contour[(index_min + 1) % len(contour)])
+            is Orientation.CLOCKWISE)
+
+
+_sentinel = object()
+
+
+def to_index_min(values: Iterable[Domain],
+                 *,
+                 key: Optional[Key] = None,
+                 default: Any = _sentinel) -> int:
+    kwargs = {}
+    if key is not None:
+        kwargs['key'] = lambda value_with_index: key(value_with_index[0])
+    if default is not _sentinel:
+        kwargs['default'] = default
+    return min(((value, index)
+                for index, value in enumerate(values)),
+               **kwargs)[1]
 
 
 def capacity(iterable: Iterable[Domain]) -> int:
