@@ -1,8 +1,7 @@
 import warnings
 from functools import partial
 from itertools import (cycle,
-                       groupby,
-                       repeat)
+                       groupby)
 from random import Random
 from typing import (List,
                     Optional,
@@ -15,6 +14,8 @@ from hypothesis.errors import HypothesisWarning
 from .core.contracts import (is_contour_non_convex,
                              is_contour_strict,
                              points_do_not_lie_on_the_same_line)
+from .core.utils import (Orientation,
+                         orientation)
 from .hints import (BoundingBox,
                     Contour,
                     Coordinate,
@@ -689,10 +690,17 @@ def triangular_contours(x_coordinates: Strategy[Coordinate],
     ...     for vertex_x, vertex_y in contour)
     True
     """
-    return (strategies.tuples(*repeat(points(x_coordinates, y_coordinates),
-                                      times=3))
+    vertices = points(x_coordinates, y_coordinates)
+
+    def to_counterclockwise_contour(contour: Contour) -> Contour:
+        return (contour
+                if orientation(*contour) is Orientation.CLOCKWISE
+                else contour[::-1])
+
+    return (strategies.tuples(vertices, vertices, vertices)
             .filter(is_contour_strict)
-            .map(list))
+            .map(list)
+            .map(to_counterclockwise_contour))
 
 
 RECTANGULAR_CONTOUR_SIZE = 4
