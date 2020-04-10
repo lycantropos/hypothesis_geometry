@@ -884,6 +884,109 @@ def multicontours(x_coordinates: Strategy[Coordinate],
                   min_contour_size: int = TRIANGULAR_CONTOUR_SIZE,
                   max_contour_size: Optional[int] = None
                   ) -> Strategy[Multicontour]:
+    """
+    Returns a strategy for multicontours.
+    Multicontour is a possibly empty sequence of non-overlapping contours.
+
+    :param x_coordinates: strategy for vertices' x-coordinates.
+    :param y_coordinates:
+        strategy for vertices' y-coordinates,
+        ``None`` for reusing x-coordinates strategy.
+    :param min_size: lower bound for size.
+    :param max_size: upper bound for size, ``None`` for unbound.
+    :param min_contour_size: lower bound for contour size.
+    :param max_contour_size:
+        upper bound for contour size, ``None`` for unbound.
+
+    >>> from hypothesis import strategies
+    >>> from hypothesis_geometry import planar
+
+    For same coordinates' domain:
+
+    >>> min_coordinate, max_coordinate = -1., 1.
+    >>> coordinates_type = float
+    >>> coordinates = strategies.floats(min_coordinate, max_coordinate,
+    ...                                 allow_infinity=False,
+    ...                                 allow_nan=False)
+    >>> min_size, max_size = 5, 10
+    >>> min_contour_size, max_contour_size = 3, 5
+    >>> multicontours = planar.multicontours(coordinates,
+    ...                                      min_size=min_size,
+    ...                                      max_size=max_size,
+    ...                                      min_contour_size=min_contour_size,
+    ...                                      max_contour_size=max_contour_size)
+    >>> multicontour = multicontours.example()
+    >>> isinstance(multicontour, list)
+    True
+    >>> all(isinstance(contour, list) for contour in multicontour)
+    True
+    >>> min_size <= len(multicontour) <= max_size
+    True
+    >>> all(min_contour_size <= len(contour) <= max_contour_size
+    ...     for contour in multicontour)
+    True
+    >>> all(isinstance(vertex, tuple)
+    ...     for contour in multicontour
+    ...     for vertex in contour)
+    True
+    >>> all(len(vertex) == 2 for contour in multicontour for vertex in contour)
+    True
+    >>> all(all(isinstance(coordinate, coordinates_type)
+    ...         for coordinate in vertex)
+    ...     for contour in multicontour
+    ...     for vertex in contour)
+    True
+    >>> all(all(min_coordinate <= coordinate <= max_coordinate
+    ...         for coordinate in vertex)
+    ...     for contour in multicontour
+    ...     for vertex in contour)
+    True
+
+    For different coordinates' domains:
+
+    >>> min_x_coordinate, max_x_coordinate = -1., 1.
+    >>> min_y_coordinate, max_y_coordinate = 10., 100.
+    >>> coordinates_type = float
+    >>> x_coordinates = strategies.floats(min_x_coordinate, max_x_coordinate,
+    ...                                   allow_infinity=False,
+    ...                                   allow_nan=False)
+    >>> y_coordinates = strategies.floats(min_y_coordinate, max_y_coordinate,
+    ...                                   allow_infinity=False,
+    ...                                   allow_nan=False)
+    >>> min_size, max_size = 5, 10
+    >>> min_contour_size, max_contour_size = 3, 5
+    >>> multicontours = planar.multicontours(x_coordinates, y_coordinates,
+    ...                            min_size=min_size,
+    ...                            max_size=max_size,
+    ...                            min_contour_size=min_contour_size,
+    ...                            max_contour_size=max_contour_size)
+    >>> multicontour = multicontours.example()
+    >>> isinstance(multicontour, list)
+    True
+    >>> all(isinstance(contour, list) for contour in multicontour)
+    True
+    >>> min_size <= len(multicontour) <= max_size
+    True
+    >>> all(min_contour_size <= len(contour) <= max_contour_size
+    ...     for contour in multicontour)
+    True
+    >>> all(isinstance(vertex, tuple)
+    ...     for contour in multicontour
+    ...     for vertex in contour)
+    True
+    >>> all(len(vertex) == 2 for contour in multicontour for vertex in contour)
+    True
+    >>> all(all(isinstance(coordinate, coordinates_type)
+    ...         for coordinate in vertex)
+    ...     for contour in multicontour
+    ...     for vertex in contour)
+    True
+    >>> all(min_x_coordinate <= vertex_x <= max_x_coordinate
+    ...     and min_y_coordinate <= vertex_y <= max_y_coordinate
+    ...     for contour in multicontour
+    ...     for vertex_x, vertex_y in contour)
+    True
+    """
     _validate_sizes(min_size, max_size, EMPTY_MULTICONTOUR_SIZE)
     _validate_sizes(min_contour_size, max_contour_size,
                     TRIANGULAR_CONTOUR_SIZE,
