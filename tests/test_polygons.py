@@ -23,7 +23,7 @@ from tests.utils import (CoordinatesLimitsType,
 
 @given(strategies.coordinates_strategies,
        strategies.concave_contours_sizes_pairs,
-       strategies.holes_lists_sizes_pairs,
+       strategies.multicontours_sizes_pairs,
        strategies.convex_contours_sizes_pairs)
 def test_basic(coordinates: Strategy[Coordinate],
                sizes_pair: SizesPair,
@@ -47,7 +47,7 @@ def test_basic(coordinates: Strategy[Coordinate],
 @given(strategies.data,
        strategies.coordinates_strategy_with_limit_and_type_pairs,
        strategies.concave_contours_sizes_pairs,
-       strategies.holes_lists_sizes_pairs,
+       strategies.multicontours_sizes_pairs,
        strategies.convex_contours_sizes_pairs)
 def test_properties(data: DataObject,
                     coordinates_limits_type_pair: Tuple[CoordinatesLimitsType,
@@ -125,7 +125,7 @@ def test_properties(data: DataObject,
 @given(strategies.data,
        strategies.coordinates_strategies_with_limits_and_types,
        strategies.concave_contours_sizes_pairs,
-       strategies.holes_lists_sizes_pairs,
+       strategies.multicontours_sizes_pairs,
        strategies.convex_contours_sizes_pairs)
 def test_same_coordinates(data: DataObject,
                           coordinates_limits_type: CoordinatesLimitsType,
@@ -207,11 +207,11 @@ def test_invalid_border_sizes(coordinates: Strategy[Coordinate],
 
 
 @given(strategies.coordinates_strategies,
-       strategies.invalid_holes_list_sizes_pairs)
+       strategies.invalid_multicontours_sizes_pairs)
 def test_invalid_holes_list_sizes(coordinates: Strategy[Coordinate],
-                                  invalid_holes_list_sizes_pair: SizesPair
+                                  invalid_sizes_pair: SizesPair
                                   ) -> None:
-    min_holes_size, max_holes_size = invalid_holes_list_sizes_pair
+    min_holes_size, max_holes_size = invalid_sizes_pair
 
     with pytest.raises(ValueError):
         polygons(coordinates,
@@ -222,9 +222,9 @@ def test_invalid_holes_list_sizes(coordinates: Strategy[Coordinate],
 @given(strategies.coordinates_strategies,
        strategies.invalid_convex_contours_sizes_pairs)
 def test_invalid_holes_sizes(coordinates: Strategy[Coordinate],
-                             invalid_holes_sizes_pair: SizesPair
+                             invalid_sizes_pair: SizesPair
                              ) -> None:
-    min_hole_size, max_hole_size = invalid_holes_sizes_pair
+    min_hole_size, max_hole_size = invalid_sizes_pair
 
     with pytest.raises(ValueError):
         polygons(coordinates,
