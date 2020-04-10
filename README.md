@@ -174,6 +174,46 @@ True
 ```
 also `planar.concave_contours` & `planar.convex_contours` options are available.
 
+### Multicontours
+```python
+>>> min_size, max_size = 5, 10
+>>> min_contour_size, max_contour_size = 4, 8
+>>> multicontours = planar.multicontours(coordinates, 
+...                                      min_size=min_size,
+...                                      max_size=max_size,
+...                                      min_contour_size=min_contour_size,
+...                                      max_contour_size=max_contour_size)
+>>> multicontour = multicontours.example()
+>>> isinstance(multicontour, list)
+True
+>>> all(isinstance(contour, list) for contour in multicontour)
+True
+>>> min_size <= len(multicontour) <= max_size
+True
+>>> all(min_contour_size <= len(contour) <= max_contour_size
+...     for contour in multicontour)
+True
+>>> all(isinstance(vertex, tuple)
+...     for contour in multicontour
+...     for vertex in contour)
+True
+>>> all(len(vertex) == 2
+...     for contour in multicontour
+...     for vertex in contour)
+True
+>>> all(all(isinstance(coordinate, coordinates_type)
+...         for coordinate in vertex)
+...     for contour in multicontour
+...     for vertex in contour)
+True
+>>> all(all(min_coordinate <= coordinate <= max_coordinate
+...         for coordinate in vertex)
+...     for contour in multicontour
+...     for vertex in contour)
+True
+
+```
+
 ### Polygons
 ```python
 >>> min_size, max_size = 5, 10
