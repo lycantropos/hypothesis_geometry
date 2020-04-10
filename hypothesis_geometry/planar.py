@@ -871,7 +871,7 @@ def bounding_boxes(x_coordinates: Strategy[Coordinate],
                              .map(sort_pair))
 
 
-EMPTY_HOLES_SIZE = 0
+EMPTY_MULTICONTOUR_SIZE = 0
 
 
 def polygons(x_coordinates: Strategy[Coordinate],
@@ -879,7 +879,7 @@ def polygons(x_coordinates: Strategy[Coordinate],
              *,
              min_size: int = TRIANGULAR_CONTOUR_SIZE,
              max_size: Optional[int] = None,
-             min_holes_size: int = EMPTY_HOLES_SIZE,
+             min_holes_size: int = EMPTY_MULTICONTOUR_SIZE,
              max_holes_size: Optional[int] = None,
              min_hole_size: int = TRIANGULAR_CONTOUR_SIZE,
              max_hole_size: Optional[int] = None) -> Strategy[Polygon]:
@@ -1032,7 +1032,7 @@ def polygons(x_coordinates: Strategy[Coordinate],
     True
     """
     _validate_sizes(min_size, max_size, TRIANGULAR_CONTOUR_SIZE)
-    _validate_sizes(min_holes_size, max_holes_size, EMPTY_HOLES_SIZE,
+    _validate_sizes(min_holes_size, max_holes_size, EMPTY_MULTICONTOUR_SIZE,
                     'min_holes_size', 'max_holes_size')
     _validate_sizes(min_hole_size, max_hole_size, TRIANGULAR_CONTOUR_SIZE,
                     'min_hole_size', 'max_hole_size')
