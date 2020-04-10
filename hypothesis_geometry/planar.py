@@ -1,6 +1,7 @@
 import warnings
 from functools import partial
-from itertools import (cycle,
+from itertools import (accumulate,
+                       cycle,
                        groupby)
 from random import Random
 from typing import (List,
@@ -19,6 +20,7 @@ from .core.utils import (Orientation,
 from .hints import (BoundingBox,
                     Contour,
                     Coordinate,
+                    Multicontour,
                     Point,
                     Polygon,
                     Polyline,
@@ -872,6 +874,75 @@ def bounding_boxes(x_coordinates: Strategy[Coordinate],
 
 
 EMPTY_MULTICONTOUR_SIZE = 0
+
+
+def multicontours(x_coordinates: Strategy[Coordinate],
+                  y_coordinates: Optional[Strategy[Coordinate]] = None,
+                  *,
+                  min_size: int = 0,
+                  max_size: Optional[int] = None,
+                  min_contour_size: int = TRIANGULAR_CONTOUR_SIZE,
+                  max_contour_size: Optional[int] = None
+                  ) -> Strategy[Multicontour]:
+    _validate_sizes(min_size, max_size, EMPTY_MULTICONTOUR_SIZE)
+    _validate_sizes(min_contour_size, max_contour_size,
+                    TRIANGULAR_CONTOUR_SIZE,
+                    'min_contour_size', 'max_contour_size')
+    min_size, min_contour_size = (max(min_size, EMPTY_MULTICONTOUR_SIZE),
+                                  max(min_contour_size,
+                                      TRIANGULAR_CONTOUR_SIZE))
+
+    def to_vertices_with_sizes(vertices: List[Point]
+                               ) -> Strategy[Tuple[List[Point], List[int]]]:
+        return strategies.tuples(strategies.just(vertices),
+                                 to_sizes(len(vertices)))
+
+    def to_sizes(limit: int) -> Strategy[List[int]]:
+        return (strategies.integers(min_size, limit // min_contour_size)
+                .flatmap(partial(_to_sizes,
+                                 min_element_size=min_contour_size,
+                                 limit=limit)))
+
+    def _to_sizes(size: int,
+                  min_element_size: int,
+                  limit: int) -> Strategy[List[int]]:
+        if not size:
+            return strategies.builds(list)
+        max_sizes = [min_element_size] * size
+        indices = cycle(range(size))
+        for _ in range(limit - size * min_element_size):
+            max_sizes[next(indices)] += 1
+        sizes_ranges = [range(min_element_size, max_element_size + 1)
+                        for max_element_size in max_sizes]
+        return (strategies.permutations([strategies.sampled_from(sizes_range)
+                                         for sizes_range in sizes_ranges])
+                .flatmap(pack(strategies.tuples))
+                .map(list))
+
+    def to_contours(vertices: List[Point], sizes: List[int]) -> List[Contour]:
+        vertices = sorted(vertices)
+        return [to_contour(vertices[offset:offset + size], size)
+                for offset, size in zip(accumulate([0] + sizes), sizes)]
+
+    def has_valid_sizes(multicontour: Multicontour) -> bool:
+        return (_has_valid_size(multicontour,
+                                min_size=min_size,
+                                max_size=max_size)
+                and all(_has_valid_size(contour,
+                                        min_size=min_contour_size,
+                                        max_size=max_contour_size)
+                        for contour in multicontour))
+
+    return (strategies.lists(points(x_coordinates, y_coordinates),
+                             min_size=min_size * min_contour_size,
+                             max_size=(None
+                                       if (max_size is None
+                                           or max_contour_size is None)
+                                       else max_size * max_contour_size),
+                             unique=True)
+            .flatmap(to_vertices_with_sizes)
+            .map(pack(to_contours))
+            .filter(has_valid_sizes))
 
 
 def polygons(x_coordinates: Strategy[Coordinate],
