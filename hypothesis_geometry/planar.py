@@ -1069,12 +1069,10 @@ def polygons(x_coordinates: Strategy[Coordinate],
                         max_hole_size: int) -> Strategy[List[int]]:
         if not holes_size:
             return strategies.builds(list)
-        max_hole_size -= holes_size * min_hole_size
         max_holes_sizes = [min_hole_size] * holes_size
         indices = cycle(range(holes_size))
-        while max_hole_size:
+        for _ in range(max_hole_size - holes_size * min_hole_size):
             max_holes_sizes[next(indices)] += 1
-            max_hole_size -= 1
         sizes_ranges = [range(min_hole_size, max_hole_size + 1)
                         for max_hole_size in max_holes_sizes]
         return (strategies.permutations([strategies.sampled_from(sizes_range)
