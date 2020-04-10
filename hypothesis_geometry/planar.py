@@ -957,8 +957,7 @@ def polygons(x_coordinates: Strategy[Coordinate],
     """
     Returns a strategy for polygons.
     Polygon is a pair of contour (called polygon’s border)
-    and possibly empty sequence of non-overlapping contours
-    which lie within the border (called polygon’s holes).
+    and multicontour which lies within the border (called polygon’s holes).
 
     :param x_coordinates: strategy for vertices' x-coordinates.
     :param y_coordinates:
