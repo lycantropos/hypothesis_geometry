@@ -868,13 +868,13 @@ def rectangular_contours(x_coordinates: Strategy[Coordinate],
     True
     >>> all(len(vertex) == 2 for vertex in contour)
     True
-    >>> all(all(isinstance(coordinate, coordinates_type)
-    ...         for coordinate in vertex)
-    ...     for vertex in contour)
+    >>> all(isinstance(coordinate, coordinates_type)
+    ...     for vertex in contour
+    ...     for coordinate in vertex)
     True
-    >>> all(all(min_coordinate <= coordinate <= max_coordinate
-    ...         for coordinate in vertex)
-    ...     for vertex in contour)
+    >>> all(min_coordinate <= coordinate <= max_coordinate
+    ...     for vertex in contour
+    ...     for coordinate in vertex)
     True
 
     For different coordinates' domains:
@@ -898,9 +898,9 @@ def rectangular_contours(x_coordinates: Strategy[Coordinate],
     True
     >>> all(len(vertex) == 2 for vertex in contour)
     True
-    >>> all(all(isinstance(coordinate, coordinates_type)
-    ...         for coordinate in vertex)
-    ...     for vertex in contour)
+    >>> all(isinstance(coordinate, coordinates_type)
+    ...     for vertex in contour
+    ...     for coordinate in vertex)
     True
     >>> all(min_x_coordinate <= vertex_x <= max_x_coordinate
     ...     and min_y_coordinate <= vertex_y <= max_y_coordinate
