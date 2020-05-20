@@ -1248,23 +1248,23 @@ def polygons(x_coordinates: Strategy[Coordinate],
     True
     >>> all(len(vertex) == 2 for hole in holes for vertex in hole)
     True
-    >>> all(all(isinstance(coordinate, coordinates_type)
-    ...         for coordinate in vertex)
-    ...     for vertex in border)
+    >>> all(isinstance(coordinate, coordinates_type)
+    ...     for vertex in border
+    ...     for coordinate in vertex)
     True
-    >>> all(all(isinstance(coordinate, coordinates_type)
-    ...         for coordinate in vertex)
+    >>> all(isinstance(coordinate, coordinates_type)
     ...     for hole in holes
-    ...     for vertex in hole)
+    ...     for vertex in hole
+    ...     for coordinate in vertex)
     True
     >>> all(all(min_coordinate <= coordinate <= max_coordinate
     ...         for coordinate in vertex)
     ...     for vertex in border)
     True
-    >>> all(all(min_coordinate <= coordinate <= max_coordinate
-    ...         for coordinate in vertex)
+    >>> all(min_coordinate <= coordinate <= max_coordinate
     ...     for hole in holes
-    ...     for vertex in hole)
+    ...     for vertex in hole
+    ...     for coordinate in vertex)
     True
 
     For different coordinates' domains:
@@ -1314,14 +1314,14 @@ def polygons(x_coordinates: Strategy[Coordinate],
     True
     >>> all(len(vertex) == 2 for hole in holes for vertex in hole)
     True
-    >>> all(all(isinstance(coordinate, coordinates_type)
-    ...         for coordinate in vertex)
-    ...     for vertex in border)
+    >>> all(isinstance(coordinate, coordinates_type)
+    ...     for vertex in border
+    ...     for coordinate in vertex)
     True
-    >>> all(all(isinstance(coordinate, coordinates_type)
-    ...         for coordinate in vertex)
+    >>> all(isinstance(coordinate, coordinates_type)
     ...     for hole in holes
-    ...     for vertex in hole)
+    ...     for vertex in hole
+    ...     for coordinate in vertex)
     True
     >>> all(min_x_coordinate <= vertex_x <= max_x_coordinate
     ...     and min_y_coordinate <= vertex_y <= max_y_coordinate
