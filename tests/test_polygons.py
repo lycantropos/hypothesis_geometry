@@ -12,7 +12,7 @@ from hypothesis_geometry.planar import polygons
 from tests import strategies
 from tests.utils import (CoordinatesLimitsType,
                          SizesPair,
-                         contours_do_not_overlap,
+                         contours_do_not_cross_or_overlap,
                          has_valid_size,
                          is_counterclockwise_contour,
                          is_non_self_intersecting_contour,
@@ -116,7 +116,7 @@ def test_properties(data: DataObject,
     assert is_non_self_intersecting_contour(border)
     assert all(is_non_self_intersecting_contour(hole)
                for hole in holes)
-    assert contours_do_not_overlap(holes)
+    assert contours_do_not_cross_or_overlap(holes)
     assert is_counterclockwise_contour(border)
     assert all(not is_counterclockwise_contour(hole)
                for hole in holes)
@@ -188,7 +188,7 @@ def test_same_coordinates(data: DataObject,
     assert is_non_self_intersecting_contour(border)
     assert all(is_non_self_intersecting_contour(hole)
                for hole in holes)
-    assert contours_do_not_overlap(holes)
+    assert contours_do_not_cross_or_overlap(holes)
     assert is_counterclockwise_contour(border)
     assert all(not is_counterclockwise_contour(hole)
                for hole in holes)

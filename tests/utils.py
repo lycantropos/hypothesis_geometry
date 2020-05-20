@@ -11,7 +11,7 @@ from typing import (Any,
                     TypeVar)
 
 from bentley_ottmann.planar import (edges_intersect,
-                                    segments_overlap)
+                                    segments_cross_or_overlap)
 from hypothesis import strategies
 from robust.angular import (Orientation,
                             orientation)
@@ -167,7 +167,7 @@ def is_non_self_intersecting_contour(contour: Contour) -> bool:
                                accurate=False)
 
 
-def contours_do_not_overlap(contours: List[Contour]) -> bool:
-    return not segments_overlap(sum([contour_to_segments(contour)
-                                     for contour in contours],
-                                    []))
+def contours_do_not_cross_or_overlap(contours: List[Contour]) -> bool:
+    return not segments_cross_or_overlap(sum([contour_to_segments(contour)
+                                              for contour in contours],
+                                             []))
