@@ -886,7 +886,8 @@ def multicontours(x_coordinates: Strategy[Coordinate],
                   ) -> Strategy[Multicontour]:
     """
     Returns a strategy for multicontours.
-    Multicontour is a possibly empty sequence of non-overlapping contours.
+    Multicontour is a possibly empty sequence of non-crossing
+    and non-overlapping contours.
 
     :param x_coordinates: strategy for vertices' x-coordinates.
     :param y_coordinates:
