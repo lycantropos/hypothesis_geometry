@@ -157,6 +157,10 @@ def is_polygon(object_: Any) -> bool:
             and is_multicontour(object_[1]))
 
 
+def is_multisegment(object_: Any) -> bool:
+    return isinstance(object_, list) and all(map(is_segment, object_))
+
+
 def is_multicontour(object_: Any) -> bool:
     return isinstance(object_, list) and all(map(is_contour, object_))
 
@@ -202,6 +206,10 @@ def is_non_self_intersecting_contour(contour: Contour) -> bool:
 
 
 def contours_do_not_cross_or_overlap(contours: List[Contour]) -> bool:
-    return not segments_cross_or_overlap(sum([contour_to_segments(contour)
-                                              for contour in contours],
-                                             []))
+    return segments_do_not_cross_or_overlap(sum([contour_to_segments(contour)
+                                                 for contour in contours],
+                                                []))
+
+
+def segments_do_not_cross_or_overlap(segments: List[Segment]) -> bool:
+    return not segments_cross_or_overlap(segments)
