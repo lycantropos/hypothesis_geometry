@@ -98,6 +98,7 @@ True
 True
 
 ```
+
 ### Segments
 ```python
 >>> segments = planar.segments(coordinates)
@@ -110,13 +111,50 @@ True
 True
 >>> all(len(endpoint) == 2 for endpoint in segment)
 True
->>> all(all(isinstance(coordinate, coordinates_type) 
-...         for coordinate in endpoint)
+>>> all(isinstance(coordinate, coordinates_type) 
+...     for endpoint in segment
+...     for coordinate in endpoint)
+True
+>>> all(min_coordinate <= coordinate <= max_coordinate 
+...     for endpoint in segment
+...     for coordinate in endpoint)
+True
+
+```
+
+### Multisegments
+```python
+>>> min_size, max_size = 5, 10
+>>> multisegments = planar.multisegments(coordinates, 
+...                                      min_size=min_size,
+...                                      max_size=max_size)
+>>> multisegment = multisegments.example()
+>>> isinstance(multisegment, list)
+True
+>>> min_size <= len(multisegment) <= max_size
+True
+>>> all(isinstance(segment, tuple)
+...     for segment in multisegment)
+True
+>>> all(isinstance(endpoint, tuple)
+...     for segment in multisegment
 ...     for endpoint in segment)
 True
->>> all(all(min_coordinate <= coordinate <= max_coordinate 
-...         for coordinate in endpoint)
+>>> all(len(segment) == 2 for segment in multisegment)
+True
+>>> all(len(endpoint) == 2
+...     for segment in multisegment
 ...     for endpoint in segment)
+True
+>>> all(isinstance(coordinate, coordinates_type)
+...     for segment in multisegment
+...     for endpoint in segment
+...     for coordinate in endpoint)
+True
+>>> all(min_coordinate <= coordinate <= max_coordinate
+...     for segment in multisegment
+...     for endpoint in segment
+...     for coordinate in endpoint)
 True
 
 ```
@@ -136,13 +174,13 @@ True
 True
 >>> all(len(vertex) == 2 for vertex in polyline)
 True
->>> all(all(isinstance(coordinate, coordinates_type)
-...         for coordinate in vertex)
-...     for vertex in polyline)
+>>> all(isinstance(coordinate, coordinates_type)
+...     for vertex in polyline
+...     for coordinate in vertex)
 True
->>> all(all(min_coordinate <= coordinate <= max_coordinate 
-...         for coordinate in vertex)
-...     for vertex in polyline)
+>>> all(min_coordinate <= coordinate <= max_coordinate 
+...     for vertex in polyline
+...     for coordinate in vertex)
 True
 
 ```
@@ -162,13 +200,13 @@ True
 True
 >>> all(len(vertex) == 2 for vertex in contour)
 True
->>> all(all(isinstance(coordinate, coordinates_type)
-...         for coordinate in vertex)
-...     for vertex in contour)
+>>> all(isinstance(coordinate, coordinates_type)
+...     for vertex in contour
+...     for coordinate in vertex)
 True
->>> all(all(min_coordinate <= coordinate <= max_coordinate
-...         for coordinate in vertex)
-...     for vertex in contour)
+>>> all(min_coordinate <= coordinate <= max_coordinate
+...     for vertex in contour
+...     for coordinate in vertex)
 True
 
 ```
@@ -201,15 +239,15 @@ True
 ...     for contour in multicontour
 ...     for vertex in contour)
 True
->>> all(all(isinstance(coordinate, coordinates_type)
-...         for coordinate in vertex)
+>>> all(isinstance(coordinate, coordinates_type)
 ...     for contour in multicontour
-...     for vertex in contour)
+...     for vertex in contour
+...     for coordinate in vertex)
 True
->>> all(all(min_coordinate <= coordinate <= max_coordinate
-...         for coordinate in vertex)
+>>> all(min_coordinate <= coordinate <= max_coordinate
 ...     for contour in multicontour
-...     for vertex in contour)
+...     for vertex in contour
+...     for coordinate in vertex)
 True
 
 ```
@@ -251,15 +289,15 @@ True
 ...     for contour in contours
 ...     for vertex in contour)
 True
->>> all(all(isinstance(coordinate, coordinates_type)
-...         for coordinate in vertex)
+>>> all(isinstance(coordinate, coordinates_type)
 ...     for contour in contours
-...     for vertex in contour)
+...     for vertex in contour
+...     for coordinate in vertex)
 True
->>> all(all(min_coordinate <= coordinate <= max_coordinate
-...         for coordinate in vertex)
+>>> all(min_coordinate <= coordinate <= max_coordinate
 ...     for contour in contours
-...     for vertex in contour)
+...     for vertex in contour
+...     for coordinate in vertex)
 True
 
 ```
