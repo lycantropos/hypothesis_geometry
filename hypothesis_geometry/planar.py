@@ -879,7 +879,7 @@ EMPTY_MULTICONTOUR_SIZE = 0
 def multicontours(x_coordinates: Strategy[Coordinate],
                   y_coordinates: Optional[Strategy[Coordinate]] = None,
                   *,
-                  min_size: int = 0,
+                  min_size: int = EMPTY_MULTICONTOUR_SIZE,
                   max_size: Optional[int] = None,
                   min_contour_size: int = TRIANGULAR_CONTOUR_SIZE,
                   max_contour_size: Optional[int] = None
