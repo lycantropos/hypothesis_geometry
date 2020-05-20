@@ -6,8 +6,7 @@ from typing import (Callable,
                     List,
                     Optional,
                     Sequence,
-                    Tuple,
-                    TypeVar)
+                    Tuple)
 
 from dendroid import red_black
 from dendroid.hints import Sortable
@@ -21,8 +20,10 @@ from .core.utils import (Orientation,
                          orientation)
 from .hints import (Contour,
                     Coordinate,
+                    Domain,
                     Point,
                     Polygon,
+                    Range,
                     Segment)
 
 
@@ -286,10 +287,6 @@ def _to_strict_sub_hull(points: Iterable[Point]) -> List[Point]:
                 break
         result.append(point)
     return result
-
-
-Domain = TypeVar('Domain')
-Range = TypeVar('Range')
 
 
 def pack(function: Callable[..., Range]

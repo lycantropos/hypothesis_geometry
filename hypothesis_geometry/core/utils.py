@@ -1,15 +1,14 @@
 from itertools import chain
 from typing import (Iterator,
                     List,
-                    Sequence,
-                    TypeVar)
+                    Sequence)
 
 from robust.angular import (Orientation,
                             orientation)
 
-from hypothesis_geometry.hints import Contour
+from hypothesis_geometry.hints import (Contour,
+                                       Domain)
 
-Domain = TypeVar('Domain')
 flatten = chain.from_iterable
 
 
