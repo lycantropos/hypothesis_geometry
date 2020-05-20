@@ -14,6 +14,7 @@ from hypothesis.errors import HypothesisWarning
 
 from .core.contracts import (is_contour_non_convex,
                              is_contour_strict,
+                             is_multisegment_valid,
                              points_do_not_lie_on_the_same_line)
 from .core.utils import (Orientation,
                          orientation)
@@ -21,12 +22,14 @@ from .hints import (BoundingBox,
                     Contour,
                     Coordinate,
                     Multicontour,
+                    Multisegment,
                     Point,
                     Polygon,
                     Polyline,
                     Segment,
                     Strategy)
 from .utils import (constrict_convex_hull_size,
+                    contour_to_segments,
                     pack,
                     sort_pair,
                     to_contour,
@@ -181,6 +184,131 @@ def segments(x_coordinates: Strategy[Coordinate],
     points_strategy = points(x_coordinates, y_coordinates)
     return (strategies.tuples(points_strategy, points_strategy)
             .filter(non_degenerate_segment))
+
+
+EMPTY_MULTISEGMENT_SIZE = 0
+
+
+def multisegments(x_coordinates: Strategy[Coordinate],
+                  y_coordinates: Optional[Strategy[Coordinate]] = None,
+                  *,
+                  min_size: int = EMPTY_MULTISEGMENT_SIZE,
+                  max_size: Optional[int] = None) -> Strategy[Multisegment]:
+    """
+    Returns a strategy for multisegments.
+    Multisegment is a possibly empty sequence of segments
+    such that any pair of them do not cross/overlap each other.
+
+    >>> from hypothesis import strategies
+    >>> from hypothesis_geometry import planar
+
+    For same coordinates' domain:
+
+    >>> min_coordinate, max_coordinate = -1., 1.
+    >>> coordinates_type = float
+    >>> coordinates = strategies.floats(min_coordinate, max_coordinate,
+    ...                                 allow_infinity=False,
+    ...                                 allow_nan=False)
+    >>> min_size, max_size = 5, 10
+    >>> multisegments = planar.multisegments(coordinates,
+    ...                                      min_size=min_size,
+    ...                                      max_size=max_size)
+    >>> multisegment = multisegments.example()
+    >>> isinstance(multisegment, list)
+    True
+    >>> min_size <= len(multisegment) <= max_size
+    True
+    >>> all(isinstance(segment, tuple) for segment in multisegment)
+    True
+    >>> all(isinstance(endpoint, tuple)
+    ...     for segment in multisegment
+    ...     for endpoint in segment)
+    True
+    >>> all(len(segment) == 2 for segment in multisegment)
+    True
+    >>> all(len(endpoint) == 2
+    ...     for segment in multisegment
+    ...     for endpoint in segment)
+    True
+    >>> all(isinstance(coordinate, coordinates_type)
+    ...     for segment in multisegment
+    ...     for endpoint in segment
+    ...     for coordinate in endpoint)
+    True
+    >>> all(min_coordinate <= coordinate <= max_coordinate
+    ...     for segment in multisegment
+    ...     for endpoint in segment
+    ...     for coordinate in endpoint)
+    True
+
+    For different coordinates' domains:
+
+    >>> min_x_coordinate, max_x_coordinate = -1., 1.
+    >>> min_y_coordinate, max_y_coordinate = 10., 100.
+    >>> coordinates_type = float
+    >>> x_coordinates = strategies.floats(min_x_coordinate, max_x_coordinate,
+    ...                                   allow_infinity=False,
+    ...                                   allow_nan=False)
+    >>> y_coordinates = strategies.floats(min_y_coordinate, max_y_coordinate,
+    ...                                   allow_infinity=False,
+    ...                                   allow_nan=False)
+    >>> min_size, max_size = 5, 10
+    >>> multisegments = planar.multisegments(x_coordinates, y_coordinates,
+    ...                                      min_size=min_size,
+    ...                                      max_size=max_size)
+    >>> multisegment = multisegments.example()
+    >>> isinstance(multisegment, list)
+    True
+    >>> min_size <= len(multisegment) <= max_size
+    True
+    >>> all(isinstance(segment, tuple) for segment in multisegment)
+    True
+    >>> all(isinstance(endpoint, tuple)
+    ...     for segment in multisegment
+    ...     for endpoint in segment)
+    True
+    >>> all(len(segment) == 2 for segment in multisegment)
+    True
+    >>> all(len(endpoint) == 2
+    ...     for segment in multisegment
+    ...     for endpoint in segment)
+    True
+    >>> all(isinstance(coordinate, coordinates_type)
+    ...     for segment in multisegment
+    ...     for endpoint in segment
+    ...     for coordinate in endpoint)
+    True
+    >>> all(min_x_coordinate <= endpoint_x <= max_x_coordinate
+    ...     and min_y_coordinate <= endpoint_y <= max_y_coordinate
+    ...     for segment in multisegment
+    ...     for endpoint_x, endpoint_y in segment)
+    True
+    """
+    _validate_sizes(min_size, max_size, EMPTY_MULTISEGMENT_SIZE)
+    min_size = max(min_size, EMPTY_MULTISEGMENT_SIZE)
+    if min_size >= TRIANGULAR_CONTOUR_SIZE:
+        def multisegment_to_slices(multisegment: Multisegment
+                                   ) -> Strategy[Multisegment]:
+            return strategies.builds(cut,
+                                     strategies.permutations(multisegment),
+                                     strategies.integers(min_size,
+                                                         len(multisegment)))
+
+        def cut(multisegment: Multisegment, limit: int) -> Multisegment:
+            return (multisegment[:limit]
+                    if limit < len(multisegment)
+                    else multisegment)
+
+        return (contours(x_coordinates, y_coordinates,
+                         min_size=min_size,
+                         max_size=max_size)
+                .map(contour_to_segments)
+                .flatmap(multisegment_to_slices))
+    else:
+        return (strategies.lists(segments(x_coordinates, y_coordinates),
+                                 min_size=min_size,
+                                 max_size=max_size)
+                .filter(is_multisegment_valid))
 
 
 MIN_POLYLINE_SIZE = 2
