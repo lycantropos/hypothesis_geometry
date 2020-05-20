@@ -19,6 +19,7 @@ from robust.angular import (Orientation,
 from hypothesis_geometry.hints import (Contour,
                                        Coordinate,
                                        Point,
+                                       Segment,
                                        Strategy)
 from hypothesis_geometry.planar import (MIN_POLYLINE_SIZE,
                                         TRIANGULAR_CONTOUR_SIZE,
@@ -42,6 +43,26 @@ def to_pairs(strategy: Strategy[Domain]) -> Strategy[Tuple[Domain, Domain]]:
     return strategies.tuples(strategy, strategy)
 
 
+def segment_has_coordinates_in_range(segment: Segment,
+                                     *,
+                                     min_x_value: Coordinate,
+                                     max_x_value: Optional[Coordinate],
+                                     min_y_value: Coordinate,
+                                     max_y_value: Optional[Coordinate]
+                                     ) -> bool:
+    start, end = segment
+    return (point_has_coordinates_in_range(start,
+                                           min_x_value=min_x_value,
+                                           max_x_value=max_x_value,
+                                           min_y_value=min_y_value,
+                                           max_y_value=max_y_value)
+            and point_has_coordinates_in_range(end,
+                                               min_x_value=min_x_value,
+                                               max_x_value=max_x_value,
+                                               min_y_value=min_y_value,
+                                               max_y_value=max_y_value))
+
+
 def point_has_coordinates_in_range(point: Point,
                                    *,
                                    min_x_value: Coordinate,
@@ -63,6 +84,19 @@ def is_coordinate_in_range(coordinate: Coordinate,
                            max_value: Optional[Coordinate]) -> bool:
     return (min_value <= coordinate
             and (max_value is None or coordinate <= max_value))
+
+
+def segment_has_coordinates_types(segment: Segment,
+                                  *,
+                                  x_type: Type[Coordinate],
+                                  y_type: Type[Coordinate]) -> bool:
+    start, end = segment
+    return (point_has_coordinates_types(start,
+                                        x_type=x_type,
+                                        y_type=y_type)
+            and point_has_coordinates_types(end,
+                                            x_type=x_type,
+                                            y_type=y_type))
 
 
 def point_has_coordinates_types(point: Point,

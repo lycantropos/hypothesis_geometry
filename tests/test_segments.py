@@ -10,8 +10,8 @@ from tests import strategies
 from tests.utils import (CoordinatesLimitsType,
                          all_unique,
                          is_segment,
-                         point_has_coordinates_in_range,
-                         point_has_coordinates_types)
+                         segment_has_coordinates_in_range,
+                         segment_has_coordinates_types)
 
 
 @given(strategies.coordinates_strategies)
@@ -39,16 +39,14 @@ def test_properties(data: DataObject,
     result = data.draw(strategy)
 
     assert is_segment(result)
-    assert all(point_has_coordinates_types(endpoint,
-                                           x_type=x_type,
-                                           y_type=y_type)
-               for endpoint in result)
-    assert all(point_has_coordinates_in_range(endpoint,
-                                              min_x_value=min_x_value,
-                                              max_x_value=max_x_value,
-                                              min_y_value=min_y_value,
-                                              max_y_value=max_y_value)
-               for endpoint in result)
+    assert segment_has_coordinates_types(result,
+                                         x_type=x_type,
+                                         y_type=y_type)
+    assert segment_has_coordinates_in_range(result,
+                                            min_x_value=min_x_value,
+                                            max_x_value=max_x_value,
+                                            min_y_value=min_y_value,
+                                            max_y_value=max_y_value)
     assert all_unique(result)
 
 
@@ -64,14 +62,12 @@ def test_same_coordinates(data: DataObject,
     result = data.draw(strategy)
 
     assert is_segment(result)
-    assert all(point_has_coordinates_types(endpoint,
-                                           x_type=type_,
-                                           y_type=type_)
-               for endpoint in result)
-    assert all(point_has_coordinates_in_range(endpoint,
-                                              min_x_value=min_value,
-                                              max_x_value=max_value,
-                                              min_y_value=min_value,
-                                              max_y_value=max_value)
-               for endpoint in result)
+    assert segment_has_coordinates_types(result,
+                                         x_type=type_,
+                                         y_type=type_)
+    assert segment_has_coordinates_in_range(result,
+                                            min_x_value=min_value,
+                                            max_x_value=max_value,
+                                            min_y_value=min_value,
+                                            max_y_value=max_value)
     assert all_unique(result)
