@@ -1007,8 +1007,7 @@ def star_contours(x_coordinates: Strategy[Coordinate],
                   y_coordinates: Optional[Strategy[Coordinate]] = None,
                   *,
                   min_size: int = TRIANGULAR_CONTOUR_SIZE,
-                  max_size: Optional[int] = None,
-                  ) -> Strategy[Contour]:
+                  max_size: Optional[int] = None) -> Strategy[Contour]:
     """
     Returns a strategy for star contours.
     Star contour is a contour such that every vertex is visible from centroid,
