@@ -22,7 +22,7 @@ from .core.subdivisional import (QuadEdge,
                                  to_edge_neighbours)
 from .core.utils import (Orientation,
                          orientation,
-                         points_to_center_of_mass)
+                         points_to_centroid)
 from .hints import (Contour,
                     Coordinate,
                     Domain,
@@ -75,11 +75,11 @@ def to_contour(points: Sequence[Point], size: int) -> Contour:
 
 
 def to_star_contour(points: Sequence[Point]) -> Contour:
-    center_x, center_y = points_to_center_of_mass(points)
+    centroid_x, centroid_y = points_to_centroid(points)
     result = [deque(candidates,
                     maxlen=1)[0][1]
               for _, candidates in groupby(sorted(
-                (_to_segment_angle(center_x, center_y, point), point)
+                (_to_segment_angle(centroid_x, centroid_y, point), point)
                 for point in points),
                 key=itemgetter(0))]
     shrink_collinear_vertices(result)
