@@ -94,8 +94,8 @@ def to_star_contour(points: Sequence[Point]) -> Contour:
         index = 0
         while max(index, 2) < len(result):
             if not point_in_angle(centroid,
-                                  result[index],
                                   result[index - 1],
+                                  result[index],
                                   result[(index + 1) % len(result)]):
                 del result[index]
             index += 1
