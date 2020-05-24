@@ -16,8 +16,10 @@ from hypothesis import strategies
 from robust.angular import (Orientation,
                             orientation)
 
+from hypothesis_geometry.core.utils import contour_to_centroid
 from hypothesis_geometry.hints import (Contour,
                                        Coordinate,
+                                       Multisegment,
                                        Point,
                                        Segment,
                                        Strategy)
@@ -203,6 +205,19 @@ def is_point(object_: Any) -> bool:
 def is_non_self_intersecting_contour(contour: Contour) -> bool:
     return not edges_intersect(contour,
                                accurate=False)
+
+
+def is_star_contour(contour: Contour) -> bool:
+    return segments_do_not_cross_or_overlap(
+            contour_to_star_multisegment(contour)
+            + contour_to_segments(contour))
+
+
+def contour_to_star_multisegment(contour: Contour) -> Multisegment:
+    centroid = contour_to_centroid(contour)
+    return [(centroid, vertex)
+            for vertex in contour
+            if vertex != centroid]
 
 
 def contours_do_not_cross_or_overlap(contours: List[Contour]) -> bool:
