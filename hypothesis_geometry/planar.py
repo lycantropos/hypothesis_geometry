@@ -1086,18 +1086,16 @@ def star_contours(x_coordinates: Strategy[Coordinate],
     True
     """
     _validate_sizes(min_size, max_size, TRIANGULAR_CONTOUR_SIZE)
-    min_size = max(min_size, MIN_CONCAVE_CONTOUR_SIZE)
-    return ((strategies.lists(points(x_coordinates, y_coordinates),
-                              min_size=min_size,
-                              max_size=max_size,
-                              unique=True)
-             .filter(points_do_not_lie_on_the_same_line)
-             .map(to_star_contour)
-             .filter(partial(_has_valid_size,
+    min_size = max(min_size, TRIANGULAR_CONTOUR_SIZE)
+    return (strategies.lists(points(x_coordinates, y_coordinates),
                              min_size=min_size,
-                             max_size=max_size)))
-            if max_size is None or max_size > TRIANGULAR_CONTOUR_SIZE
-            else triangular_contours(x_coordinates, y_coordinates))
+                             max_size=max_size,
+                             unique=True)
+            .filter(points_do_not_lie_on_the_same_line)
+            .map(to_star_contour)
+            .filter(partial(_has_valid_size,
+                            min_size=min_size,
+                            max_size=max_size)))
 
 
 EMPTY_MULTICONTOUR_SIZE = 0
