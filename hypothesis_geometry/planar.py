@@ -737,7 +737,9 @@ def concave_contours(x_coordinates: Strategy[Coordinate],
                                     else min(len(points), max_size))
         return strategies.tuples(strategies.just(points), sizes)
 
-    return ((star_contours(x_coordinates, y_coordinates)
+    return ((star_contours(x_coordinates, y_coordinates,
+                           min_size=min_size,
+                           max_size=max_size)
              | (strategies.lists(points(x_coordinates, y_coordinates),
                                  min_size=min_size,
                                  max_size=max_size,
