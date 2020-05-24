@@ -1,3 +1,4 @@
+from fractions import Fraction
 from itertools import chain
 from typing import (Iterator,
                     List,
@@ -7,7 +8,9 @@ from robust.angular import (Orientation,
                             orientation)
 
 from hypothesis_geometry.hints import (Contour,
-                                       Domain)
+                                       Coordinate,
+                                       Domain,
+                                       Point)
 
 flatten = chain.from_iterable
 
@@ -29,3 +32,15 @@ def to_orientations(contour: Contour) -> Iterator[Orientation]:
     return (orientation(contour[index - 1], contour[index],
                         contour[(index + 1) % len(contour)])
             for index in range(len(contour)))
+
+
+def points_to_center_of_mass(points: Sequence[Point]) -> Point:
+    xs, ys = zip(*points)
+    return (_divide_by_int(sum(xs), len(points)),
+            _divide_by_int(sum(ys), len(points)))
+
+
+def _divide_by_int(dividend: Coordinate, divisor: int) -> Coordinate:
+    return (Fraction(dividend, divisor)
+            if isinstance(dividend, int)
+            else dividend / divisor)
