@@ -34,7 +34,7 @@ def to_orientations(contour: Contour) -> Iterator[Orientation]:
             for index in range(len(contour)))
 
 
-def points_to_center_of_mass(points: Sequence[Point]) -> Point:
+def points_to_centroid(points: Sequence[Point]) -> Point:
     xs, ys = zip(*points)
     return (_divide_by_int(sum(xs), len(points)),
             _divide_by_int(sum(ys), len(points)))
