@@ -78,9 +78,9 @@ def to_contour(points: Sequence[Point], size: int) -> Contour:
 
 def to_star_contour(points: Sequence[Point]) -> Contour:
     centroid = points_to_centroid(points)
-    result = points
-    while True:
-        size = len(result)
+    result, prev_size = points, len(points) + 1
+    while 2 < len(result) < prev_size:
+        prev_size = len(result)
         centroid_x, centroid_y = centroid
         result = [deque(candidates,
                         maxlen=1)[0][1]
@@ -88,21 +88,17 @@ def to_star_contour(points: Sequence[Point]) -> Contour:
                     (_to_segment_angle(centroid_x, centroid_y, point), point)
                     for point in result),
                     key=itemgetter(0))]
-        centroid = (contour_to_centroid(result)
-                    if len(result) > 2
-                    else (0, 0))
-        index = 0
-        while max(index, 2) < len(result):
-            if not point_in_angle(centroid,
-                                  result[index - 1],
-                                  result[index],
-                                  result[(index + 1) % len(result)]):
-                del result[index]
-            index += 1
-        if size == len(result):
+        if len(result) > 2:
+            centroid = contour_to_centroid(result)
+            index = 0
+            while max(index, 2) < len(result):
+                if not point_in_angle(centroid,
+                                      result[index - 1],
+                                      result[index],
+                                      result[(index + 1) % len(result)]):
+                    del result[index]
+                index += 1
             shrink_collinear_vertices(result)
-            if size == len(result):
-                break
     return result
 
 
