@@ -1,5 +1,10 @@
+import math
+from collections import deque
+from fractions import Fraction
 from functools import partial
+from itertools import groupby
 from math import atan2
+from operator import itemgetter
 from random import Random
 from typing import (Callable,
                     Iterable,
@@ -67,6 +72,36 @@ def to_contour(points: Sequence[Point], size: int) -> Contour:
               for edge in triangular.to_boundary_edges(triangulation)]
     shrink_collinear_vertices(result)
     return result
+
+
+def to_star_contour(points: Sequence[Point]) -> Contour:
+    center_x, center_y = _points_to_center_of_mass(points)
+    result = [deque(candidates,
+                    maxlen=1)[0][1]
+              for _, candidates in groupby(sorted(
+                (_to_segment_angle(center_x, center_y, point), point)
+                for point in points),
+                key=itemgetter(0))]
+    shrink_collinear_vertices(result)
+    return result
+
+
+def _points_to_center_of_mass(points: Sequence[Point]) -> Point:
+    xs, ys = zip(*points)
+    return (_divide_by_int(sum(xs), len(points)),
+            _divide_by_int(sum(ys), len(points)))
+
+
+def _divide_by_int(dividend: Coordinate, divisor: int) -> Coordinate:
+    return (Fraction(dividend, divisor)
+            if isinstance(dividend, int)
+            else dividend / divisor)
+
+
+def _to_segment_angle(start_x: Coordinate, start_y: Coordinate,
+                      end: Point) -> Coordinate:
+    end_x, end_y = end
+    return math.atan2(end_y - start_y, end_x - start_x)
 
 
 def to_polygon(points: Sequence[Point],

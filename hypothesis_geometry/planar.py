@@ -36,6 +36,7 @@ from .utils import (constrict_convex_hull_size,
                     to_convex_contour,
                     to_convex_hull,
                     to_polygon,
+                    to_star_contour,
                     to_strict_convex_hull)
 
 
@@ -999,6 +1000,25 @@ def bounding_boxes(x_coordinates: Strategy[Coordinate],
                                               max_size=2,
                                               unique=True)
                              .map(sort_pair))
+
+
+def star_contours(x_coordinates: Strategy[Coordinate],
+                  y_coordinates: Optional[Strategy[Coordinate]] = None,
+                  *,
+                  min_size: int = MIN_CONCAVE_CONTOUR_SIZE,
+                  max_size: Optional[int] = None,
+                  ) -> Strategy[Contour]:
+    _validate_sizes(min_size, max_size, MIN_CONCAVE_CONTOUR_SIZE)
+    min_size = max(min_size, MIN_CONCAVE_CONTOUR_SIZE)
+    return (strategies.lists(points(x_coordinates, y_coordinates),
+                             min_size=min_size,
+                             max_size=max_size,
+                             unique=True)
+            .filter(points_do_not_lie_on_the_same_line)
+            .map(to_star_contour)
+            .filter(partial(_has_valid_size,
+                            min_size=min_size,
+                            max_size=max_size)))
 
 
 EMPTY_MULTICONTOUR_SIZE = 0
