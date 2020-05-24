@@ -737,16 +737,17 @@ def concave_contours(x_coordinates: Strategy[Coordinate],
                                     else min(len(points), max_size))
         return strategies.tuples(strategies.just(points), sizes)
 
-    return (strategies.lists(points(x_coordinates, y_coordinates),
-                             min_size=min_size,
-                             max_size=max_size,
-                             unique=True)
-            .filter(points_do_not_lie_on_the_same_line)
-            .flatmap(to_points_with_sizes)
-            .map(pack(to_contour))
-            .filter(partial(_has_valid_size,
-                            min_size=min_size,
-                            max_size=max_size))
+    return ((star_contours(x_coordinates, y_coordinates)
+             | (strategies.lists(points(x_coordinates, y_coordinates),
+                                 min_size=min_size,
+                                 max_size=max_size,
+                                 unique=True)
+                .filter(points_do_not_lie_on_the_same_line)
+                .flatmap(to_points_with_sizes)
+                .map(pack(to_contour))
+                .filter(partial(_has_valid_size,
+                                min_size=min_size,
+                                max_size=max_size))))
             .filter(is_contour_non_convex))
 
 
