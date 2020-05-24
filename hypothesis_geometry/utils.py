@@ -1,6 +1,5 @@
 import math
 from collections import deque
-from fractions import Fraction
 from functools import partial
 from itertools import groupby
 from math import atan2
@@ -22,7 +21,8 @@ from .core import triangular
 from .core.subdivisional import (QuadEdge,
                                  to_edge_neighbours)
 from .core.utils import (Orientation,
-                         orientation)
+                         orientation,
+                         points_to_center_of_mass)
 from .hints import (Contour,
                     Coordinate,
                     Domain,
@@ -75,7 +75,7 @@ def to_contour(points: Sequence[Point], size: int) -> Contour:
 
 
 def to_star_contour(points: Sequence[Point]) -> Contour:
-    center_x, center_y = _points_to_center_of_mass(points)
+    center_x, center_y = points_to_center_of_mass(points)
     result = [deque(candidates,
                     maxlen=1)[0][1]
               for _, candidates in groupby(sorted(
@@ -84,18 +84,6 @@ def to_star_contour(points: Sequence[Point]) -> Contour:
                 key=itemgetter(0))]
     shrink_collinear_vertices(result)
     return result
-
-
-def _points_to_center_of_mass(points: Sequence[Point]) -> Point:
-    xs, ys = zip(*points)
-    return (_divide_by_int(sum(xs), len(points)),
-            _divide_by_int(sum(ys), len(points)))
-
-
-def _divide_by_int(dividend: Coordinate, divisor: int) -> Coordinate:
-    return (Fraction(dividend, divisor)
-            if isinstance(dividend, int)
-            else dividend / divisor)
 
 
 def _to_segment_angle(start_x: Coordinate, start_y: Coordinate,
