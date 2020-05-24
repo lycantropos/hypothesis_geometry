@@ -6,6 +6,11 @@ from typing import (Iterator,
 
 from robust.angular import (Orientation,
                             orientation)
+from robust.hints import Expansion
+from robust.utils import (scale_expansion,
+                          sum_expansions,
+                          two_product,
+                          two_two_diff)
 
 from hypothesis_geometry.hints import (Contour,
                                        Coordinate,
@@ -41,18 +46,33 @@ def points_to_centroid(points: Sequence[Point]) -> Point:
 
 
 def contour_to_centroid(contour: Contour) -> Point:
-    double_area, x_numerator, y_numerator = 0, 0, 0
-    prev_x, prev_y = contour[-1]
-    for x, y in contour:
-        area_component = prev_x * y - prev_y * x
-        double_area += area_component
-        x_numerator += (prev_x + x) * area_component
-        y_numerator += (prev_y + y) * area_component
+    double_area, x_numerator, y_numerator = ((0,),) * 3
+    prev_x, prev_y = prev_vertex = contour[-1]
+    for vertex in contour:
+        area_component = _to_endpoints_cross_product_z(prev_vertex, vertex)
+        double_area = sum_expansions(double_area, area_component)
+        x, y = vertex
+        x_numerator = sum_expansions(x_numerator,
+                                     scale_expansion(area_component,
+                                                     prev_x + x))
+        y_numerator = sum_expansions(y_numerator,
+                                     scale_expansion(area_component,
+                                                     prev_y + y))
         prev_x, prev_y = x, y
-    denominator = 3 * double_area
+        prev_vertex = vertex
+    denominator = 3 * double_area[-1]
     assert denominator != 0
-    return (_divide_by_int(x_numerator, denominator),
-            _divide_by_int(y_numerator, denominator))
+    return (_divide_by_int(x_numerator[-1], denominator),
+            _divide_by_int(y_numerator[-1], denominator))
+
+
+def _to_endpoints_cross_product_z(start: Point, end: Point) -> Expansion:
+    (start_x, start_y), (end_x, end_y) = start, end
+    minuend, minuend_tail = two_product(start_x, end_y)
+    subtrahend, subtrahend_tail = two_product(start_y, end_x)
+    return (two_two_diff(minuend, minuend_tail, subtrahend, subtrahend_tail)
+            if minuend_tail or subtrahend_tail
+            else (minuend - subtrahend,))
 
 
 def _divide_by_int(dividend: Coordinate, divisor: int) -> Coordinate:
