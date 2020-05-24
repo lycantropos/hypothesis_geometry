@@ -21,7 +21,9 @@ from .core import triangular
 from .core.subdivisional import (QuadEdge,
                                  to_edge_neighbours)
 from .core.utils import (Orientation,
+                         contour_to_centroid,
                          orientation,
+                         point_in_angle,
                          points_to_centroid)
 from .hints import (Contour,
                     Coordinate,
@@ -75,14 +77,32 @@ def to_contour(points: Sequence[Point], size: int) -> Contour:
 
 
 def to_star_contour(points: Sequence[Point]) -> Contour:
-    centroid_x, centroid_y = points_to_centroid(points)
-    result = [deque(candidates,
-                    maxlen=1)[0][1]
-              for _, candidates in groupby(sorted(
-                (_to_segment_angle(centroid_x, centroid_y, point), point)
-                for point in points),
-                key=itemgetter(0))]
-    shrink_collinear_vertices(result)
+    centroid = points_to_centroid(points)
+    result = points
+    while True:
+        size = len(result)
+        centroid_x, centroid_y = centroid
+        result = [deque(candidates,
+                        maxlen=1)[0][1]
+                  for _, candidates in groupby(sorted(
+                    (_to_segment_angle(centroid_x, centroid_y, point), point)
+                    for point in result),
+                    key=itemgetter(0))]
+        centroid = (contour_to_centroid(result)
+                    if len(result) > 2
+                    else (0, 0))
+        index = 0
+        while max(index, 2) < len(result):
+            if not point_in_angle(centroid,
+                                  result[index],
+                                  result[index - 1],
+                                  result[(index + 1) % len(result)]):
+                del result[index]
+            index += 1
+        if size == len(result):
+            shrink_collinear_vertices(result)
+            if size == len(result):
+                break
     return result
 
 
