@@ -705,9 +705,9 @@ def concave_contours(x_coordinates: Strategy[Coordinate],
     ...                                   allow_infinity=False,
     ...                                   allow_nan=False)
     >>> min_size, max_size = 5, 10
-    >>> contours = planar.contours(x_coordinates, y_coordinates,
-    ...                            min_size=min_size,
-    ...                            max_size=max_size)
+    >>> contours = planar.concave_contours(x_coordinates, y_coordinates,
+    ...                                    min_size=min_size,
+    ...                                    max_size=max_size)
     >>> contour = contours.example()
     >>> isinstance(contour, list)
     True
