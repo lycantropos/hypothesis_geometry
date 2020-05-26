@@ -163,6 +163,10 @@ def is_multisegment(object_: Any) -> bool:
     return isinstance(object_, list) and all(map(is_segment, object_))
 
 
+def is_multipoint(object_: Any) -> bool:
+    return isinstance(object_, list) and all(map(is_point, object_))
+
+
 def is_multicontour(object_: Any) -> bool:
     return isinstance(object_, list) and all(map(is_contour, object_))
 
