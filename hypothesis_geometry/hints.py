@@ -11,6 +11,7 @@ Strategy = SearchStrategy
 Coordinate = Real
 BoundingBox = Tuple[Coordinate, Coordinate, Coordinate, Coordinate]
 Point = Tuple[Coordinate, Coordinate]
+Multipoint = List[Point]
 Segment = Tuple[Point, Point]
 Multisegment = List[Segment]
 Contour = List[Point]
