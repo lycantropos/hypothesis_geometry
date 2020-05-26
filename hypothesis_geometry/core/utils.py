@@ -61,7 +61,6 @@ def contour_to_centroid(contour: Contour) -> Point:
         prev_x, prev_y = x, y
         prev_vertex = vertex
     denominator = 3 * double_area[-1]
-    assert denominator != 0
     return (_divide_by_int(x_numerator[-1], denominator),
             _divide_by_int(y_numerator[-1], denominator))
 
