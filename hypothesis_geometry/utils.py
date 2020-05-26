@@ -109,8 +109,9 @@ def _to_segment_angle(start_x: Coordinate, start_y: Coordinate,
 
 
 def to_polygon(points: Sequence[Point],
-               size: int,
-               holes_sizes: List[int]) -> Polygon:
+               border_size: int,
+               holes_sizes: List[int],
+               random: Random) -> Polygon:
     triangulation = triangular.delaunay(points)
     boundary_edges = triangular.to_boundary_edges(triangulation)
     boundary_vertices = {edge.start for edge in boundary_edges}
@@ -118,13 +119,20 @@ def to_polygon(points: Sequence[Point],
     start = 0
     holes = []
     holes_segments = []
+    random_flag = partial(random.getrandbits, 1)
+    random_sorting_key = partial(random.choice, [itemgetter(1, 0), None])
     for hole_size in holes_sizes:
-        hole_points = inner_points[start:start + hole_size]
+        hole_points = inner_points[:hole_size]
         hole = to_contour(hole_points, hole_size)[::-1]
         holes.append(hole)
         holes_segments.extend(contour_to_segments(hole))
         boundary_vertices.update(hole_points)
         start += hole_size
+        inner_points = inner_points[hole_size:]
+        if random_flag():
+            inner_points = sorted(inner_points,
+                                  key=random_sorting_key(),
+                                  reverse=random_flag())
 
     def is_mouth(edge: QuadEdge) -> bool:
         neighbour_end = edge.left_from_start.end
@@ -144,15 +152,15 @@ def to_polygon(points: Sequence[Point],
                         for edge in boundary_edges}
     candidates = red_black.tree(*filter(is_mouth, boundary_edges),
                                 key=_edge_key)
-    current_size = len(to_strict_convex_hull(points))
-    while current_size < size:
+    current_border_size = len(to_strict_convex_hull(points))
+    while current_border_size < border_size:
         try:
             edge = candidates.popmax()
         except KeyError:
             break
         if not is_mouth(edge):
             continue
-        current_size += 1
+        current_border_size += 1
         boundary_vertices.add(edge.left_from_start.end)
         triangulation.delete(edge)
         for neighbour in edges_neighbours.pop(edge):
