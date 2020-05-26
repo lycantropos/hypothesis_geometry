@@ -1538,20 +1538,23 @@ def polygons(x_coordinates: Strategy[Coordinate],
                     'min_holes_size', 'max_holes_size')
     _validate_sizes(min_hole_size, max_hole_size, TRIANGULAR_CONTOUR_SIZE,
                     'min_hole_size', 'max_hole_size')
-    min_size, min_hole_size = (max(min_size, TRIANGULAR_CONTOUR_SIZE),
-                               max(min_hole_size, TRIANGULAR_CONTOUR_SIZE))
+    min_size, min_hole_size, min_holes_size = (
+        max(min_size, TRIANGULAR_CONTOUR_SIZE),
+        max(min_hole_size, TRIANGULAR_CONTOUR_SIZE),
+        max(min_holes_size, EMPTY_MULTICONTOUR_SIZE))
 
-    def to_points_with_sizes(points: List[Point]
-                             ) -> Strategy[Tuple[List[Point], int, List[int]]]:
+    def to_polygons(points: List[Point]) -> Strategy[Polygon]:
         max_border_points_count = len(points) - min_inner_points_count
         min_border_size = max(min_size, len(to_strict_convex_hull(points)))
         max_border_size = (max_border_points_count
                            if max_size is None
                            else min(max_size, max_border_points_count))
-        return strategies.tuples(strategies.just(points),
+        return strategies.builds(to_polygon,
+                                 strategies.just(points),
                                  strategies.integers(min_border_size,
                                                      max_border_size),
-                                 to_holes_sizes(points))
+                                 to_holes_sizes(points),
+                                 strategies.randoms())
 
     def to_holes_sizes(points: List[Point]) -> Strategy[List[int]]:
         max_inner_points_count = len(points) - len(to_convex_hull(points))
@@ -1612,12 +1615,12 @@ def polygons(x_coordinates: Strategy[Coordinate],
                           or max_hole_size is None)
                       else max_size + max_hole_size * max_holes_size),
             unique=True)
+            .filter(points_do_not_lie_on_the_same_line)
             .map(sorted)
             .map(partial(constrict_convex_hull_size,
                          max_size=max_size))
             .filter(has_valid_inner_points_count)
-            .flatmap(to_points_with_sizes)
-            .map(pack(to_polygon))
+            .flatmap(to_polygons)
             .filter(has_valid_sizes))
 
 
