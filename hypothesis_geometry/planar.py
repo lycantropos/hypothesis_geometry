@@ -22,6 +22,7 @@ from .hints import (BoundingBox,
                     Contour,
                     Coordinate,
                     Multicontour,
+                    Multipoint,
                     Multisegment,
                     Point,
                     Polygon,
@@ -104,6 +105,99 @@ def points(x_coordinates: Strategy[Coordinate],
     if y_coordinates is None:
         y_coordinates = x_coordinates
     return strategies.tuples(x_coordinates, y_coordinates)
+
+
+EMPTY_MULTIPOINT_SIZE = 0
+
+
+def multipoints(x_coordinates: Strategy[Coordinate],
+                y_coordinates: Optional[Strategy[Coordinate]] = None,
+                *,
+                min_size: int = EMPTY_MULTIPOINT_SIZE,
+                max_size: Optional[int] = None
+                ) -> Strategy[Multipoint]:
+    """
+    Returns a strategy for multipoints.
+    Multipoint is a possibly empty sequence of distinct points.
+
+    :param x_coordinates: strategy for points' x-coordinates.
+    :param y_coordinates:
+        strategy for points' y-coordinates,
+        ``None`` for reusing x-coordinates strategy.
+    :param min_size: lower bound for multipoint size.
+    :param max_size: upper bound for multipoint size, ``None`` for unbound.
+
+    >>> from hypothesis import strategies
+    >>> from hypothesis_geometry import planar
+
+    For same coordinates' domain:
+
+    >>> min_coordinate, max_coordinate = -1., 1.
+    >>> coordinates_type = float
+    >>> coordinates = strategies.floats(min_coordinate, max_coordinate,
+    ...                                 allow_infinity=False,
+    ...                                 allow_nan=False)
+    >>> min_size, max_size = 5, 10
+    >>> multipoints = planar.multipoints(coordinates,
+    ...                                  min_size=min_size,
+    ...                                  max_size=max_size)
+    >>> multipoint = multipoints.example()
+    >>> isinstance(multipoint, list)
+    True
+    >>> min_size <= len(multipoint) <= max_size
+    True
+    >>> all(isinstance(point, tuple) for point in multipoint)
+    True
+    >>> all(len(point) == 2 for point in multipoint)
+    True
+    >>> all(isinstance(coordinate, coordinates_type)
+    ...     for point in multipoint
+    ...     for coordinate in point)
+    True
+    >>> all(min_coordinate <= coordinate <= max_coordinate
+    ...     for point in multipoint
+    ...     for coordinate in point)
+    True
+
+    For different coordinates' domains:
+
+    >>> min_x_coordinate, max_x_coordinate = -1., 1.
+    >>> min_y_coordinate, max_y_coordinate = 10., 100.
+    >>> coordinates_type = float
+    >>> x_coordinates = strategies.floats(min_x_coordinate, max_x_coordinate,
+    ...                                   allow_infinity=False,
+    ...                                   allow_nan=False)
+    >>> y_coordinates = strategies.floats(min_y_coordinate, max_y_coordinate,
+    ...                                   allow_infinity=False,
+    ...                                   allow_nan=False)
+    >>> min_size, max_size = 5, 10
+    >>> multipoints = planar.multipoints(x_coordinates, y_coordinates,
+    ...                                      min_size=min_size,
+    ...                                      max_size=max_size)
+    >>> multipoint = multipoints.example()
+    >>> isinstance(multipoint, list)
+    True
+    >>> min_size <= len(multipoint) <= max_size
+    True
+    >>> all(isinstance(point, tuple) for point in multipoint)
+    True
+    >>> all(len(point) == 2 for point in multipoint)
+    True
+    >>> all(isinstance(coordinate, coordinates_type)
+    ...     for point in multipoint
+    ...     for coordinate in point)
+    True
+    >>> all(min_x_coordinate <= point_x <= max_x_coordinate
+    ...     and min_y_coordinate <= point_y <= max_y_coordinate
+    ...     for point_x, point_y in multipoint)
+    True
+    """
+    _validate_sizes(min_size, max_size, EMPTY_MULTIPOINT_SIZE)
+    min_size = max(min_size, EMPTY_MULTIPOINT_SIZE)
+    return strategies.lists(points(x_coordinates, y_coordinates),
+                            unique=True,
+                            min_size=min_size,
+                            max_size=max_size)
 
 
 def segments(x_coordinates: Strategy[Coordinate],
