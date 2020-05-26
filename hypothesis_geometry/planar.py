@@ -200,6 +200,13 @@ def multisegments(x_coordinates: Strategy[Coordinate],
     Multisegment is a possibly empty sequence of segments
     such that any pair of them do not cross/overlap each other.
 
+    :param x_coordinates: strategy for segments' x-coordinates.
+    :param y_coordinates:
+        strategy for segments' y-coordinates,
+        ``None`` for reusing x-coordinates strategy.
+    :param min_size: lower bound for multisegment size.
+    :param max_size: upper bound for multisegment size, ``None`` for unbound.
+
     >>> from hypothesis import strategies
     >>> from hypothesis_geometry import planar
 
