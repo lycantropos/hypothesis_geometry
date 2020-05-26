@@ -8,8 +8,11 @@ from hypothesis_geometry.hints import (Coordinate,
                                        Strategy)
 from hypothesis_geometry.planar import multisegments
 from tests import strategies
-from tests.utils import (CoordinatesLimitsType, SizesPair, has_valid_size,
-                         is_multisegment, segment_has_coordinates_in_range,
+from tests.utils import (CoordinatesLimitsType,
+                         SizesPair,
+                         has_valid_size,
+                         is_multisegment,
+                         segment_has_coordinates_in_range,
                          segment_has_coordinates_types,
                          segments_do_not_cross_or_overlap)
 
