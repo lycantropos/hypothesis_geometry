@@ -5,7 +5,6 @@ from hypothesis import given
 from hypothesis.errors import HypothesisWarning
 from hypothesis.strategies import DataObject
 
-from hypothesis_geometry.core.contracts import is_contour_strict
 from hypothesis_geometry.hints import (Coordinate,
                                        Strategy)
 from hypothesis_geometry.planar import multicontours
@@ -16,9 +15,10 @@ from tests.utils import (CoordinatesLimitsType,
                          has_valid_size,
                          is_counterclockwise_contour,
                          is_multicontour,
+                         is_multicontour_strict,
                          is_non_self_intersecting_contour,
-                         point_has_coordinates_in_range,
-                         point_has_coordinates_types)
+                         multicontour_has_coordinates_in_range,
+                         multicontour_has_coordinates_types)
 
 
 @given(strategies.coordinates_strategies,
@@ -73,20 +73,15 @@ def test_properties(data: DataObject,
                               min_size=min_contour_size,
                               max_size=max_contour_size)
                for contour in result)
-    assert all(point_has_coordinates_types(vertex,
-                                           x_type=x_type,
-                                           y_type=y_type)
-               for contour in result
-               for vertex in contour)
-    assert all(point_has_coordinates_in_range(vertex,
-                                              min_x_value=min_x_value,
-                                              max_x_value=max_x_value,
-                                              min_y_value=min_y_value,
-                                              max_y_value=max_y_value)
-               for contour in result
-               for vertex in contour)
-    assert all(is_contour_strict(contour)
-               for contour in result)
+    assert multicontour_has_coordinates_types(result,
+                                              x_type=x_type,
+                                              y_type=y_type)
+    assert multicontour_has_coordinates_in_range(result,
+                                                 min_x_value=min_x_value,
+                                                 max_x_value=max_x_value,
+                                                 min_y_value=min_y_value,
+                                                 max_y_value=max_y_value)
+    assert is_multicontour_strict(result)
     assert all(is_non_self_intersecting_contour(contour)
                for contour in result)
     assert contours_do_not_cross_or_overlap(result)
@@ -122,20 +117,15 @@ def test_same_coordinates(data: DataObject,
                               min_size=min_contour_size,
                               max_size=max_contour_size)
                for contour in result)
-    assert all(point_has_coordinates_types(vertex,
-                                           x_type=type_,
-                                           y_type=type_)
-               for contour in result
-               for vertex in contour)
-    assert all(point_has_coordinates_in_range(vertex,
-                                              min_x_value=min_value,
-                                              max_x_value=max_value,
-                                              min_y_value=min_value,
-                                              max_y_value=max_value)
-               for contour in result
-               for vertex in contour)
-    assert all(is_contour_strict(contour)
-               for contour in result)
+    assert multicontour_has_coordinates_types(result,
+                                              x_type=type_,
+                                              y_type=type_)
+    assert multicontour_has_coordinates_in_range(result,
+                                                 min_x_value=min_value,
+                                                 max_x_value=max_value,
+                                                 min_y_value=min_value,
+                                                 max_y_value=max_value)
+    assert is_multicontour_strict(result)
     assert all(is_non_self_intersecting_contour(contour)
                for contour in result)
     assert contours_do_not_cross_or_overlap(result)
