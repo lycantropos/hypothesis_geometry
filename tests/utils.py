@@ -152,37 +152,6 @@ def all_unique(iterable: Iterable[Hashable]) -> bool:
     return True
 
 
-def is_polygon(object_: Any) -> bool:
-    return (isinstance(object_, tuple)
-            and len(object_) == 2
-            and is_contour(object_[0])
-            and is_multicontour(object_[1]))
-
-
-def is_multisegment(object_: Any) -> bool:
-    return isinstance(object_, list) and all(map(is_segment, object_))
-
-
-def is_multipoint(object_: Any) -> bool:
-    return isinstance(object_, list) and all(map(is_point, object_))
-
-
-def is_multicontour(object_: Any) -> bool:
-    return isinstance(object_, list) and all(map(is_contour, object_))
-
-
-def is_contour(object_: Any) -> bool:
-    return (isinstance(object_, list)
-            and len(object_) >= TRIANGULAR_CONTOUR_SIZE
-            and all(map(is_point, object_)))
-
-
-def is_polyline(object_: Any) -> bool:
-    return (isinstance(object_, list)
-            and len(object_) >= MIN_POLYLINE_SIZE
-            and all(map(is_point, object_)))
-
-
 def is_bounding_box(object_: Any) -> bool:
     return (isinstance(object_, tuple)
             and len(object_) == 4
@@ -191,11 +160,22 @@ def is_bounding_box(object_: Any) -> bool:
             and len(set(map(type, object_))) == 1)
 
 
-def is_segment(object_: Any) -> bool:
-    return (isinstance(object_, tuple)
-            and len(object_) == 2
-            and all(map(is_point, object_))
-            and len(set(object_)) == 2)
+def is_contour(object_: Any) -> bool:
+    return (isinstance(object_, list)
+            and len(object_) >= TRIANGULAR_CONTOUR_SIZE
+            and all(map(is_point, object_)))
+
+
+def is_multipoint(object_: Any) -> bool:
+    return isinstance(object_, list) and all(map(is_point, object_))
+
+
+def is_multisegment(object_: Any) -> bool:
+    return isinstance(object_, list) and all(map(is_segment, object_))
+
+
+def is_multicontour(object_: Any) -> bool:
+    return isinstance(object_, list) and all(map(is_contour, object_))
 
 
 def is_point(object_: Any) -> bool:
@@ -204,6 +184,26 @@ def is_point(object_: Any) -> bool:
             and all(isinstance(coordinate, Number)
                     for coordinate in object_)
             and len(set(map(type, object_))) == 1)
+
+
+def is_polygon(object_: Any) -> bool:
+    return (isinstance(object_, tuple)
+            and len(object_) == 2
+            and is_contour(object_[0])
+            and is_multicontour(object_[1]))
+
+
+def is_polyline(object_: Any) -> bool:
+    return (isinstance(object_, list)
+            and len(object_) >= MIN_POLYLINE_SIZE
+            and all(map(is_point, object_)))
+
+
+def is_segment(object_: Any) -> bool:
+    return (isinstance(object_, tuple)
+            and len(object_) == 2
+            and all(map(is_point, object_))
+            and len(set(object_)) == 2)
 
 
 def is_non_self_intersecting_contour(contour: Contour) -> bool:
