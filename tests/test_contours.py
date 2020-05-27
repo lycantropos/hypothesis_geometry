@@ -12,12 +12,12 @@ from hypothesis_geometry.planar import contours
 from tests import strategies
 from tests.utils import (CoordinatesLimitsType,
                          SizesPair,
+                         contour_has_coordinates_in_range,
+                         contour_has_coordinates_types,
                          has_valid_size,
                          is_contour,
                          is_counterclockwise_contour,
-                         is_non_self_intersecting_contour,
-                         point_has_coordinates_in_range,
-                         point_has_coordinates_types)
+                         is_non_self_intersecting_contour)
 
 
 @given(strategies.coordinates_strategies,
@@ -58,16 +58,14 @@ def test_properties(data: DataObject,
     assert has_valid_size(result,
                           min_size=min_size,
                           max_size=max_size)
-    assert all(point_has_coordinates_types(vertex,
-                                           x_type=x_type,
-                                           y_type=y_type)
-               for vertex in result)
-    assert all(point_has_coordinates_in_range(vertex,
-                                              min_x_value=min_x_value,
-                                              max_x_value=max_x_value,
-                                              min_y_value=min_y_value,
-                                              max_y_value=max_y_value)
-               for vertex in result)
+    assert contour_has_coordinates_types(result,
+                                         x_type=x_type,
+                                         y_type=y_type)
+    assert contour_has_coordinates_in_range(result,
+                                            min_x_value=min_x_value,
+                                            max_x_value=max_x_value,
+                                            min_y_value=min_y_value,
+                                            max_y_value=max_y_value)
     assert is_contour_strict(result)
     assert is_non_self_intersecting_contour(result)
     assert is_counterclockwise_contour(result)
@@ -92,16 +90,14 @@ def test_same_coordinates(data: DataObject,
     assert has_valid_size(result,
                           min_size=min_size,
                           max_size=max_size)
-    assert all(point_has_coordinates_types(vertex,
-                                           x_type=type_,
-                                           y_type=type_)
-               for vertex in result)
-    assert all(point_has_coordinates_in_range(vertex,
-                                              min_x_value=min_value,
-                                              max_x_value=max_value,
-                                              min_y_value=min_value,
-                                              max_y_value=max_value)
-               for vertex in result)
+    assert contour_has_coordinates_types(result,
+                                         x_type=type_,
+                                         y_type=type_)
+    assert contour_has_coordinates_in_range(result,
+                                            min_x_value=min_value,
+                                            max_x_value=max_value,
+                                            min_y_value=min_value,
+                                            max_y_value=max_value)
     assert is_contour_strict(result)
     assert is_non_self_intersecting_contour(result)
     assert is_counterclockwise_contour(result)
