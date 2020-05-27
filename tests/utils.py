@@ -16,9 +16,11 @@ from hypothesis import strategies
 from robust.angular import (Orientation,
                             orientation)
 
+from hypothesis_geometry.core.contracts import is_contour_strict
 from hypothesis_geometry.core.utils import contour_to_centroid
 from hypothesis_geometry.hints import (Contour,
                                        Coordinate,
+                                       Multicontour,
                                        Multisegment,
                                        Point,
                                        Segment,
@@ -45,6 +47,51 @@ def to_pairs(strategy: Strategy[Domain]) -> Strategy[Tuple[Domain, Domain]]:
     return strategies.tuples(strategy, strategy)
 
 
+def contour_has_coordinates_in_range(contour: Contour,
+                                     *,
+                                     min_x_value: Coordinate,
+                                     max_x_value: Optional[Coordinate],
+                                     min_y_value: Coordinate,
+                                     max_y_value: Optional[Coordinate]
+                                     ) -> bool:
+    return all(point_has_coordinates_in_range(vertex,
+                                              min_x_value=min_x_value,
+                                              max_x_value=max_x_value,
+                                              min_y_value=min_y_value,
+                                              max_y_value=max_y_value)
+               for vertex in contour)
+
+
+def multicontour_has_coordinates_in_range(multicontour: Multicontour,
+                                          *,
+                                          min_x_value: Coordinate,
+                                          max_x_value: Optional[Coordinate],
+                                          min_y_value: Coordinate,
+                                          max_y_value: Optional[Coordinate]
+                                          ) -> bool:
+    return all(contour_has_coordinates_in_range(contour,
+                                                min_x_value=min_x_value,
+                                                max_x_value=max_x_value,
+                                                min_y_value=min_y_value,
+                                                max_y_value=max_y_value)
+               for contour in multicontour)
+
+
+def point_has_coordinates_in_range(point: Point,
+                                   *,
+                                   min_x_value: Coordinate,
+                                   max_x_value: Optional[Coordinate],
+                                   min_y_value: Coordinate,
+                                   max_y_value: Optional[Coordinate]) -> bool:
+    x, y = point
+    return (is_coordinate_in_range(x,
+                                   min_value=min_x_value,
+                                   max_value=max_x_value)
+            and is_coordinate_in_range(y,
+                                       min_value=min_y_value,
+                                       max_value=max_y_value))
+
+
 def segment_has_coordinates_in_range(segment: Segment,
                                      *,
                                      min_x_value: Coordinate,
@@ -65,27 +112,39 @@ def segment_has_coordinates_in_range(segment: Segment,
                                                max_y_value=max_y_value))
 
 
-def point_has_coordinates_in_range(point: Point,
-                                   *,
-                                   min_x_value: Coordinate,
-                                   max_x_value: Optional[Coordinate],
-                                   min_y_value: Coordinate,
-                                   max_y_value: Optional[Coordinate]) -> bool:
-    x, y = point
-    return (is_coordinate_in_range(x,
-                                   min_value=min_x_value,
-                                   max_value=max_x_value)
-            and is_coordinate_in_range(y,
-                                       min_value=min_y_value,
-                                       max_value=max_y_value))
-
-
 def is_coordinate_in_range(coordinate: Coordinate,
                            *,
                            min_value: Coordinate,
                            max_value: Optional[Coordinate]) -> bool:
     return (min_value <= coordinate
             and (max_value is None or coordinate <= max_value))
+
+
+def contour_has_coordinates_types(contour: Contour, *,
+                                  x_type: Type[Coordinate],
+                                  y_type: Type[Coordinate]) -> bool:
+    return all(point_has_coordinates_types(vertex,
+                                           x_type=x_type,
+                                           y_type=y_type)
+               for vertex in contour)
+
+
+def multicontour_has_coordinates_types(multicontour: Multicontour,
+                                       *,
+                                       x_type: Type[Coordinate],
+                                       y_type: Type[Coordinate]) -> bool:
+    return all(contour_has_coordinates_types(contour,
+                                             x_type=x_type,
+                                             y_type=y_type)
+               for contour in multicontour)
+
+
+def point_has_coordinates_types(point: Point,
+                                *,
+                                x_type: Type[Coordinate],
+                                y_type: Type[Coordinate]) -> bool:
+    x, y = point
+    return isinstance(x, x_type) and isinstance(y, y_type)
 
 
 def segment_has_coordinates_types(segment: Segment,
@@ -99,14 +158,6 @@ def segment_has_coordinates_types(segment: Segment,
             and point_has_coordinates_types(end,
                                             x_type=x_type,
                                             y_type=y_type))
-
-
-def point_has_coordinates_types(point: Point,
-                                *,
-                                x_type: Type[Coordinate],
-                                y_type: Type[Coordinate]) -> bool:
-    x, y = point
-    return isinstance(x, x_type) and isinstance(y, y_type)
 
 
 def has_no_consecutive_repetitions(iterable: Iterable[Domain]) -> bool:
@@ -168,6 +219,10 @@ def is_contour(object_: Any) -> bool:
 
 def is_multipoint(object_: Any) -> bool:
     return isinstance(object_, list) and all(map(is_point, object_))
+
+
+def is_multipolygon(object_: Any) -> bool:
+    return isinstance(object_, list) and all(map(is_polygon, object_))
 
 
 def is_multisegment(object_: Any) -> bool:
@@ -232,3 +287,7 @@ def contours_do_not_cross_or_overlap(contours: List[Contour]) -> bool:
 
 def segments_do_not_cross_or_overlap(segments: List[Segment]) -> bool:
     return not segments_cross_or_overlap(segments)
+
+
+def is_multicontour_strict(multicontour: Multicontour) -> bool:
+    return all(is_contour_strict(contour) for contour in multicontour)

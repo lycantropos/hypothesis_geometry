@@ -12,13 +12,16 @@ from hypothesis_geometry.planar import polygons
 from tests import strategies
 from tests.utils import (CoordinatesLimitsType,
                          SizesPair,
+                         contour_has_coordinates_in_range,
+                         contour_has_coordinates_types,
                          contours_do_not_cross_or_overlap,
                          has_valid_size,
                          is_counterclockwise_contour,
+                         is_multicontour_strict,
                          is_non_self_intersecting_contour,
                          is_polygon,
-                         point_has_coordinates_in_range,
-                         point_has_coordinates_types)
+                         multicontour_has_coordinates_in_range,
+                         multicontour_has_coordinates_types)
 
 
 @given(strategies.coordinates_strategies,
@@ -88,31 +91,24 @@ def test_properties(data: DataObject,
                               min_size=min_hole_size,
                               max_size=max_hole_size)
                for hole in holes)
-    assert all(point_has_coordinates_types(vertex,
-                                           x_type=x_type,
-                                           y_type=y_type)
-               for vertex in border)
-    assert all(point_has_coordinates_types(vertex,
-                                           x_type=x_type,
-                                           y_type=y_type)
-               for hole in holes
-               for vertex in hole)
-    assert all(point_has_coordinates_in_range(vertex,
-                                              min_x_value=min_x_value,
-                                              max_x_value=max_x_value,
-                                              min_y_value=min_y_value,
-                                              max_y_value=max_y_value)
-               for vertex in border)
-    assert all(point_has_coordinates_in_range(vertex,
-                                              min_x_value=min_x_value,
-                                              max_x_value=max_x_value,
-                                              min_y_value=min_y_value,
-                                              max_y_value=max_y_value)
-               for hole in holes
-               for vertex in hole)
+    assert contour_has_coordinates_types(border,
+                                         x_type=x_type,
+                                         y_type=y_type)
+    assert multicontour_has_coordinates_types(holes,
+                                              x_type=x_type,
+                                              y_type=y_type)
+    assert contour_has_coordinates_in_range(border,
+                                            min_x_value=min_x_value,
+                                            max_x_value=max_x_value,
+                                            min_y_value=min_y_value,
+                                            max_y_value=max_y_value)
+    assert multicontour_has_coordinates_in_range(holes,
+                                                 min_x_value=min_x_value,
+                                                 max_x_value=max_x_value,
+                                                 min_y_value=min_y_value,
+                                                 max_y_value=max_y_value)
     assert is_contour_strict(border)
-    assert all(is_contour_strict(hole)
-               for hole in holes)
+    assert is_multicontour_strict(holes)
     assert is_non_self_intersecting_contour(border)
     assert all(is_non_self_intersecting_contour(hole)
                for hole in holes)
@@ -160,31 +156,24 @@ def test_same_coordinates(data: DataObject,
                               min_size=min_hole_size,
                               max_size=max_hole_size)
                for hole in holes)
-    assert all(point_has_coordinates_types(vertex,
-                                           x_type=type_,
-                                           y_type=type_)
-               for vertex in border)
-    assert all(point_has_coordinates_types(vertex,
-                                           x_type=type_,
-                                           y_type=type_)
-               for hole in holes
-               for vertex in hole)
-    assert all(point_has_coordinates_in_range(vertex,
-                                              min_x_value=min_value,
-                                              max_x_value=max_value,
-                                              min_y_value=min_value,
-                                              max_y_value=max_value)
-               for vertex in border)
-    assert all(point_has_coordinates_in_range(vertex,
-                                              min_x_value=min_value,
-                                              max_x_value=max_value,
-                                              min_y_value=min_value,
-                                              max_y_value=max_value)
-               for hole in holes
-               for vertex in hole)
+    assert contour_has_coordinates_types(border,
+                                         x_type=type_,
+                                         y_type=type_)
+    assert multicontour_has_coordinates_types(holes,
+                                              x_type=type_,
+                                              y_type=type_)
+    assert contour_has_coordinates_in_range(border,
+                                            min_x_value=min_value,
+                                            max_x_value=max_value,
+                                            min_y_value=min_value,
+                                            max_y_value=max_value)
+    assert multicontour_has_coordinates_in_range(holes,
+                                                 min_x_value=min_value,
+                                                 max_x_value=max_value,
+                                                 min_y_value=min_value,
+                                                 max_y_value=max_value)
     assert is_contour_strict(border)
-    assert all(is_contour_strict(hole)
-               for hole in holes)
+    assert is_multicontour_strict(holes)
     assert is_non_self_intersecting_contour(border)
     assert all(is_non_self_intersecting_contour(hole)
                for hole in holes)
