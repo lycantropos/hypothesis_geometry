@@ -11,6 +11,7 @@ from hypothesis_geometry.hints import (Coordinate,
                                        Strategy)
 from hypothesis_geometry.planar import (EMPTY_MULTICONTOUR_SIZE,
                                         EMPTY_MULTIPOINT_SIZE,
+                                        EMPTY_MULTIPOLYGON_SIZE,
                                         EMPTY_MULTISEGMENT_SIZE,
                                         MIN_CONCAVE_CONTOUR_SIZE,
                                         MIN_POLYLINE_SIZE,
@@ -70,6 +71,7 @@ concave_contours_sizes_pairs = to_sizes_pairs(MIN_CONCAVE_CONTOUR_SIZE)
 convex_contours_sizes_pairs = to_sizes_pairs(TRIANGULAR_CONTOUR_SIZE)
 multicontours_sizes_pairs = to_sizes_pairs(EMPTY_MULTICONTOUR_SIZE, 5)
 multipoints_sizes_pairs = to_sizes_pairs(EMPTY_MULTIPOINT_SIZE)
+multipolygons_sizes_pairs = to_sizes_pairs(EMPTY_MULTIPOLYGON_SIZE, 5)
 multisegments_sizes_pairs = to_sizes_pairs(EMPTY_MULTISEGMENT_SIZE)
 polylines_sizes_pairs = to_sizes_pairs(MIN_POLYLINE_SIZE)
 non_valid_concave_contours_sizes_pairs = to_non_valid_sizes_pairs(
@@ -85,6 +87,8 @@ invalid_multicontours_sizes_pairs = to_invalid_sizes_pairs(
         EMPTY_MULTICONTOUR_SIZE)
 invalid_multipoints_sizes_pairs = to_invalid_sizes_pairs(
         EMPTY_MULTIPOINT_SIZE)
+invalid_multipolygons_sizes_pairs = to_invalid_sizes_pairs(
+        EMPTY_MULTIPOLYGON_SIZE)
 invalid_multisegments_sizes_pairs = to_invalid_sizes_pairs(
         EMPTY_MULTISEGMENT_SIZE)
 invalid_polylines_sizes_pairs = to_invalid_sizes_pairs(MIN_POLYLINE_SIZE)
