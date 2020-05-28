@@ -4,7 +4,8 @@ from itertools import (accumulate,
                        cycle,
                        groupby)
 from random import Random
-from typing import (List,
+from typing import (Callable,
+                    List,
                     Optional,
                     Sized,
                     Tuple)
@@ -21,15 +22,18 @@ from .core.utils import (Orientation,
 from .hints import (BoundingBox,
                     Contour,
                     Coordinate,
+                    Domain,
                     Multicontour,
                     Multipoint,
+                    Multipolygon,
                     Multisegment,
                     Point,
                     Polygon,
                     Polyline,
                     Segment,
                     Strategy)
-from .utils import (constrict_convex_hull_size,
+from .utils import (ceil_division,
+                    constrict_convex_hull_size,
                     contour_to_segments,
                     pack,
                     sort_pair,
@@ -1622,6 +1626,250 @@ def polygons(x_coordinates: Strategy[Coordinate],
             .filter(has_valid_inner_points_count)
             .flatmap(to_polygons)
             .filter(has_valid_sizes))
+
+
+EMPTY_MULTIPOLYGON_SIZE = 0
+
+
+def multipolygons(x_coordinates: Strategy[Coordinate],
+                  y_coordinates: Optional[Strategy[Coordinate]] = None,
+                  *,
+                  min_size: int = EMPTY_MULTIPOLYGON_SIZE,
+                  max_size: Optional[int] = None,
+                  min_border_size: int = TRIANGULAR_CONTOUR_SIZE,
+                  max_border_size: Optional[int] = None,
+                  min_holes_size: int = EMPTY_MULTICONTOUR_SIZE,
+                  max_holes_size: Optional[int] = None,
+                  min_hole_size: int = TRIANGULAR_CONTOUR_SIZE,
+                  max_hole_size: Optional[int] = None
+                  ) -> Strategy[Multipolygon]:
+    """
+    Returns a strategy for multipolygons.
+    Multipolygon is a possibly empty sequence of polygons
+    with non-crossing and non-overlapping borders.
+
+    :param x_coordinates: strategy for vertices' x-coordinates.
+    :param y_coordinates:
+        strategy for vertices' y-coordinates,
+        ``None`` for reusing x-coordinates strategy.
+    :param min_size: lower bound for size.
+    :param max_size: upper bound for size, ``None`` for unbound.
+    :param min_border_size: lower bound for polygons' border size.
+    :param max_border_size:
+        upper bound for polygons' border size, ``None`` for unbound.
+    :param min_holes_size: lower bound for polygons' holes count.
+    :param max_holes_size:
+        upper bound for polygons' holes count, ``None`` for countless.
+    :param min_hole_size: lower bound for hole size.
+    :param max_hole_size:
+        upper bound for polygons' hole size, ``None`` for unbound.
+
+    >>> from hypothesis import strategies
+    >>> from hypothesis_geometry import planar
+
+    For same coordinates' domain:
+
+    >>> min_coordinate, max_coordinate = -1., 1.
+    >>> coordinates_type = float
+    >>> coordinates = strategies.floats(min_coordinate, max_coordinate,
+    ...                                 allow_infinity=False,
+    ...                                 allow_nan=False)
+    >>> min_size, max_size = 0, 5
+    >>> min_border_size, max_border_size = 5, 10
+    >>> min_holes_size, max_holes_size = 1, 4
+    >>> min_hole_size, max_hole_size = 3, 5
+    >>> multipolygons = planar.multipolygons(coordinates,
+    ...                                      min_size=min_size,
+    ...                                      max_size=max_size,
+    ...                                      min_border_size=min_border_size,
+    ...                                      max_border_size=max_border_size,
+    ...                                      min_holes_size=min_holes_size,
+    ...                                      max_holes_size=max_holes_size,
+    ...                                      min_hole_size=min_hole_size,
+    ...                                      max_hole_size=max_hole_size)
+    >>> multipolygon = multipolygons.example()
+    >>> isinstance(multipolygon, list)
+    True
+    >>> min_size <= len(multipolygon) <= max_size
+    True
+    >>> all(isinstance(polygon, tuple) for polygon in multipolygon)
+    True
+    >>> all(len(polygon) == 2 for polygon in multipolygon)
+    True
+    >>> all(isinstance(border, list)
+    ...     and isinstance(holes, list)
+    ...     and all(isinstance(hole, list) for hole in holes)
+    ...     for border, holes in multipolygon)
+    True
+    >>> all(min_border_size <= len(border) <= max_border_size
+    ...     and min_holes_size <= len(holes) <= max_holes_size
+    ...     and all(min_hole_size <= len(hole) <= max_hole_size
+    ...             for hole in holes)
+    ...     for border, holes in multipolygon)
+    True
+    >>> all(all(isinstance(vertex, tuple) for vertex in border)
+    ...     and all(isinstance(vertex, tuple)
+    ...             for hole in holes
+    ...             for vertex in hole)
+    ...     for border, holes in multipolygon)
+    True
+    >>> all(all(len(vertex) == 2 for vertex in border)
+    ...     and all(len(vertex) == 2 for hole in holes for vertex in hole)
+    ...     for border, holes in multipolygon)
+    True
+    >>> all(all(isinstance(coordinate, coordinates_type)
+    ...         for vertex in border
+    ...         for coordinate in vertex)
+    ...     and all(isinstance(coordinate, coordinates_type)
+    ...             for hole in holes
+    ...             for vertex in hole
+    ...             for coordinate in vertex)
+    ...     for border, holes in multipolygon)
+    True
+    >>> all(all(all(min_coordinate <= coordinate <= max_coordinate
+    ...             for coordinate in vertex)
+    ...         for vertex in border)
+    ...     and all(min_coordinate <= coordinate <= max_coordinate
+    ...             for hole in holes
+    ...             for vertex in hole
+    ...             for coordinate in vertex)
+    ...     for border, holes in multipolygon)
+    True
+
+    For different coordinates' domains:
+
+    >>> min_x_coordinate, max_x_coordinate = -1., 1.
+    >>> min_y_coordinate, max_y_coordinate = 10., 100.
+    >>> coordinates_type = float
+    >>> x_coordinates = strategies.floats(min_x_coordinate, max_x_coordinate,
+    ...                                   allow_infinity=False,
+    ...                                   allow_nan=False)
+    >>> y_coordinates = strategies.floats(min_y_coordinate, max_y_coordinate,
+    ...                                   allow_infinity=False,
+    ...                                   allow_nan=False)
+    >>> min_size, max_size = 0, 5
+    >>> min_border_size, max_border_size = 5, 10
+    >>> min_holes_size, max_holes_size = 1, 4
+    >>> min_hole_size, max_hole_size = 3, 5
+    >>> multipolygons = planar.multipolygons(x_coordinates, y_coordinates,
+    ...                                      min_size=min_size,
+    ...                                      max_size=max_size,
+    ...                                      min_border_size=min_border_size,
+    ...                                      max_border_size=max_border_size,
+    ...                                      min_holes_size=min_holes_size,
+    ...                                      max_holes_size=max_holes_size,
+    ...                                      min_hole_size=min_hole_size,
+    ...                                      max_hole_size=max_hole_size)
+    >>> multipolygon = multipolygons.example()
+    >>> isinstance(multipolygon, list)
+    True
+    >>> min_size <= len(multipolygon) <= max_size
+    True
+    >>> all(isinstance(polygon, tuple) for polygon in multipolygon)
+    True
+    >>> all(len(polygon) == 2 for polygon in multipolygon)
+    True
+    >>> all(isinstance(border, list)
+    ...     and isinstance(holes, list)
+    ...     and all(isinstance(hole, list) for hole in holes)
+    ...     for border, holes in multipolygon)
+    True
+    >>> all(min_border_size <= len(border) <= max_border_size
+    ...     and min_holes_size <= len(holes) <= max_holes_size
+    ...     and all(min_hole_size <= len(hole) <= max_hole_size
+    ...             for hole in holes)
+    ...     for border, holes in multipolygon)
+    True
+    >>> all(all(isinstance(vertex, tuple) for vertex in border)
+    ...     and all(isinstance(vertex, tuple)
+    ...             for hole in holes
+    ...             for vertex in hole)
+    ...     for border, holes in multipolygon)
+    True
+    >>> all(all(len(vertex) == 2 for vertex in border)
+    ...     and all(len(vertex) == 2 for hole in holes for vertex in hole)
+    ...     for border, holes in multipolygon)
+    True
+    >>> all(all(isinstance(coordinate, coordinates_type)
+    ...         for vertex in border
+    ...         for coordinate in vertex)
+    ...     and all(isinstance(coordinate, coordinates_type)
+    ...             for hole in holes
+    ...             for vertex in hole
+    ...             for coordinate in vertex)
+    ...     for border, holes in multipolygon)
+    True
+    >>> all(all(min_x_coordinate <= vertex_x <= max_x_coordinate
+    ...         and min_y_coordinate <= vertex_y <= max_y_coordinate
+    ...         for vertex_x, vertex_y in border)
+    ...     and all(min_x_coordinate <= vertex_x <= max_x_coordinate
+    ...             and min_y_coordinate <= vertex_y <= max_y_coordinate
+    ...             for hole in holes
+    ...             for vertex_x, vertex_y in hole)
+    ...     for border, holes in multipolygon)
+    True
+    """
+    _validate_sizes(min_size, max_size, EMPTY_MULTIPOLYGON_SIZE)
+    _validate_sizes(min_border_size, max_border_size, TRIANGULAR_CONTOUR_SIZE,
+                    'min_border_size', 'max_border_size')
+    _validate_sizes(min_holes_size, max_holes_size, EMPTY_MULTICONTOUR_SIZE,
+                    'min_holes_size', 'max_holes_size')
+    _validate_sizes(min_hole_size, max_hole_size, TRIANGULAR_CONTOUR_SIZE,
+                    'min_hole_size', 'max_hole_size')
+    min_size, min_border_size, min_hole_size = (
+        max(min_size, EMPTY_MULTIPOLYGON_SIZE),
+        max(min_border_size, TRIANGULAR_CONTOUR_SIZE),
+        max(min_hole_size, TRIANGULAR_CONTOUR_SIZE))
+    if y_coordinates is None:
+        y_coordinates = x_coordinates
+    min_polygon_size = min_border_size + min_holes_size * min_hole_size
+
+    @strategies.composite
+    def to_multipolygons(draw: Callable[[Strategy[Domain]], Domain],
+                         coordinates_pairs: Tuple[List[Coordinate],
+                                                  List[Coordinate]]
+                         ) -> Multipolygon:
+        xs, ys = coordinates_pairs
+        size_scale = min(len(xs), len(ys)) // min_polygon_size
+        size = draw(strategies.integers(min_size,
+                                        size_scale
+                                        if max_size is None
+                                        else min(max_size, size_scale)))
+        if not size:
+            return []
+        xs = sorted(xs)
+        step = ceil_division(len(xs), size)
+        polygons_y_coordinates = strategies.sampled_from(ys)
+        return [draw(polygons(strategies.sampled_from(xs[start:start + step]),
+                              polygons_y_coordinates,
+                              min_size=min_border_size,
+                              max_size=max_border_size,
+                              min_holes_size=min_holes_size,
+                              max_holes_size=max_holes_size,
+                              min_hole_size=min_hole_size,
+                              max_hole_size=max_hole_size))
+                for start in range(0, len(xs), step)]
+
+    min_points_count = min_size * min_polygon_size
+    max_points_count = (None
+                        if (max_size is None
+                            or max_border_size is None
+                            or max_holes_size is None
+                            or max_hole_size is None)
+                        else max_size * (max_border_size
+                                         + max_hole_size * max_holes_size))
+    return (strategies.tuples(
+            strategies.lists(x_coordinates,
+                             min_size=min_points_count,
+                             max_size=(None
+                                       if max_points_count is None
+                                       else max_points_count),
+                             unique=True),
+            strategies.lists(y_coordinates,
+                             min_size=min_points_count,
+                             max_size=max_points_count,
+                             unique=True))
+            .flatmap(to_multipolygons))
 
 
 def _validate_sizes(min_size: int, max_size: Optional[int],

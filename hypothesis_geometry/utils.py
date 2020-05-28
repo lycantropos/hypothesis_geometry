@@ -354,3 +354,7 @@ def sort_pair(pair: Sequence[Domain]) -> Tuple[Domain, Domain]:
 def contour_to_segments(contour: Contour) -> List[Segment]:
     return [(contour[index - 1], contour[index])
             for index in range(len(contour))]
+
+
+def ceil_division(dividend: int, divisor: int) -> int:
+    return -(-dividend // divisor)
