@@ -302,6 +302,72 @@ True
 
 ```
 
+### Multipolygons
+```python
+>>> min_size, max_size = 0, 5
+>>> min_border_size, max_border_size = 5, 10
+>>> min_holes_size, max_holes_size = 1, 3
+>>> min_hole_size, max_hole_size = 4, 8
+>>> multipolygons = planar.multipolygons(coordinates, 
+...                                      min_size=min_size,
+...                                      max_size=max_size,
+...                                      min_border_size=min_border_size,
+...                                      max_border_size=max_border_size,
+...                                      min_holes_size=min_holes_size,
+...                                      max_holes_size=max_holes_size,
+...                                      min_hole_size=min_hole_size,
+...                                      max_hole_size=max_hole_size)
+>>> multipolygon = multipolygons.example()
+>>> isinstance(multipolygon, list)
+True
+>>> min_size <= len(multipolygon) <= max_size
+True
+>>> all(isinstance(polygon, tuple) for polygon in multipolygon)
+True
+>>> all(len(polygon) == 2 for polygon in multipolygon)
+True
+>>> all(isinstance(border, list)
+...     and isinstance(holes, list)
+...     and all(isinstance(hole, list) for hole in holes)
+...     for border, holes in multipolygon)
+True
+>>> all(min_border_size <= len(border) <= max_border_size
+...     and min_holes_size <= len(holes) <= max_holes_size
+...     and all(min_hole_size <= len(hole) <= max_hole_size
+...             for hole in holes)
+...     for border, holes in multipolygon)
+True
+>>> all(all(isinstance(vertex, tuple) for vertex in border)
+...     and all(isinstance(vertex, tuple)
+...             for hole in holes
+...             for vertex in hole)
+...     for border, holes in multipolygon)
+True
+>>> all(all(len(vertex) == 2 for vertex in border)
+...     and all(len(vertex) == 2 for hole in holes for vertex in hole)
+...     for border, holes in multipolygon)
+True
+>>> all(all(isinstance(coordinate, coordinates_type)
+...         for vertex in border
+...         for coordinate in vertex)
+...     and all(isinstance(coordinate, coordinates_type)
+...             for hole in holes
+...             for vertex in hole
+...             for coordinate in vertex)
+...     for border, holes in multipolygon)
+True
+>>> all(all(all(min_coordinate <= coordinate <= max_coordinate
+...             for coordinate in vertex)
+...         for vertex in border)
+...     and all(min_coordinate <= coordinate <= max_coordinate
+...             for hole in holes
+...             for vertex in hole
+...             for coordinate in vertex)
+...     for border, holes in multipolygon)
+True
+
+```
+
 #### Caveats
 - Strategies may be slow depending on domain,
 so it may be necessary to add `HealthCheck.filter_too_much`, `HealthCheck.too_slow`
