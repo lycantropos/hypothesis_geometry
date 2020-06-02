@@ -1820,8 +1820,8 @@ def multipolygons(x_coordinates: Strategy[Coordinate],
     min_polygon_size = min_border_size + min_holes_size * min_hole_size
 
     @strategies.composite
-    def to_multipolygons(draw: Callable[[Strategy[Domain]], Domain],
-                         xs: List[Coordinate]) -> Multipolygon:
+    def xs_to_multipolygons(draw: Callable[[Strategy[Domain]], Domain],
+                            xs: List[Coordinate]) -> Multipolygon:
         size_scale = len(xs) // min_polygon_size
         size = draw(strategies.integers(min_size,
                                         size_scale
@@ -1841,6 +1841,28 @@ def multipolygons(x_coordinates: Strategy[Coordinate],
                               max_hole_size=max_hole_size))
                 for start in range(0, len(xs), step)]
 
+    @strategies.composite
+    def ys_to_multipolygons(draw: Callable[[Strategy[Domain]], Domain],
+                            ys: List[Coordinate]) -> Multipolygon:
+        size_scale = len(ys) // min_polygon_size
+        size = draw(strategies.integers(min_size,
+                                        size_scale
+                                        if max_size is None
+                                        else min(max_size, size_scale)))
+        if not size:
+            return []
+        ys = sorted(ys)
+        step = ceil_division(len(ys), size)
+        return [draw(polygons(x_coordinates,
+                              strategies.sampled_from(ys[start:start + step]),
+                              min_size=min_border_size,
+                              max_size=max_border_size,
+                              min_holes_size=min_holes_size,
+                              max_holes_size=max_holes_size,
+                              min_hole_size=min_hole_size,
+                              max_hole_size=max_hole_size))
+                for start in range(0, len(ys), step)]
+
     min_points_count = min_size * min_polygon_size
     max_points_count = (None
                         if (max_size is None
@@ -1850,13 +1872,20 @@ def multipolygons(x_coordinates: Strategy[Coordinate],
                         else max_size * (max_border_size
                                          + max_hole_size * max_holes_size))
 
-    result = (strategies.lists(x_coordinates,
-                               min_size=min_points_count,
-                               max_size=(None
-                                         if max_points_count is None
-                                         else max_points_count),
-                               unique=True)
-              .flatmap(to_multipolygons))
+    result = ((strategies.lists(x_coordinates,
+                                min_size=min_points_count,
+                                max_size=(None
+                                          if max_points_count is None
+                                          else max_points_count),
+                                unique=True)
+               .flatmap(xs_to_multipolygons))
+              | (strategies.lists(y_coordinates,
+                                  min_size=min_points_count,
+                                  max_size=(None
+                                            if max_points_count is None
+                                            else max_points_count),
+                                  unique=True)
+                 .flatmap(ys_to_multipolygons)))
 
     if min_holes_size == EMPTY_MULTICONTOUR_SIZE:
         def multicontour_to_multipolygon(multicontour: Multicontour
