@@ -1,7 +1,6 @@
 import warnings
 from functools import partial
-from itertools import (accumulate,
-                       cycle,
+from itertools import (cycle,
                        groupby)
 from random import Random
 from typing import (Callable,
@@ -40,6 +39,7 @@ from .utils import (ceil_division,
                     to_contour,
                     to_convex_contour,
                     to_convex_hull,
+                    to_multicontour,
                     to_polygon,
                     to_star_contour,
                     to_strict_convex_hull)
@@ -1328,10 +1328,11 @@ def multicontours(x_coordinates: Strategy[Coordinate],
                                   max(min_contour_size,
                                       TRIANGULAR_CONTOUR_SIZE))
 
-    def to_vertices_with_sizes(vertices: List[Point]
-                               ) -> Strategy[Tuple[List[Point], List[int]]]:
-        return strategies.tuples(strategies.just(vertices),
-                                 to_sizes(len(vertices)))
+    def to_multicontours(vertices: List[Point]) -> Strategy[Multicontour]:
+        return strategies.builds(to_multicontour,
+                                 strategies.just(vertices),
+                                 to_sizes(len(vertices)),
+                                 strategies.randoms())
 
     def to_sizes(limit: int) -> Strategy[List[int]]:
         return (strategies.integers(min_size, limit // min_contour_size)
@@ -1355,11 +1356,6 @@ def multicontours(x_coordinates: Strategy[Coordinate],
                 .flatmap(pack(strategies.tuples))
                 .map(list))
 
-    def to_contours(vertices: List[Point], sizes: List[int]) -> List[Contour]:
-        vertices = sorted(vertices)
-        return [to_contour(vertices[offset:offset + size], size)
-                for offset, size in zip(accumulate([0] + sizes), sizes)]
-
     def has_valid_sizes(multicontour: Multicontour) -> bool:
         return (_has_valid_size(multicontour,
                                 min_size=min_size,
@@ -1376,8 +1372,7 @@ def multicontours(x_coordinates: Strategy[Coordinate],
                                            or max_contour_size is None)
                                        else max_size * max_contour_size),
                              unique=True)
-            .flatmap(to_vertices_with_sizes)
-            .map(pack(to_contours))
+            .flatmap(to_multicontours)
             .filter(has_valid_sizes))
 
 

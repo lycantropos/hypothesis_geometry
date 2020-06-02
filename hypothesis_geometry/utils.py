@@ -28,6 +28,7 @@ from .core.utils import (Orientation,
 from .hints import (Contour,
                     Coordinate,
                     Domain,
+                    Multicontour,
                     Point,
                     Polygon,
                     Range,
@@ -106,6 +107,23 @@ def _to_segment_angle(start_x: Coordinate, start_y: Coordinate,
                       end: Point) -> Coordinate:
     end_x, end_y = end
     return math.atan2(end_y - start_y, end_x - start_x)
+
+
+def to_multicontour(vertices: List[Point],
+                    sizes: List[int],
+                    random: Random) -> Multicontour:
+    vertices = sorted(vertices)
+    random_flag = partial(random.getrandbits, 1)
+    random_sorting_key = partial(random.choice, [itemgetter(1, 0), None])
+    result = []
+    for size in sizes:
+        result.append(to_contour(vertices[:size], size))
+        vertices = vertices[size:]
+        if random_flag():
+            vertices = sorted(vertices,
+                              key=random_sorting_key(),
+                              reverse=random_flag())
+    return result
 
 
 def to_polygon(points: Sequence[Point],
