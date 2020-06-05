@@ -1,7 +1,8 @@
 import warnings
 from functools import partial
 from itertools import (cycle,
-                       groupby)
+                       groupby,
+                       repeat)
 from random import Random
 from typing import (Callable,
                     List,
@@ -35,6 +36,7 @@ from .utils import (ceil_division,
                     constrict_convex_hull_size,
                     contour_to_segments,
                     pack,
+                    pairwise,
                     sort_pair,
                     to_contour,
                     to_convex_contour,
@@ -392,6 +394,32 @@ def multisegments(x_coordinates: Strategy[Coordinate],
     """
     _validate_sizes(min_size, max_size, EMPTY_MULTISEGMENT_SIZE)
     min_size = max(min_size, EMPTY_MULTISEGMENT_SIZE)
+    if y_coordinates is None:
+        y_coordinates = x_coordinates
+
+    def to_vertical_multisegment(x: Coordinate,
+                                 ys: List[Coordinate]) -> Multisegment:
+        return list(pairwise(zip(repeat(x), sorted(ys))))
+
+    def to_horizontal_multisegment(xs: List[Coordinate],
+                                   y: Coordinate) -> Multisegment:
+        return list(pairwise(zip(sorted(xs), repeat(y))))
+
+    next_min_size, next_max_size = (min_size + 1, (max_size
+                                                   if max_size is None
+                                                   else max_size + 1))
+    result = (strategies.builds(to_vertical_multisegment,
+                                x_coordinates,
+                                strategies.lists(y_coordinates,
+                                                 min_size=next_min_size,
+                                                 max_size=next_max_size,
+                                                 unique=True))
+              | strategies.builds(to_horizontal_multisegment,
+                                  strategies.lists(x_coordinates,
+                                                   min_size=next_min_size,
+                                                   max_size=next_max_size,
+                                                   unique=True),
+                                  y_coordinates))
     if min_size >= TRIANGULAR_CONTOUR_SIZE:
         def multisegment_to_slices(multisegment: Multisegment
                                    ) -> Strategy[Multisegment]:
@@ -405,16 +433,17 @@ def multisegments(x_coordinates: Strategy[Coordinate],
                     if limit < len(multisegment)
                     else multisegment)
 
-        return (contours(x_coordinates, y_coordinates,
-                         min_size=min_size,
-                         max_size=max_size)
-                .map(contour_to_segments)
-                .flatmap(multisegment_to_slices))
+        return result | (contours(x_coordinates, y_coordinates,
+                                  min_size=min_size,
+                                  max_size=max_size)
+                         .map(contour_to_segments)
+                         .flatmap(multisegment_to_slices))
     else:
-        return (strategies.lists(segments(x_coordinates, y_coordinates),
-                                 min_size=min_size,
-                                 max_size=max_size)
-                .filter(is_multisegment_valid))
+        return result | (strategies.lists(segments(x_coordinates,
+                                                   y_coordinates),
+                                          min_size=min_size,
+                                          max_size=max_size)
+                         .filter(is_multisegment_valid))
 
 
 MIN_POLYLINE_SIZE = 2
