@@ -21,6 +21,7 @@ from hypothesis_geometry.core.utils import contour_to_centroid
 from hypothesis_geometry.hints import (Contour,
                                        Coordinate,
                                        Multicontour,
+                                       Multipolygon,
                                        Multisegment,
                                        Point,
                                        Polygon,
@@ -46,6 +47,29 @@ def identity(argument: Domain) -> Domain:
 
 def to_pairs(strategy: Strategy[Domain]) -> Strategy[Tuple[Domain, Domain]]:
     return strategies.tuples(strategy, strategy)
+
+
+def multipolygon_has_valid_sizes(multipolygon: Multipolygon,
+                                 *,
+                                 min_size: int,
+                                 max_size: Optional[int],
+                                 min_border_size: int,
+                                 max_border_size: Optional[int],
+                                 min_holes_size: int,
+                                 max_holes_size: Optional[int],
+                                 min_hole_size: int,
+                                 max_hole_size: Optional[int]) -> bool:
+    return (has_valid_size(multipolygon,
+                           min_size=min_size,
+                           max_size=max_size)
+            and all(polygon_has_valid_sizes(polygon,
+                                            min_size=min_border_size,
+                                            max_size=max_border_size,
+                                            min_holes_size=min_holes_size,
+                                            max_holes_size=max_holes_size,
+                                            min_hole_size=min_hole_size,
+                                            max_hole_size=max_hole_size)
+                    for polygon in multipolygon))
 
 
 def polygon_has_valid_sizes(polygon: Polygon,
@@ -97,6 +121,21 @@ def multicontour_has_coordinates_in_range(multicontour: Multicontour,
                                                 min_y_value=min_y_value,
                                                 max_y_value=max_y_value)
                for contour in multicontour)
+
+
+def multipolygon_has_coordinates_in_range(multipolygon: Multipolygon,
+                                          *,
+                                          min_x_value: Coordinate,
+                                          max_x_value: Optional[Coordinate],
+                                          min_y_value: Coordinate,
+                                          max_y_value: Optional[Coordinate]
+                                          ) -> bool:
+    return all(polygon_has_coordinates_in_range(polygon,
+                                                min_x_value=min_x_value,
+                                                max_x_value=max_x_value,
+                                                min_y_value=min_y_value,
+                                                max_y_value=max_y_value)
+               for polygon in multipolygon)
 
 
 def point_has_coordinates_in_range(point: Point,
@@ -179,6 +218,16 @@ def multicontour_has_coordinates_types(multicontour: Multicontour,
                                              x_type=x_type,
                                              y_type=y_type)
                for contour in multicontour)
+
+
+def multipolygon_has_coordinates_types(multipolygon: Multipolygon,
+                                       *,
+                                       x_type: Type[Coordinate],
+                                       y_type: Type[Coordinate]) -> bool:
+    return all(polygon_has_coordinates_types(polygon,
+                                             x_type=x_type,
+                                             y_type=y_type)
+               for polygon in multipolygon)
 
 
 def point_has_coordinates_types(point: Point,

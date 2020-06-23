@@ -12,16 +12,15 @@ from hypothesis_geometry.planar import multipolygons
 from tests import strategies
 from tests.utils import (CoordinatesLimitsType,
                          SizesPair,
-                         contour_has_coordinates_in_range,
-                         contour_has_coordinates_types,
                          contours_do_not_cross_or_overlap,
                          has_valid_size,
                          is_counterclockwise_contour,
                          is_multicontour_strict,
                          is_multipolygon,
                          is_non_self_intersecting_contour,
-                         multicontour_has_coordinates_in_range,
-                         multicontour_has_coordinates_types)
+                         multipolygon_has_coordinates_in_range,
+                         multipolygon_has_coordinates_types,
+                         multipolygon_has_valid_sizes)
 
 
 @given(strategies.coordinates_strategies,
@@ -89,39 +88,23 @@ def test_properties(data: DataObject,
     result = data.draw(strategy)
 
     assert is_multipolygon(result)
-    assert has_valid_size(result,
-                          min_size=min_size,
-                          max_size=max_size)
-    assert all(has_valid_size(border,
-                              min_size=min_border_size,
-                              max_size=max_border_size)
-               and has_valid_size(holes,
-                                  min_size=min_holes_size,
-                                  max_size=max_holes_size)
-               and all(has_valid_size(hole,
-                                      min_size=min_hole_size,
-                                      max_size=max_hole_size)
-                       for hole in holes)
-               for border, holes in result)
-    assert all(contour_has_coordinates_types(border,
-                                             x_type=x_type,
-                                             y_type=y_type)
-               and multicontour_has_coordinates_types(holes,
-                                                      x_type=x_type,
-                                                      y_type=y_type)
-               for border, holes in result)
-    assert all(
-            contour_has_coordinates_in_range(border,
-                                             min_x_value=min_x_value,
-                                             max_x_value=max_x_value,
-                                             min_y_value=min_y_value,
-                                             max_y_value=max_y_value)
-            and multicontour_has_coordinates_in_range(holes,
-                                                      min_x_value=min_x_value,
-                                                      max_x_value=max_x_value,
-                                                      min_y_value=min_y_value,
-                                                      max_y_value=max_y_value)
-            for border, holes in result)
+    assert multipolygon_has_valid_sizes(result,
+                                        min_size=min_size,
+                                        max_size=max_size,
+                                        min_border_size=min_border_size,
+                                        max_border_size=max_border_size,
+                                        min_holes_size=min_holes_size,
+                                        max_holes_size=max_holes_size,
+                                        min_hole_size=min_hole_size,
+                                        max_hole_size=max_hole_size)
+    assert multipolygon_has_coordinates_types(result,
+                                              x_type=x_type,
+                                              y_type=y_type)
+    assert multipolygon_has_coordinates_in_range(result,
+                                                 min_x_value=min_x_value,
+                                                 max_x_value=max_x_value,
+                                                 min_y_value=min_y_value,
+                                                 max_y_value=max_y_value)
     assert all(is_contour_strict(border) and is_multicontour_strict(holes)
                for border, holes in result)
     assert all(is_non_self_intersecting_contour(border)
@@ -171,36 +154,23 @@ def test_same_coordinates(data: DataObject,
     assert has_valid_size(result,
                           min_size=min_size,
                           max_size=max_size)
-    assert all(has_valid_size(border,
-                              min_size=min_border_size,
-                              max_size=max_border_size)
-               and has_valid_size(holes,
-                                  min_size=min_holes_size,
-                                  max_size=max_holes_size)
-               and all(has_valid_size(hole,
-                                      min_size=min_hole_size,
-                                      max_size=max_hole_size)
-                       for hole in holes)
-               for border, holes in result)
-    assert all(contour_has_coordinates_types(border,
-                                             x_type=type_,
-                                             y_type=type_)
-               and multicontour_has_coordinates_types(holes,
-                                                      x_type=type_,
-                                                      y_type=type_)
-               for border, holes in result)
-    assert all(
-            contour_has_coordinates_in_range(border,
-                                             min_x_value=min_value,
-                                             max_x_value=max_value,
-                                             min_y_value=min_value,
-                                             max_y_value=max_value)
-            and multicontour_has_coordinates_in_range(holes,
-                                                      min_x_value=min_value,
-                                                      max_x_value=max_value,
-                                                      min_y_value=min_value,
-                                                      max_y_value=max_value)
-            for border, holes in result)
+    assert multipolygon_has_valid_sizes(result,
+                                        min_size=min_size,
+                                        max_size=max_size,
+                                        min_border_size=min_border_size,
+                                        max_border_size=max_border_size,
+                                        min_holes_size=min_holes_size,
+                                        max_holes_size=max_holes_size,
+                                        min_hole_size=min_hole_size,
+                                        max_hole_size=max_hole_size)
+    assert multipolygon_has_coordinates_types(result,
+                                              x_type=type_,
+                                              y_type=type_)
+    assert multipolygon_has_coordinates_in_range(result,
+                                                 min_x_value=min_value,
+                                                 max_x_value=max_value,
+                                                 min_y_value=min_value,
+                                                 max_y_value=max_value)
     assert all(is_contour_strict(border) and is_multicontour_strict(holes)
                for border, holes in result)
     assert all(is_non_self_intersecting_contour(border)
