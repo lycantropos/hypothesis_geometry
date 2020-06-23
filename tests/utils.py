@@ -23,6 +23,7 @@ from hypothesis_geometry.hints import (Contour,
                                        Multicontour,
                                        Multisegment,
                                        Point,
+                                       Polygon,
                                        Segment,
                                        Strategy)
 from hypothesis_geometry.planar import (MIN_POLYLINE_SIZE,
@@ -45,6 +46,27 @@ def identity(argument: Domain) -> Domain:
 
 def to_pairs(strategy: Strategy[Domain]) -> Strategy[Tuple[Domain, Domain]]:
     return strategies.tuples(strategy, strategy)
+
+
+def polygon_has_valid_sizes(polygon: Polygon,
+                            *,
+                            min_size: int,
+                            max_size: Optional[int],
+                            min_holes_size: int,
+                            max_holes_size: Optional[int],
+                            min_hole_size: int,
+                            max_hole_size: Optional[int]) -> bool:
+    border, holes = polygon
+    return (has_valid_size(border,
+                           min_size=min_size,
+                           max_size=max_size)
+            and has_valid_size(holes,
+                               min_size=min_holes_size,
+                               max_size=max_holes_size)
+            and all(has_valid_size(hole,
+                                   min_size=min_hole_size,
+                                   max_size=max_hole_size)
+                    for hole in holes))
 
 
 def contour_has_coordinates_in_range(contour: Contour,
@@ -90,6 +112,26 @@ def point_has_coordinates_in_range(point: Point,
             and is_coordinate_in_range(y,
                                        min_value=min_y_value,
                                        max_value=max_y_value))
+
+
+def polygon_has_coordinates_in_range(polygon: Polygon,
+                                     *,
+                                     min_x_value: Coordinate,
+                                     max_x_value: Optional[Coordinate],
+                                     min_y_value: Coordinate,
+                                     max_y_value: Optional[Coordinate]
+                                     ) -> bool:
+    border, holes = polygon
+    return (contour_has_coordinates_in_range(border,
+                                             min_x_value=min_x_value,
+                                             max_x_value=max_x_value,
+                                             min_y_value=min_y_value,
+                                             max_y_value=max_y_value)
+            and multicontour_has_coordinates_in_range(holes,
+                                                      min_x_value=min_x_value,
+                                                      max_x_value=max_x_value,
+                                                      min_y_value=min_y_value,
+                                                      max_y_value=max_y_value))
 
 
 def segment_has_coordinates_in_range(segment: Segment,
@@ -145,6 +187,19 @@ def point_has_coordinates_types(point: Point,
                                 y_type: Type[Coordinate]) -> bool:
     x, y = point
     return isinstance(x, x_type) and isinstance(y, y_type)
+
+
+def polygon_has_coordinates_types(polygon: Polygon,
+                                  *,
+                                  x_type: Type[Coordinate],
+                                  y_type: Type[Coordinate]) -> bool:
+    border, holes = polygon
+    return (contour_has_coordinates_types(border,
+                                          x_type=x_type,
+                                          y_type=y_type)
+            and multicontour_has_coordinates_types(holes,
+                                                   x_type=x_type,
+                                                   y_type=y_type))
 
 
 def segment_has_coordinates_types(segment: Segment,
