@@ -1,8 +1,10 @@
 from fractions import Fraction
 from itertools import chain
-from typing import (Iterator,
+from typing import (Iterable,
+                    Iterator,
                     List,
-                    Sequence)
+                    Sequence,
+                    Tuple)
 
 from robust.angular import (Orientation,
                             orientation)
@@ -18,6 +20,17 @@ from hypothesis_geometry.hints import (Contour,
                                        Point)
 
 flatten = chain.from_iterable
+
+
+def pairwise(iterable: Iterable[Domain]) -> Iterable[Tuple[Domain, Domain]]:
+    iterator = iter(iterable)
+    try:
+        element = next(iterator)
+    except StopIteration:
+        return
+    for next_element in iterator:
+        yield element, next_element
+        element = next_element
 
 
 def split(sequence: Sequence[Domain],

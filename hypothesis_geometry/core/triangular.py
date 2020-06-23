@@ -1,17 +1,19 @@
+from itertools import (accumulate,
+                       chain)
 from typing import (Iterable,
                     List,
                     Optional,
                     Sequence)
 
+from decision.partition import coin_change
 from reprit.base import generate_repr
 
 from hypothesis_geometry.hints import Point
 from .contracts import is_point_inside_circumcircle
 from .subdivisional import QuadEdge
 from .utils import (Orientation,
-                    flatten,
                     orientation,
-                    split)
+                    pairwise)
 
 
 class Triangulation:
@@ -53,14 +55,10 @@ class Triangulation:
 
 
 def delaunay(points: Sequence[Point]) -> Triangulation:
-    result = [tuple(sorted(points))]
-    max_initializer_size = max(_initializers)
-    while max(map(len, result)) > max_initializer_size:
-        result = list(flatten(split(part)
-                              if len(part) > max_initializer_size
-                              else [part]
-                              for part in result))
-    result = [_initialize_triangulation(points) for points in result]
+    points = sorted(points)
+    result = [_initialize_triangulation(points[start:stop])
+              for start, stop in pairwise(accumulate(
+                chain((0,), coin_change(len(points), _initializers))))]
     while len(result) > 1:
         parts_to_merge_count = len(result) // 2 * 2
         result = ([result[offset].merge_with(result[offset + 1])
