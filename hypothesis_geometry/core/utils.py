@@ -33,15 +33,6 @@ def pairwise(iterable: Iterable[Domain]) -> Iterable[Tuple[Domain, Domain]]:
         element = next_element
 
 
-def split(sequence: Sequence[Domain],
-          *,
-          size: int = 2) -> List[Sequence[Domain]]:
-    step, offset = divmod(len(sequence), size)
-    return [sequence[number * step + min(number, offset):
-                     (number + 1) * step + min(number + 1, offset)]
-            for number in range(size)]
-
-
 Orientation = Orientation
 orientation = orientation
 
