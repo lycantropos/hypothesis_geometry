@@ -18,7 +18,8 @@ from .core.contracts import (is_contour_non_convex,
                              is_multisegment_valid,
                              points_do_not_lie_on_the_same_line)
 from .core.utils import (Orientation,
-                         orientation)
+                         orientation,
+                         pairwise)
 from .hints import (BoundingBox,
                     Contour,
                     Coordinate,
@@ -36,7 +37,6 @@ from .utils import (ceil_division,
                     constrict_convex_hull_size,
                     contour_to_segments,
                     pack,
-                    pairwise,
                     sort_pair,
                     to_contour,
                     to_convex_contour,

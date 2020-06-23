@@ -376,14 +376,3 @@ def contour_to_segments(contour: Contour) -> List[Segment]:
 
 def ceil_division(dividend: int, divisor: int) -> int:
     return -(-dividend // divisor)
-
-
-def pairwise(iterable: Iterable[Domain]) -> Iterable[Tuple[Domain, Domain]]:
-    iterator = iter(iterable)
-    try:
-        element = next(iterator)
-    except StopIteration:
-        return
-    for next_element in iterator:
-        yield element, next_element
-        element = next_element
