@@ -7,7 +7,7 @@ services:
       args:
         - PYTHON_IMAGE=${CPYTHON_IMAGE_NAME}
         - PYTHON_IMAGE_VERSION=${CPYTHON_IMAGE_VERSION}
-    image: lycantropos/hypothesis_geometry-cpython:0.14.2
+    image: lycantropos/hypothesis_geometry-cpython:0.15.0-alpha
     volumes:
       - ./hypothesis_geometry/:/opt/hypothesis_geometry/hypothesis_geometry/
       - ./tests/:/opt/hypothesis_geometry/tests/
