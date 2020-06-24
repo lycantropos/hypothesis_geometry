@@ -66,7 +66,7 @@ def points(x_coordinates: Strategy[Coordinate],
 
     >>> min_coordinate, max_coordinate = -1., 1.
     >>> coordinates_type = float
-    >>> coordinates = strategies.floats(min_coordinate, max_coordinate, 
+    >>> coordinates = strategies.floats(min_coordinate, max_coordinate,
     ...                                 allow_infinity=False,
     ...                                 allow_nan=False)
     >>> points = planar.points(coordinates)
@@ -87,7 +87,7 @@ def points(x_coordinates: Strategy[Coordinate],
     >>> min_x_coordinate, max_x_coordinate = -1., 1.
     >>> min_y_coordinate, max_y_coordinate = 10., 100.
     >>> coordinates_type = float
-    >>> x_coordinates = strategies.floats(min_x_coordinate, max_x_coordinate, 
+    >>> x_coordinates = strategies.floats(min_x_coordinate, max_x_coordinate,
     ...                                   allow_infinity=False,
     ...                                   allow_nan=False)
     >>> y_coordinates = strategies.floats(min_y_coordinate, max_y_coordinate,
