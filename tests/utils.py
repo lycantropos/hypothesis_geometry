@@ -154,6 +154,21 @@ def multipolygon_has_coordinates_in_range(multipolygon: Multipolygon,
                for polygon in multipolygon)
 
 
+def multisegment_has_coordinates_in_range(multisegment: Multisegment,
+                                          *,
+                                          min_x_value: Coordinate,
+                                          max_x_value: Optional[Coordinate],
+                                          min_y_value: Coordinate,
+                                          max_y_value: Optional[Coordinate]
+                                          ) -> bool:
+    return all(segment_has_coordinates_in_range(segment,
+                                                min_x_value=min_x_value,
+                                                max_x_value=max_x_value,
+                                                min_y_value=min_y_value,
+                                                max_y_value=max_y_value)
+               for segment in multisegment)
+
+
 def point_has_coordinates_in_range(point: Point,
                                    *,
                                    min_x_value: Coordinate,
@@ -254,6 +269,16 @@ def multipolygon_has_coordinates_types(multipolygon: Multipolygon,
                                              x_type=x_type,
                                              y_type=y_type)
                for polygon in multipolygon)
+
+
+def multisegment_has_coordinates_types(multisegment: Multisegment,
+                                       *,
+                                       x_type: Type[Coordinate],
+                                       y_type: Type[Coordinate]):
+    return all(segment_has_coordinates_types(segment,
+                                             x_type=x_type,
+                                             y_type=y_type)
+               for segment in multisegment)
 
 
 def point_has_coordinates_types(point: Point,
