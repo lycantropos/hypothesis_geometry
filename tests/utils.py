@@ -20,6 +20,7 @@ from hypothesis_geometry.core.contracts import is_contour_strict
 from hypothesis_geometry.core.utils import contour_to_centroid
 from hypothesis_geometry.hints import (Contour,
                                        Coordinate,
+                                       Mix,
                                        Multicontour,
                                        Multipoint,
                                        Multipolygon,
@@ -48,6 +49,40 @@ def identity(argument: Domain) -> Domain:
 
 def to_pairs(strategy: Strategy[Domain]) -> Strategy[Tuple[Domain, Domain]]:
     return strategies.tuples(strategy, strategy)
+
+
+def mix_has_valid_sizes(mix: Mix,
+                        *,
+                        min_multipoint_size: int,
+                        max_multipoint_size: Optional[int],
+                        min_multisegment_size: int,
+                        max_multisegment_size: Optional[int],
+                        min_multipolygon_size: int,
+                        max_multipolygon_size: Optional[int],
+                        min_multipolygon_border_size: int,
+                        max_multipolygon_border_size: Optional[int],
+                        min_multipolygon_holes_size: int,
+                        max_multipolygon_holes_size: Optional[int],
+                        min_multipolygon_hole_size: int,
+                        max_multipolygon_hole_size: Optional[int]
+                        ) -> bool:
+    multipoint, multisegment, multipolygon = mix
+    return (has_valid_size(multipoint,
+                           min_size=min_multipoint_size,
+                           max_size=max_multipoint_size)
+            and has_valid_size(multisegment,
+                               min_size=min_multisegment_size,
+                               max_size=max_multisegment_size)
+            and multipolygon_has_valid_sizes(
+                    multipolygon,
+                    min_size=min_multipolygon_size,
+                    max_size=max_multipolygon_size,
+                    min_border_size=min_multipolygon_border_size,
+                    max_border_size=max_multipolygon_border_size,
+                    min_holes_size=min_multipolygon_holes_size,
+                    max_holes_size=max_multipolygon_holes_size,
+                    min_hole_size=min_multipolygon_hole_size,
+                    max_hole_size=max_multipolygon_hole_size))
 
 
 def multipolygon_has_valid_sizes(multipolygon: Multipolygon,
@@ -107,6 +142,31 @@ def contour_has_coordinates_in_range(contour: Contour,
                                               min_y_value=min_y_value,
                                               max_y_value=max_y_value)
                for vertex in contour)
+
+
+def mix_has_coordinates_in_range(mix: Mix,
+                                 *,
+                                 min_x_value: Coordinate,
+                                 max_x_value: Optional[Coordinate],
+                                 min_y_value: Coordinate,
+                                 max_y_value: Optional[Coordinate]
+                                 ) -> bool:
+    multipoint, multisegment, multipolygon = mix
+    return (multipoint_has_coordinates_in_range(multipoint,
+                                                min_x_value=min_x_value,
+                                                max_x_value=max_x_value,
+                                                min_y_value=min_y_value,
+                                                max_y_value=max_y_value)
+            and multisegment_has_coordinates_in_range(multisegment,
+                                                      min_x_value=min_x_value,
+                                                      max_x_value=max_x_value,
+                                                      min_y_value=min_y_value,
+                                                      max_y_value=max_y_value)
+            and multipolygon_has_coordinates_in_range(multipolygon,
+                                                      min_x_value=min_x_value,
+                                                      max_x_value=max_x_value,
+                                                      min_y_value=min_y_value,
+                                                      max_y_value=max_y_value))
 
 
 def multicontour_has_coordinates_in_range(multicontour: Multicontour,
@@ -239,6 +299,22 @@ def contour_has_coordinates_types(contour: Contour, *,
                                            x_type=x_type,
                                            y_type=y_type)
                for vertex in contour)
+
+
+def mix_has_coordinates_types(mix: Mix,
+                              *,
+                              x_type: Type[Coordinate],
+                              y_type: Type[Coordinate]) -> bool:
+    multipoint, multisegment, multipolygon = mix
+    return (multipoint_has_coordinates_types(multipoint,
+                                             x_type=x_type,
+                                             y_type=y_type)
+            and multisegment_has_coordinates_types(multisegment,
+                                                   x_type=x_type,
+                                                   y_type=y_type)
+            and multipolygon_has_coordinates_types(multipolygon,
+                                                   x_type=x_type,
+                                                   y_type=y_type))
 
 
 def multicontour_has_coordinates_types(multicontour: Multicontour,
@@ -374,6 +450,13 @@ def is_contour(object_: Any) -> bool:
 
 def is_multipoint(object_: Any) -> bool:
     return isinstance(object_, list) and all(map(is_point, object_))
+
+
+def is_mix(object_: Any) -> bool:
+    return (isinstance(object_, tuple)
+            and is_multipoint(object_[0])
+            and is_multisegment(object_[1])
+            and is_multipolygon(object_[2]))
 
 
 def is_multipolygon(object_: Any) -> bool:
