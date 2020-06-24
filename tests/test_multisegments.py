@@ -12,8 +12,8 @@ from tests.utils import (CoordinatesLimitsType,
                          SizesPair,
                          has_valid_size,
                          is_multisegment,
-                         segment_has_coordinates_in_range,
-                         segment_has_coordinates_types,
+                         multisegment_has_coordinates_in_range,
+                         multisegment_has_coordinates_types,
                          segments_do_not_cross_or_overlap)
 
 
@@ -55,16 +55,13 @@ def test_properties(data: DataObject,
     assert has_valid_size(result,
                           min_size=min_size,
                           max_size=max_size)
-    assert all(segment_has_coordinates_types(segment,
-                                             x_type=x_type,
-                                             y_type=y_type)
-               for segment in result)
-    assert all(segment_has_coordinates_in_range(segment,
-                                                min_x_value=min_x_value,
-                                                max_x_value=max_x_value,
-                                                min_y_value=min_y_value,
-                                                max_y_value=max_y_value)
-               for segment in result)
+    assert multisegment_has_coordinates_types(result, x_type=x_type,
+                                              y_type=y_type)
+    assert multisegment_has_coordinates_in_range(result,
+                                                 min_x_value=min_x_value,
+                                                 max_x_value=max_x_value,
+                                                 min_y_value=min_y_value,
+                                                 max_y_value=max_y_value)
     assert segments_do_not_cross_or_overlap(result)
 
 
@@ -87,16 +84,14 @@ def test_same_coordinates(data: DataObject,
     assert has_valid_size(result,
                           min_size=min_size,
                           max_size=max_size)
-    assert all(segment_has_coordinates_types(segment,
-                                             x_type=type_,
-                                             y_type=type_)
-               for segment in result)
-    assert all(segment_has_coordinates_in_range(segment,
-                                                min_x_value=min_value,
-                                                max_x_value=max_value,
-                                                min_y_value=min_value,
-                                                max_y_value=max_value)
-               for segment in result)
+    assert multisegment_has_coordinates_types(result,
+                                              x_type=type_,
+                                              y_type=type_)
+    assert multisegment_has_coordinates_in_range(result,
+                                                 min_x_value=min_value,
+                                                 max_x_value=max_value,
+                                                 min_y_value=min_value,
+                                                 max_y_value=max_value)
     assert segments_do_not_cross_or_overlap(result)
 
 
