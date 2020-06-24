@@ -13,8 +13,8 @@ from tests.utils import (CoordinatesLimitsType,
                          all_unique,
                          has_valid_size,
                          is_multipoint,
-                         point_has_coordinates_in_range,
-                         point_has_coordinates_types)
+                         multipoint_has_coordinates_in_range,
+                         multipoint_has_coordinates_types)
 
 
 @given(strategies.coordinates_strategies,
@@ -55,16 +55,14 @@ def test_properties(data: DataObject,
     assert has_valid_size(result,
                           min_size=min_size,
                           max_size=max_size)
-    assert all(point_has_coordinates_types(point,
-                                           x_type=x_type,
-                                           y_type=y_type)
-               for point in result)
-    assert all(point_has_coordinates_in_range(point,
-                                              min_x_value=min_x_value,
-                                              max_x_value=max_x_value,
-                                              min_y_value=min_y_value,
-                                              max_y_value=max_y_value)
-               for point in result)
+    assert multipoint_has_coordinates_types(result,
+                                            x_type=x_type,
+                                            y_type=y_type)
+    assert multipoint_has_coordinates_in_range(result,
+                                               min_x_value=min_x_value,
+                                               max_x_value=max_x_value,
+                                               min_y_value=min_y_value,
+                                               max_y_value=max_y_value)
     assert all_unique(result)
 
 
@@ -87,16 +85,14 @@ def test_same_coordinates(data: DataObject,
     assert has_valid_size(result,
                           min_size=min_size,
                           max_size=max_size)
-    assert all(point_has_coordinates_types(point,
-                                           x_type=type_,
-                                           y_type=type_)
-               for point in result)
-    assert all(point_has_coordinates_in_range(point,
-                                              min_x_value=min_value,
-                                              max_x_value=max_value,
-                                              min_y_value=min_value,
-                                              max_y_value=max_value)
-               for point in result)
+    assert multipoint_has_coordinates_types(result,
+                                            x_type=type_,
+                                            y_type=type_)
+    assert multipoint_has_coordinates_in_range(result,
+                                               min_x_value=min_value,
+                                               max_x_value=max_value,
+                                               min_y_value=min_value,
+                                               max_y_value=max_value)
     assert all_unique(result)
 
 
