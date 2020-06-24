@@ -21,6 +21,7 @@ from hypothesis_geometry.core.utils import contour_to_centroid
 from hypothesis_geometry.hints import (Contour,
                                        Coordinate,
                                        Multicontour,
+                                       Multipoint,
                                        Multipolygon,
                                        Multisegment,
                                        Point,
@@ -123,6 +124,21 @@ def multicontour_has_coordinates_in_range(multicontour: Multicontour,
                for contour in multicontour)
 
 
+def multipoint_has_coordinates_in_range(multipoint: Multipoint,
+                                        *,
+                                        min_x_value: Coordinate,
+                                        max_x_value: Optional[Coordinate],
+                                        min_y_value: Coordinate,
+                                        max_y_value: Optional[Coordinate]
+                                        ) -> bool:
+    return all(point_has_coordinates_in_range(point,
+                                              min_x_value=min_x_value,
+                                              max_x_value=max_x_value,
+                                              min_y_value=min_y_value,
+                                              max_y_value=max_y_value)
+               for point in multipoint)
+
+
 def multipolygon_has_coordinates_in_range(multipolygon: Multipolygon,
                                           *,
                                           min_x_value: Coordinate,
@@ -218,6 +234,16 @@ def multicontour_has_coordinates_types(multicontour: Multicontour,
                                              x_type=x_type,
                                              y_type=y_type)
                for contour in multicontour)
+
+
+def multipoint_has_coordinates_types(multipoint: Multipoint,
+                                     *,
+                                     x_type: Type[Coordinate],
+                                     y_type: Type[Coordinate]) -> bool:
+    return all(point_has_coordinates_types(point,
+                                           x_type=x_type,
+                                           y_type=y_type)
+               for point in multipoint)
 
 
 def multipolygon_has_coordinates_types(multipolygon: Multipolygon,
