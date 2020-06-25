@@ -1,4 +1,5 @@
-from itertools import groupby
+from itertools import (chain,
+                       groupby)
 from numbers import Number
 from typing import (Any,
                     Callable,
@@ -17,7 +18,8 @@ from robust.angular import (Orientation,
                             orientation)
 
 from hypothesis_geometry.core.contracts import is_contour_strict
-from hypothesis_geometry.core.utils import contour_to_centroid
+from hypothesis_geometry.core.utils import (contour_to_centroid,
+                                            flatten)
 from hypothesis_geometry.hints import (Contour,
                                        Coordinate,
                                        Mix,
@@ -515,6 +517,15 @@ def contour_to_star_multisegment(contour: Contour) -> Multisegment:
     return [(centroid, vertex)
             for vertex in contour
             if vertex != centroid]
+
+
+def mix_segments_do_not_cross_or_overlap(mix: Mix) -> bool:
+    _, multisegment, multipolygon = mix
+    return segments_do_not_cross_or_overlap(
+            multisegment + list(flatten(chain(contour_to_segments(border),
+                                              flatten(contour_to_segments(hole)
+                                                      for hole in holes))
+                                        for border, holes in multipolygon)))
 
 
 def contours_do_not_cross_or_overlap(contours: List[Contour]) -> bool:
