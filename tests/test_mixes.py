@@ -14,7 +14,8 @@ from tests.utils import (CoordinatesLimitsType,
                          is_mix,
                          mix_has_coordinates_in_range,
                          mix_has_coordinates_types,
-                         mix_has_valid_sizes)
+                         mix_has_valid_sizes,
+                         mix_segments_do_not_cross_or_overlap)
 
 
 @given(strategies.coordinates_strategies,
@@ -130,6 +131,7 @@ def test_properties(data: DataObject,
                                         max_x_value=max_x_value,
                                         min_y_value=min_y_value,
                                         max_y_value=max_y_value)
+    assert mix_segments_do_not_cross_or_overlap(result)
 
 
 @given(strategies.data,
@@ -199,6 +201,7 @@ def test_same_coordinates(data: DataObject,
                                         max_x_value=max_multipolygon_value,
                                         min_y_value=min_multipolygon_value,
                                         max_y_value=max_multipolygon_value)
+    assert mix_segments_do_not_cross_or_overlap(result)
 
 
 @given(strategies.coordinates_strategies,
