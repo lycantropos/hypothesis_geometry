@@ -2,7 +2,6 @@ from fractions import Fraction
 from itertools import chain
 from typing import (Iterable,
                     Iterator,
-                    List,
                     Sequence,
                     Tuple)
 
