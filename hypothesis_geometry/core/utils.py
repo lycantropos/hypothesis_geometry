@@ -49,7 +49,7 @@ def points_to_centroid(points: Sequence[Point]) -> Point:
 
 
 def contour_to_centroid(contour: Contour) -> Point:
-    double_area, x_numerator, y_numerator = ((0,),) * 3
+    double_area = x_numerator = y_numerator = (0,)
     prev_x, prev_y = contour[-1]
     for x, y in contour:
         area_component = _to_endpoints_cross_product_z(prev_x, prev_y, x, y)
