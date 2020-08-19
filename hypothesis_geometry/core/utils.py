@@ -44,8 +44,9 @@ def points_to_centroid(points: Sequence[Point]) -> Point:
     for x, y in points:
         accumulated_x += x
         accumulated_y += y
-    return (_divide_by_int(accumulated_x, len(points)),
-            _divide_by_int(accumulated_y, len(points)))
+    divisor = len(points)
+    return (_divide_by_int(accumulated_x, divisor),
+            _divide_by_int(accumulated_y, divisor))
 
 
 def contour_to_centroid(contour: Contour) -> Point:
@@ -61,9 +62,9 @@ def contour_to_centroid(contour: Contour) -> Point:
                                      scale_expansion(area_component,
                                                      prev_y + y))
         prev_x, prev_y = x, y
-    denominator = 3 * double_area[-1]
-    return (_divide_by_int(x_numerator[-1], denominator),
-            _divide_by_int(y_numerator[-1], denominator))
+    divisor = 3 * double_area[-1]
+    return (_divide_by_int(x_numerator[-1], divisor),
+            _divide_by_int(y_numerator[-1], divisor))
 
 
 def _to_endpoints_cross_product_z(start_x: Coordinate,
