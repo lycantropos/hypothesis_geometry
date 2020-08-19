@@ -40,9 +40,12 @@ def to_orientations(contour: Contour) -> Iterator[Orientation]:
 
 
 def points_to_centroid(points: Sequence[Point]) -> Point:
-    xs, ys = zip(*points)
-    return (_divide_by_int(sum(xs), len(points)),
-            _divide_by_int(sum(ys), len(points)))
+    accumulated_x = accumulated_y = 0
+    for x, y in points:
+        accumulated_x += x
+        accumulated_y += y
+    return (_divide_by_int(accumulated_x, len(points)),
+            _divide_by_int(accumulated_y, len(points)))
 
 
 def contour_to_centroid(contour: Contour) -> Point:
