@@ -168,7 +168,7 @@ def to_polygon(points: Sequence[Point],
 
     edges_neighbours = {edge: to_edge_neighbours(edge)
                         for edge in boundary_edges}
-    candidates = red_black.tree(*filter(is_mouth, boundary_edges),
+    candidates = red_black.set_(*filter(is_mouth, boundary_edges),
                                 key=_edge_key)
     current_border_size = len(to_strict_convex_hull(points))
     while current_border_size < border_size:
