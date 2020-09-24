@@ -13,7 +13,7 @@ from typing import (Callable,
                     Tuple)
 
 from dendroid import red_black
-from dendroid.hints import Sortable
+from dendroid.hints import Key
 from robust.linear import (SegmentsRelationship,
                            segments_relationship)
 
@@ -55,7 +55,7 @@ def to_contour(points: Sequence[Point], size: int) -> Contour:
 
     edges_neighbours = {edge: to_edge_neighbours(edge)
                         for edge in boundary_edges}
-    candidates = red_black.tree(*filter(is_mouth, boundary_edges),
+    candidates = red_black.set_(*filter(is_mouth, boundary_edges),
                                 key=_edge_key)
     current_size = len(to_strict_convex_hull(points))
     while current_size < size:
@@ -190,7 +190,7 @@ def to_polygon(points: Sequence[Point],
     return border, holes
 
 
-def _edge_key(edge: QuadEdge) -> Sortable:
+def _edge_key(edge: QuadEdge) -> Key:
     return _to_squared_edge_length(edge), edge.start, edge.end
 
 
@@ -273,7 +273,7 @@ def to_convex_contour(points: List[Point],
     vectors_ys = to_vectors_coordinates(ys, min_y, max_y)
     random.shuffle(vectors_ys)
 
-    def to_vector_angle(vector: Tuple[Coordinate, Coordinate]) -> Sortable:
+    def to_vector_angle(vector: Tuple[Coordinate, Coordinate]) -> Key:
         x, y = vector
         return atan2(y, x)
 
