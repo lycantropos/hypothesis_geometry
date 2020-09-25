@@ -2,7 +2,6 @@ import os
 import platform
 
 from hypothesis import (HealthCheck,
-                        Verbosity,
                         settings)
 
 on_travis_ci = bool(os.getenv('CI', False))
@@ -15,6 +14,4 @@ settings.register_profile('default',
                                         else settings.default.max_examples),
                           deadline=None,
                           suppress_health_check=[HealthCheck.filter_too_much,
-                                                 HealthCheck.too_slow],
-                          verbosity=Verbosity(settings.default.verbosity
-                                              + on_travis_ci))
+                                                 HealthCheck.too_slow])
