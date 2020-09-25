@@ -425,7 +425,8 @@ def multisegments(x_coordinates: Strategy[Coordinate],
               | (strategies.lists(segments(x_coordinates, y_coordinates),
                                   min_size=min_size,
                                   max_size=max_size)
-                 .map(planar.segments_to_multisegment)))
+                 .map(partial(planar.segments_to_multisegment,
+                              accurate=False))))
     if min_size >= TRIANGULAR_CONTOUR_SIZE:
         def multisegment_to_slices(multisegment: Multisegment
                                    ) -> Strategy[Multisegment]:
