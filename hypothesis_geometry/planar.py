@@ -399,7 +399,7 @@ def multisegments(x_coordinates: Strategy[Coordinate],
     if y_coordinates is None:
         y_coordinates = x_coordinates
 
-    if max_size < 2:
+    if max_size is not None and max_size < 2:
         return (segments(x_coordinates, y_coordinates)
                 .map(lambda segment: [segment])
                 if max_size
