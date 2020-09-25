@@ -1,10 +1,8 @@
 from typing import List
 
-from bentley_ottmann.planar import segments_cross_or_overlap
 from robust import cocircular
 
 from hypothesis_geometry.hints import (Contour,
-                                       Multisegment,
                                        Point)
 from .utils import (Orientation,
                     to_orientations)
@@ -22,10 +20,6 @@ def is_contour_non_convex(contour: Contour) -> bool:
 def is_contour_strict(contour: Contour) -> bool:
     return all(orientation is not Orientation.COLLINEAR
                for orientation in to_orientations(contour))
-
-
-def is_multisegment_valid(multisegment: Multisegment) -> bool:
-    return not segments_cross_or_overlap(multisegment)
 
 
 def is_point_inside_circumcircle(first_vertex: Point,

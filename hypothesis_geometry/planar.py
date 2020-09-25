@@ -11,12 +11,12 @@ from typing import (Callable,
                     Sized,
                     Tuple)
 
+from clipping import planar
 from hypothesis import strategies
 from hypothesis.errors import HypothesisWarning
 
 from .core.contracts import (is_contour_non_convex,
                              is_contour_strict,
-                             is_multisegment_valid,
                              points_do_not_lie_on_the_same_line)
 from .core.utils import (Orientation,
                          orientation,
@@ -421,7 +421,11 @@ def multisegments(x_coordinates: Strategy[Coordinate],
                                                    min_size=next_min_size,
                                                    max_size=next_max_size,
                                                    unique=True),
-                                  y_coordinates))
+                                  y_coordinates)
+              | (strategies.lists(segments(x_coordinates, y_coordinates),
+                                  min_size=min_size,
+                                  max_size=max_size)
+                 .map(planar.segments_to_multisegment)))
     if min_size >= TRIANGULAR_CONTOUR_SIZE:
         def multisegment_to_slices(multisegment: Multisegment
                                    ) -> Strategy[Multisegment]:
@@ -435,17 +439,12 @@ def multisegments(x_coordinates: Strategy[Coordinate],
                     if limit < len(multisegment)
                     else multisegment)
 
-        return result | (contours(x_coordinates, y_coordinates,
-                                  min_size=min_size,
-                                  max_size=max_size)
-                         .map(contour_to_segments)
-                         .flatmap(multisegment_to_slices))
-    else:
-        return result | (strategies.lists(segments(x_coordinates,
-                                                   y_coordinates),
-                                          min_size=min_size,
-                                          max_size=max_size)
-                         .filter(is_multisegment_valid))
+        result |= (contours(x_coordinates, y_coordinates,
+                            min_size=min_size,
+                            max_size=max_size)
+                   .map(contour_to_segments)
+                   .flatmap(multisegment_to_slices))
+    return result
 
 
 MIN_POLYLINE_SIZE = 2
