@@ -446,8 +446,7 @@ def multisegments(x_coordinates: Strategy[Coordinate],
                             max_size=max_size)
                    .map(contour_to_segments)
                    .flatmap(multisegment_to_slices))
-    return result | (strategies.lists(segments(x_coordinates,
-                                               y_coordinates),
+    return result | (strategies.lists(segments(x_coordinates, y_coordinates),
                                       min_size=min_size,
                                       max_size=max_size)
                      .filter(is_multisegment_valid))
