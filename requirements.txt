@@ -1,5 +1,5 @@
 bentley_ottmann>=0.9.0
-decision>=0.1.0
+decision>=0.2.0
 dendroid>=1.0.0
 hypothesis>=5.32.0
 reprit>=0.2.2
