@@ -2319,8 +2319,7 @@ def mixes(x_coordinates: Strategy[Coordinate],
                                 multisegment_points_counts),
                             zip(repeat(draw_polygon),
                                 multipolygon_points_counts)))))
-        for (drawer, count), (next_drawer, _) in pairwise(
-                drawers_with_points_counts):
+        for drawer, count in drawers_with_points_counts:
             drawer(count)
             xs = xs[count:]
         return multipoint, multisegment, multipolygon
@@ -2335,7 +2334,7 @@ def mixes(x_coordinates: Strategy[Coordinate],
 
         def draw_multipoint(points_count: int) -> None:
             multipoint.extend(draw(multipoints(
-                    y_coordinates, strategies.sampled_from(ys[:points_count]),
+                    x_coordinates, strategies.sampled_from(ys[:points_count]),
                     min_size=points_count,
                     max_size=points_count)))
 
@@ -2363,8 +2362,7 @@ def mixes(x_coordinates: Strategy[Coordinate],
                                 multisegment_points_counts),
                             zip(repeat(draw_polygon),
                                 multipolygon_points_counts)))))
-        for (drawer, count), (next_drawer, _) in pairwise(
-                drawers_with_points_counts):
+        for drawer, count in drawers_with_points_counts:
             drawer(count)
             ys = ys[count:]
         return multipoint, multisegment, multipolygon
