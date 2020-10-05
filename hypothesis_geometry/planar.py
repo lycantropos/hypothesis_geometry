@@ -2482,17 +2482,17 @@ def mixes(x_coordinates: Strategy[Coordinate],
                .flatmap(ys_to_mix)))
 
 
+def _choosers() -> Strategy[Chooser]:
+    return (strategies.randoms(use_true_random=True)
+            .map(lambda random: random.choice))
+
+
 def _has_valid_size(sized: Sized,
                     *,
                     min_size: int,
                     max_size: Optional[int]) -> bool:
     size = len(sized)
     return min_size <= size and (max_size is None or size <= max_size)
-
-
-def _choosers() -> Strategy[Chooser]:
-    return (strategies.randoms(use_true_random=True)
-            .map(lambda random: random.choice))
 
 
 def _validate_sizes(min_size: int, max_size: Optional[int],
