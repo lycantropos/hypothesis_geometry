@@ -769,7 +769,8 @@ def convex_contours(x_coordinates: Strategy[Coordinate],
 
     def to_points_with_random(points: List[Point]
                               ) -> Strategy[Tuple[List[Point], Random]]:
-        return strategies.tuples(strategies.just(points), strategies.randoms())
+        return strategies.tuples(strategies.just(points),
+                                 strategies.randoms(use_true_random=True))
 
     result = (strategies.lists(points(x_coordinates, y_coordinates),
                                min_size=min_size,
