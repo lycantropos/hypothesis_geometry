@@ -29,6 +29,7 @@ from .hints import (Contour,
                     Coordinate,
                     Domain,
                     Multicontour,
+                    Multisegment,
                     Point,
                     Polygon,
                     Range,
@@ -143,7 +144,7 @@ def to_polygon(points: Sequence[Point],
         hole_points = inner_points[:hole_size]
         hole = to_contour(hole_points, hole_size)[::-1]
         holes.append(hole)
-        holes_segments.extend(contour_to_segments(hole))
+        holes_segments.extend(contour_to_multisegment(hole))
         boundary_vertices.update(hole_points)
         start += hole_size
         inner_points = inner_points[hole_size:]
@@ -369,10 +370,15 @@ def sort_pair(pair: Sequence[Domain]) -> Tuple[Domain, Domain]:
     return (first, second) if first < second else (second, first)
 
 
-def contour_to_segments(contour: Contour) -> List[Segment]:
+def contour_to_multisegment(contour: Contour) -> Multisegment:
     return [(contour[index - 1], contour[index])
             for index in range(len(contour))]
 
 
 def ceil_division(dividend: int, divisor: int) -> int:
     return -(-dividend // divisor)
+
+
+def polygon_to_border_multisegment(polygon: Polygon) -> Multisegment:
+    border, _ = polygon
+    return contour_to_multisegment(border)

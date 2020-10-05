@@ -34,7 +34,7 @@ from hypothesis_geometry.hints import (Contour,
 from hypothesis_geometry.planar import (MIN_POLYLINE_SIZE,
                                         TRIANGULAR_CONTOUR_SIZE,
                                         _has_valid_size)
-from hypothesis_geometry.utils import contour_to_segments
+from hypothesis_geometry.utils import contour_to_multisegment
 
 has_valid_size = _has_valid_size
 Domain = TypeVar('Domain')
@@ -509,7 +509,7 @@ def is_non_self_intersecting_contour(contour: Contour) -> bool:
 def is_star_contour(contour: Contour) -> bool:
     return segments_do_not_cross_or_overlap(
             contour_to_star_multisegment(contour)
-            + contour_to_segments(contour))
+            + contour_to_multisegment(contour))
 
 
 def contour_to_star_multisegment(contour: Contour) -> Multisegment:
@@ -522,16 +522,16 @@ def contour_to_star_multisegment(contour: Contour) -> Multisegment:
 def mix_segments_do_not_cross_or_overlap(mix: Mix) -> bool:
     _, multisegment, multipolygon = mix
     return segments_do_not_cross_or_overlap(
-            multisegment + list(flatten(chain(contour_to_segments(border),
-                                              flatten(contour_to_segments(hole)
-                                                      for hole in holes))
-                                        for border, holes in multipolygon)))
+            multisegment
+            + list(flatten(chain(contour_to_multisegment(border),
+                                 flatten(contour_to_multisegment(hole)
+                                         for hole in holes))
+                           for border, holes in multipolygon)))
 
 
 def contours_do_not_cross_or_overlap(contours: List[Contour]) -> bool:
-    return segments_do_not_cross_or_overlap(sum([contour_to_segments(contour)
-                                                 for contour in contours],
-                                                []))
+    return segments_do_not_cross_or_overlap(list(flatten(
+            contour_to_multisegment(contour) for contour in contours)))
 
 
 def segments_do_not_cross_or_overlap(segments: List[Segment]) -> bool:

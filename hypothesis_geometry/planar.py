@@ -14,7 +14,9 @@ from typing import (Callable,
 from hypothesis import strategies
 from hypothesis.errors import HypothesisWarning
 
-from .core.contracts import (is_contour_non_convex,
+from .core.contracts import (has_horizontal_lowermost_segment,
+                             has_vertical_leftmost_segment,
+                             is_contour_non_convex,
                              is_contour_strict,
                              is_multisegment_valid,
                              points_do_not_lie_on_the_same_line)
@@ -37,8 +39,9 @@ from .hints import (BoundingBox,
                     Strategy)
 from .utils import (ceil_division,
                     constrict_convex_hull_size,
-                    contour_to_segments,
+                    contour_to_multisegment,
                     pack,
+                    polygon_to_border_multisegment,
                     sort_pair,
                     to_contour,
                     to_convex_contour,
@@ -444,7 +447,7 @@ def multisegments(x_coordinates: Strategy[Coordinate],
         result |= (contours(x_coordinates, y_coordinates,
                             min_size=min_size,
                             max_size=max_size)
-                   .map(contour_to_segments)
+                   .map(contour_to_multisegment)
                    .flatmap(multisegment_to_slices))
     return result | (strategies.lists(segments(x_coordinates, y_coordinates),
                                       min_size=min_size,
@@ -2319,9 +2322,22 @@ def mixes(x_coordinates: Strategy[Coordinate],
                                 multisegment_points_counts),
                             zip(repeat(draw_polygon),
                                 multipolygon_points_counts)))))
-        for drawer, count in drawers_with_points_counts:
+        for index, (drawer, count) in enumerate(drawers_with_points_counts):
             drawer(count)
-            xs = xs[count:]
+            can_touch_next_geometry = (
+                    drawer is draw_multisegment
+                    and index < len(drawers_with_points_counts) - 1
+                    and (drawers_with_points_counts[index + 1]
+                         is not draw_multipoint)
+                    and not has_vertical_leftmost_segment(multisegment)
+                    or drawer is draw_polygon
+                    and index < len(drawers_with_points_counts) - 1
+                    and (drawers_with_points_counts[index + 1]
+                         is not draw_multipoint)
+                    and
+                    not has_vertical_leftmost_segment(
+                            polygon_to_border_multisegment(multipolygon[-1])))
+            xs = xs[count - can_touch_next_geometry:]
         return multipoint, multisegment, multipolygon
 
     @strategies.composite
@@ -2362,9 +2378,22 @@ def mixes(x_coordinates: Strategy[Coordinate],
                                 multisegment_points_counts),
                             zip(repeat(draw_polygon),
                                 multipolygon_points_counts)))))
-        for drawer, count in drawers_with_points_counts:
+        for index, (drawer, count) in enumerate(drawers_with_points_counts):
             drawer(count)
-            ys = ys[count:]
+            can_touch_next_geometry = (
+                    drawer is draw_multisegment
+                    and index < len(drawers_with_points_counts) - 1
+                    and (drawers_with_points_counts[index + 1]
+                         is not draw_multipoint)
+                    and not has_horizontal_lowermost_segment(multisegment)
+                    or drawer is draw_polygon
+                    and index < len(drawers_with_points_counts) - 1
+                    and (drawers_with_points_counts[index + 1]
+                         is not draw_multipoint)
+                    and
+                    not has_horizontal_lowermost_segment(
+                            polygon_to_border_multisegment(multipolygon[-1])))
+            ys = ys[count - can_touch_next_geometry:]
         return multipoint, multisegment, multipolygon
 
     def _to_points_counts(draw: Callable[[Strategy[Domain]], Domain],
