@@ -4,6 +4,7 @@ from itertools import (chain,
                        cycle,
                        groupby,
                        repeat)
+from operator import itemgetter
 from random import Random
 from typing import (Callable,
                     List,
@@ -37,7 +38,8 @@ from .hints import (BoundingBox,
                     Polyline,
                     Segment,
                     Strategy)
-from .utils import (ceil_division,
+from .utils import (Chooser,
+                    ceil_division,
                     constrict_convex_hull_size,
                     contour_to_multisegment,
                     pack,
@@ -1371,7 +1373,7 @@ def multicontours(x_coordinates: Strategy[Coordinate],
         return strategies.builds(to_multicontour,
                                  strategies.just(vertices),
                                  to_sizes(len(vertices)),
-                                 strategies.randoms())
+                                 _choosers())
 
     def to_sizes(limit: int) -> Strategy[List[int]]:
         return (strategies.integers(min_size, limit // min_contour_size)
@@ -1592,7 +1594,7 @@ def polygons(x_coordinates: Strategy[Coordinate],
                                  strategies.integers(min_border_size,
                                                      max_border_size),
                                  to_holes_sizes(points),
-                                 strategies.randoms())
+                                 strategies.randoms(use_true_random=True))
 
     def to_holes_sizes(points: List[Point]) -> Strategy[List[int]]:
         max_inner_points_count = len(points) - len(to_convex_hull(points))
@@ -2480,6 +2482,19 @@ def mixes(x_coordinates: Strategy[Coordinate],
                .flatmap(ys_to_mix)))
 
 
+def _has_valid_size(sized: Sized,
+                    *,
+                    min_size: int,
+                    max_size: Optional[int]) -> bool:
+    size = len(sized)
+    return min_size <= size and (max_size is None or size <= max_size)
+
+
+def _choosers() -> Strategy[Chooser]:
+    return (strategies.randoms(use_true_random=True)
+            .map(lambda random: random.choice))
+
+
 def _validate_sizes(min_size: int, max_size: Optional[int],
                     min_expected_size: int,
                     min_size_name: str = 'min_size',
@@ -2515,11 +2530,3 @@ def _validate_sizes(min_size: int, max_size: Optional[int],
                               min_expected_size=min_expected_size,
                               min_size=min_size),
                       HypothesisWarning)
-
-
-def _has_valid_size(sized: Sized,
-                    *,
-                    min_size: int,
-                    max_size: Optional[int]) -> bool:
-    size = len(sized)
-    return min_size <= size and (max_size is None or size <= max_size)

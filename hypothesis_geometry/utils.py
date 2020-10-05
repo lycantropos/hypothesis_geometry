@@ -1,7 +1,8 @@
 import math
 from collections import deque
 from functools import partial
-from itertools import groupby
+from itertools import (cycle,
+                       groupby)
 from math import atan2
 from operator import itemgetter
 from random import Random
@@ -18,6 +19,8 @@ from robust.linear import (SegmentsRelationship,
                            segments_relationship)
 
 from .core import triangular
+from .core.contracts import (has_horizontal_lowermost_segment,
+                             has_vertical_leftmost_segment)
 from .core.subdivisional import (QuadEdge,
                                  to_edge_neighbours)
 from .core.utils import (Orientation,
@@ -34,6 +37,8 @@ from .hints import (Contour,
                     Polygon,
                     Range,
                     Segment)
+
+Chooser = Callable[[Sequence[Domain]], Domain]
 
 
 def to_contour(points: Sequence[Point], size: int) -> Contour:
@@ -112,18 +117,31 @@ def _to_segment_angle(start_x: Coordinate, start_y: Coordinate,
 
 def to_multicontour(vertices: List[Point],
                     sizes: List[int],
-                    random: Random) -> Multicontour:
-    vertices = sorted(vertices)
-    random_flag = partial(random.getrandbits, 1)
-    random_sorting_key = partial(random.choice, [itemgetter(1, 0), None])
+                    chooser: Chooser) -> Multicontour:
+    sorting_key_chooser = partial(chooser, [None, itemgetter(1, 0)])
+    current_sorting_key = sorting_key_chooser()
+    vertices = sorted(vertices,
+                      key=current_sorting_key)
+    predicates = cycle((has_vertical_leftmost_segment,
+                        has_horizontal_lowermost_segment)
+                       if current_sorting_key is None
+                       else (has_horizontal_lowermost_segment,
+                             has_vertical_leftmost_segment))
+    current_predicate = next(predicates)
     result = []
     for size in sizes:
-        result.append(to_contour(vertices[:size], size))
-        vertices = vertices[size:]
-        if random_flag():
-            vertices = sorted(vertices,
-                              key=random_sorting_key(),
-                              reverse=random_flag())
+        contour = to_contour(vertices[:size], size)
+        result.append(contour)
+        can_touch_next_contour = current_predicate(
+                contour_to_multisegment(contour))
+        vertices = vertices[size - can_touch_next_contour:]
+        new_sorting_key = sorting_key_chooser()
+        if new_sorting_key is not current_sorting_key:
+            (vertices, current_sorting_key,
+             current_predicate) = (sorted(vertices,
+                                          key=new_sorting_key),
+                                   new_sorting_key,
+                                   next(predicates))
     return result
 
 
