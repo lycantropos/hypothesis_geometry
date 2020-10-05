@@ -1,6 +1,6 @@
 import warnings
 from functools import partial
-from itertools import (accumulate,
+from itertools import (chain,
                        cycle,
                        groupby,
                        repeat)
@@ -2277,84 +2277,101 @@ def mixes(x_coordinates: Strategy[Coordinate],
                         + min_multipolygon_holes_size
                         * min_multipolygon_hole_size)
     min_multipolygon_points_count = min_multipolygon_size * min_polygon_size
-    min_multisegment_points_count = (min_multisegment_size or -1) + 1
+    min_multisegment_points_count = 2 * min_multisegment_size
     min_points_size = (min_multipoint_size + min_multisegment_points_count
                        + min_multipolygon_points_count)
 
     @strategies.composite
     def xs_to_mix(draw: Callable[[Strategy[Domain]], Domain],
                   xs: List[Coordinate]) -> Mix:
-        multipoint_size, multisegment_size, multipolygon_sizes = _to_sizes(
-                draw, len(xs))
+        (multipoint_points_counts, multisegment_points_counts,
+         multipolygon_points_counts) = _to_points_counts(draw, len(xs))
         xs = sorted(xs)
-        return (draw(multipoints(strategies.sampled_from(xs[:multipoint_size]),
-                                 y_coordinates,
-                                 min_size=min_multipoint_size,
-                                 max_size=multipoint_size))
-                if multipoint_size
-                else [],
-                draw(multisegments(
-                        strategies.sampled_from(
-                                xs[multipoint_size:
-                                   multipoint_size + multisegment_size]),
-                        y_coordinates,
-                        min_size=min_multisegment_size,
-                        max_size=(multisegment_size or 1) - 1))
-                if multisegment_size
-                else [],
-                [draw(polygons(strategies.sampled_from(xs[start:start + size]),
-                               y_coordinates,
-                               min_size=min_multipolygon_border_size,
-                               max_size=max_multipolygon_border_size,
-                               min_holes_size=min_multipolygon_holes_size,
-                               max_holes_size=max_multipolygon_holes_size,
-                               min_hole_size=min_multipolygon_hole_size,
-                               max_hole_size=max_multipolygon_hole_size))
-                 for start, size in zip(accumulate([multipoint_size
-                                                    + multisegment_size]
-                                                   + multipolygon_sizes),
-                                        multipolygon_sizes)]
-                if multipolygon_sizes
-                else [])
+        multipoint, multisegment, multipolygon = [], [], []
+
+        def draw_multipoint(points_count: int) -> None:
+            multipoint.extend(draw(multipoints(
+                    strategies.sampled_from(xs[:points_count]), y_coordinates,
+                    min_size=points_count,
+                    max_size=points_count)))
+
+        def draw_multisegment(points_count: int) -> None:
+            size = points_count // 2
+            multisegment.extend(draw(multisegments(
+                    strategies.sampled_from(xs[:points_count]), y_coordinates,
+                    min_size=size,
+                    max_size=size)))
+
+        def draw_polygon(points_count: int) -> None:
+            multipolygon.append(draw(polygons(
+                    strategies.sampled_from(xs[:points_count]), y_coordinates,
+                    min_size=min_multipolygon_border_size,
+                    max_size=max_multipolygon_border_size,
+                    min_holes_size=min_multipolygon_holes_size,
+                    max_holes_size=max_multipolygon_holes_size,
+                    min_hole_size=min_multipolygon_hole_size,
+                    max_hole_size=max_multipolygon_hole_size)))
+
+        drawers_with_points_counts = draw(strategies.permutations(
+                tuple(chain(zip(repeat(draw_multipoint),
+                                multipoint_points_counts),
+                            zip(repeat(draw_multisegment),
+                                multisegment_points_counts),
+                            zip(repeat(draw_polygon),
+                                multipolygon_points_counts)))))
+        for (drawer, count), (next_drawer, _) in pairwise(
+                drawers_with_points_counts):
+            drawer(count)
+            xs = xs[count:]
+        return multipoint, multisegment, multipolygon
 
     @strategies.composite
     def ys_to_mix(draw: Callable[[Strategy[Domain]], Domain],
                   ys: List[Coordinate]) -> Mix:
-        multipoint_size, multisegment_size, multipolygon_sizes = _to_sizes(
-                draw, len(ys))
+        (multipoint_points_counts, multisegment_points_counts,
+         multipolygon_points_counts) = _to_points_counts(draw, len(ys))
         ys = sorted(ys)
-        return (draw(multipoints(x_coordinates,
-                                 strategies.sampled_from(ys[:multipoint_size]),
-                                 min_size=min_multipoint_size,
-                                 max_size=multipoint_size))
-                if multipoint_size
-                else [],
-                draw(multisegments(
-                        x_coordinates,
-                        strategies.sampled_from(
-                                ys[multipoint_size:
-                                   multipoint_size + multisegment_size]),
-                        min_size=min_multisegment_size,
-                        max_size=(multisegment_size or 1) - 1))
-                if multisegment_size
-                else [],
-                [draw(polygons(x_coordinates,
-                               strategies.sampled_from(ys[start:start + size]),
-                               min_size=min_multipolygon_border_size,
-                               max_size=max_multipolygon_border_size,
-                               min_holes_size=min_multipolygon_holes_size,
-                               max_holes_size=max_multipolygon_holes_size,
-                               min_hole_size=min_multipolygon_hole_size,
-                               max_hole_size=max_multipolygon_hole_size))
-                 for start, size in zip(accumulate([multipoint_size
-                                                    + multisegment_size]
-                                                   + multipolygon_sizes),
-                                        multipolygon_sizes)]
-                if multipolygon_sizes
-                else [])
+        multipoint, multisegment, multipolygon = [], [], []
 
-    def _to_sizes(draw: Callable[[Strategy[Domain]], Domain],
-                  max_points_count: int) -> Tuple[int, int, List[int]]:
+        def draw_multipoint(points_count: int) -> None:
+            multipoint.extend(draw(multipoints(
+                    y_coordinates, strategies.sampled_from(ys[:points_count]),
+                    min_size=points_count,
+                    max_size=points_count)))
+
+        def draw_multisegment(points_count: int) -> None:
+            size = points_count // 2
+            multisegment.extend(draw(multisegments(
+                    x_coordinates, strategies.sampled_from(ys[:points_count]),
+                    min_size=size,
+                    max_size=size)))
+
+        def draw_polygon(points_count: int) -> None:
+            multipolygon.append(draw(polygons(
+                    x_coordinates, strategies.sampled_from(ys[:points_count]),
+                    min_size=min_multipolygon_border_size,
+                    max_size=max_multipolygon_border_size,
+                    min_holes_size=min_multipolygon_holes_size,
+                    max_holes_size=max_multipolygon_holes_size,
+                    min_hole_size=min_multipolygon_hole_size,
+                    max_hole_size=max_multipolygon_hole_size)))
+
+        drawers_with_points_counts = draw(strategies.permutations(
+                tuple(chain(zip(repeat(draw_multipoint),
+                                multipoint_points_counts),
+                            zip(repeat(draw_multisegment),
+                                multisegment_points_counts),
+                            zip(repeat(draw_polygon),
+                                multipolygon_points_counts)))))
+        for (drawer, count), (next_drawer, _) in pairwise(
+                drawers_with_points_counts):
+            drawer(count)
+            ys = ys[count:]
+        return multipoint, multisegment, multipolygon
+
+    def _to_points_counts(draw: Callable[[Strategy[Domain]], Domain],
+                          max_points_count: int
+                          ) -> Tuple[List[int], List[int], List[int]]:
         max_multipolygon_points_count = (max_points_count - min_multipoint_size
                                          - min_multisegment_points_count)
         multipolygon_size_upper_bound = (max_multipolygon_points_count
@@ -2365,31 +2382,48 @@ def mixes(x_coordinates: Strategy[Coordinate],
                 if max_multipolygon_size is None
                 else min(multipolygon_size_upper_bound,
                          max_multipolygon_size)))
-        multipolygon_sizes = (
-            [draw(polygons_sizes)
-             for polygons_sizes in repeat(strategies.integers(
+        multipolygon_points_counts = (
+            [draw(polygons_points_counts)
+             for polygons_points_counts in repeat(strategies.integers(
                     min_polygon_size,
                     max_multipolygon_points_count // multipolygon_size),
                     multipolygon_size)]
             if multipolygon_size
             else [])
-        multipolygon_size = sum(multipolygon_sizes)
-        multisegment_size_upper_bound = (max_points_count - multipolygon_size
-                                         - min_multipoint_size)
-        multisegment_points_count = draw(strategies.integers(
-                min_multisegment_points_count,
-                multisegment_size_upper_bound
-                if max_multisegment_size is None
-                else min(max_multisegment_size + 1,
-                         multisegment_size_upper_bound)))
+        multipolygon_points_count = sum(multipolygon_points_counts)
+        multisegment_points_count_upper_bound = (
+                max_points_count - multipolygon_points_count
+                - min_multipoint_size)
+        max_multisegment_points_count = (
+            multisegment_points_count_upper_bound
+            if max_multisegment_size is None
+            else min(multisegment_points_count_upper_bound,
+                     2 * max_multisegment_size))
+        multisegment_points_count = draw(strategies.sampled_from(
+                range(min_multisegment_points_count,
+                      max_multisegment_points_count + 1,
+                      2)))
         multipoint_size_upper_bound = (max_points_count
                                        - multisegment_points_count
-                                       - multipolygon_size)
-        multipoint_size = (multipoint_size_upper_bound
-                           if max_multipoint_size is None
-                           else min(multipoint_size_upper_bound,
-                                    max_multipoint_size))
-        return multipoint_size, multisegment_points_count, multipolygon_sizes
+                                       - multipolygon_points_count)
+        multipoint_points_count = (multipoint_size_upper_bound
+                                   if max_multipoint_size is None
+                                   else min(multipoint_size_upper_bound,
+                                            max_multipoint_size))
+        multisegment_size = multisegment_points_count // 2
+        return (_partition(draw, multipoint_points_count),
+                [2 * size for size in _partition(draw, multisegment_size)],
+                multipolygon_points_counts)
+
+    def _partition(draw: Callable[[Strategy[Domain]], Domain],
+                   value: int) -> List[int]:
+        assert value >= 0, 'Value should be non-negative.'
+        result = []
+        while value:
+            part = draw(strategies.integers(1, value))
+            result.append(part)
+            value -= part
+        return result
 
     return ((strategies.lists(x_coordinates,
                               min_size=min_points_size,
