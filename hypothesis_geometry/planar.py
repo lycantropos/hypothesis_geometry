@@ -2276,13 +2276,14 @@ def mixes(x_coordinates: Strategy[Coordinate],
     if y_coordinates is None:
         y_coordinates = x_coordinates
 
-    min_polygon_size = (min_multipolygon_border_size
-                        + min_multipolygon_holes_size
-                        * min_multipolygon_hole_size)
-    min_multipolygon_points_count = min_multipolygon_size * min_polygon_size
+    min_polygon_points_count = (min_multipolygon_border_size
+                                + min_multipolygon_holes_size
+                                * min_multipolygon_hole_size)
+    min_multipolygon_points_count = (min_multipolygon_size
+                                     * min_polygon_points_count)
     min_multisegment_points_count = 2 * min_multisegment_size
-    min_points_size = (min_multipoint_size + min_multisegment_points_count
-                       + min_multipolygon_points_count)
+    min_points_count = (min_multipoint_size + min_multisegment_points_count
+                        + min_multipolygon_points_count)
 
     @strategies.composite
     def xs_to_mix(draw: Callable[[Strategy[Domain]], Domain],
@@ -2402,18 +2403,19 @@ def mixes(x_coordinates: Strategy[Coordinate],
         max_multipolygon_points_count = (max_points_count - min_multipoint_size
                                          - min_multisegment_points_count)
         multipolygon_size_upper_bound = (max_multipolygon_points_count
-                                         // min_polygon_size)
+                                         // min_polygon_points_count)
         multipolygon_size = draw(strategies.integers(
                 min_multipolygon_size,
                 multipolygon_size_upper_bound
                 if max_multipolygon_size is None
                 else min(multipolygon_size_upper_bound,
                          max_multipolygon_size)))
+        max_polygon_points_count = (max_multipolygon_points_count
+                                    // multipolygon_size)
         multipolygon_points_counts = (
             [draw(polygons_points_counts)
              for polygons_points_counts in repeat(strategies.integers(
-                    min_polygon_size,
-                    max_multipolygon_points_count // multipolygon_size),
+                    min_polygon_points_count, max_polygon_points_count),
                     multipolygon_size)]
             if multipolygon_size
             else [])
@@ -2453,11 +2455,11 @@ def mixes(x_coordinates: Strategy[Coordinate],
         return result
 
     return ((strategies.lists(x_coordinates,
-                              min_size=min_points_size,
+                              min_size=min_points_count,
                               unique=True)
              .flatmap(xs_to_mix))
             | (strategies.lists(y_coordinates,
-                                min_size=min_points_size,
+                                min_size=min_points_count,
                                 unique=True)
                .flatmap(ys_to_mix)))
 
