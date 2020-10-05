@@ -2426,12 +2426,11 @@ def mixes(x_coordinates: Strategy[Coordinate],
                 if max_multipolygon_size is None
                 else min(multipolygon_size_upper_bound,
                          max_multipolygon_size)))
-        max_polygon_points_count = (max_multipolygon_points_count
-                                    // multipolygon_size)
         multipolygon_points_counts = (
             [draw(polygons_points_counts)
              for polygons_points_counts in repeat(strategies.integers(
-                    min_polygon_points_count, max_polygon_points_count),
+                    min_polygon_points_count,
+                    max_multipolygon_points_count // multipolygon_size),
                     multipolygon_size)]
             if multipolygon_size
             else [])
