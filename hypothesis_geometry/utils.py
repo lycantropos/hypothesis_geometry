@@ -413,10 +413,6 @@ def contour_to_multisegment(contour: Contour) -> Multisegment:
             for index in range(len(contour))]
 
 
-def ceil_division(dividend: int, divisor: int) -> int:
-    return -(-dividend // divisor)
-
-
 def polygon_to_border_multisegment(polygon: Polygon) -> Multisegment:
     border, _ = polygon
     return contour_to_multisegment(border)

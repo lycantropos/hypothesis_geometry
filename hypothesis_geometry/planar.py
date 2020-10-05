@@ -4,7 +4,6 @@ from itertools import (chain,
                        cycle,
                        groupby,
                        repeat)
-from operator import itemgetter
 from random import Random
 from typing import (Callable,
                     List,
@@ -39,7 +38,6 @@ from .hints import (BoundingBox,
                     Segment,
                     Strategy)
 from .utils import (Chooser,
-                    ceil_division,
                     constrict_convex_hull_size,
                     contour_to_multisegment,
                     pack,
@@ -1872,11 +1870,14 @@ def multipolygons(x_coordinates: Strategy[Coordinate],
             return []
         xs = sorted(xs)
         multipolygon = []
-        start = 0
-        step = ceil_division(len(xs), size)
-        for _ in repeat(None, size):
+        start, coordinates_count = 0, len(xs)
+        for index in range(size - 1):
+            polygon_points_count = draw(strategies.integers(
+                    min_polygon_points_count,
+                    (coordinates_count - start) // (size - index)))
+            polygon_xs = xs[start:start + polygon_points_count]
             polygon = draw(
-                    polygons(strategies.sampled_from(xs[start:start + step]),
+                    polygons(strategies.sampled_from(polygon_xs),
                              y_coordinates,
                              min_size=min_border_size,
                              max_size=max_border_size,
@@ -1887,7 +1888,16 @@ def multipolygons(x_coordinates: Strategy[Coordinate],
             multipolygon.append(polygon)
             can_touch_next_polygon = not has_vertical_leftmost_segment(
                     polygon_to_border_multisegment(polygon))
-            start += step - can_touch_next_polygon
+            start += polygon_points_count - can_touch_next_polygon
+        multipolygon.append(draw(
+                polygons(strategies.sampled_from(xs[start:]),
+                         y_coordinates,
+                         min_size=min_border_size,
+                         max_size=max_border_size,
+                         min_holes_size=min_holes_size,
+                         max_holes_size=max_holes_size,
+                         min_hole_size=min_hole_size,
+                         max_hole_size=max_hole_size)))
         return multipolygon
 
     @strategies.composite
@@ -1902,12 +1912,15 @@ def multipolygons(x_coordinates: Strategy[Coordinate],
             return []
         ys = sorted(ys)
         multipolygon = []
-        start = 0
-        step = ceil_division(len(ys), size)
-        for _ in repeat(None, size):
+        start, coordinates_count = 0, len(ys)
+        for index in range(size - 1):
+            polygon_points_count = draw(strategies.integers(
+                    min_polygon_points_count,
+                    (coordinates_count - start) // (size - index)))
+            polygon_ys = ys[start:start + polygon_points_count]
             polygon = draw(
                     polygons(x_coordinates,
-                             strategies.sampled_from(ys[start:start + step]),
+                             strategies.sampled_from(polygon_ys),
                              min_size=min_border_size,
                              max_size=max_border_size,
                              min_holes_size=min_holes_size,
@@ -1917,7 +1930,16 @@ def multipolygons(x_coordinates: Strategy[Coordinate],
             multipolygon.append(polygon)
             can_touch_next_polygon = not has_horizontal_lowermost_segment(
                     polygon_to_border_multisegment(polygon))
-            start += step - can_touch_next_polygon
+            start += polygon_points_count - can_touch_next_polygon
+        multipolygon.append(draw(
+                polygons(x_coordinates,
+                         strategies.sampled_from(ys[start:]),
+                         min_size=min_border_size,
+                         max_size=max_border_size,
+                         min_holes_size=min_holes_size,
+                         max_holes_size=max_holes_size,
+                         min_hole_size=min_hole_size,
+                         max_hole_size=max_hole_size)))
         return multipolygon
 
     min_points_count = min_size * min_polygon_points_count
