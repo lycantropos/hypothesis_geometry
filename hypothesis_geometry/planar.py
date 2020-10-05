@@ -2365,14 +2365,14 @@ def mixes(x_coordinates: Strategy[Coordinate],
                 if max_multipolygon_size is None
                 else min(multipolygon_size_upper_bound,
                          max_multipolygon_size)))
-        if multipolygon_size:
-            polygons_sizes = strategies.integers(min_polygon_size,
-                                                 max_multipolygon_points_count
-                                                 // multipolygon_size)
-            multipolygon_sizes = [draw(polygons_sizes)
-                                  for _ in repeat(None, multipolygon_size)]
-        else:
-            multipolygon_sizes = []
+        multipolygon_sizes = (
+            [draw(polygons_sizes)
+             for polygons_sizes in repeat(strategies.integers(
+                    min_polygon_size,
+                    max_multipolygon_points_count // multipolygon_size),
+                    multipolygon_size)]
+            if multipolygon_size
+            else [])
         multipolygon_size = sum(multipolygon_sizes)
         multisegment_size_upper_bound = (max_points_count - multipolygon_size
                                          - min_multipoint_size)
