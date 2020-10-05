@@ -1868,16 +1868,24 @@ def multipolygons(x_coordinates: Strategy[Coordinate],
         if not size:
             return []
         xs = sorted(xs)
+        multipolygon = []
+        start = 0
         step = ceil_division(len(xs), size)
-        return [draw(polygons(strategies.sampled_from(xs[start:start + step]),
-                              y_coordinates,
-                              min_size=min_border_size,
-                              max_size=max_border_size,
-                              min_holes_size=min_holes_size,
-                              max_holes_size=max_holes_size,
-                              min_hole_size=min_hole_size,
-                              max_hole_size=max_hole_size))
-                for start in range(0, len(xs), step)]
+        for _ in repeat(None, size):
+            polygon = draw(
+                    polygons(strategies.sampled_from(xs[start:start + step]),
+                             y_coordinates,
+                             min_size=min_border_size,
+                             max_size=max_border_size,
+                             min_holes_size=min_holes_size,
+                             max_holes_size=max_holes_size,
+                             min_hole_size=min_hole_size,
+                             max_hole_size=max_hole_size))
+            multipolygon.append(polygon)
+            can_touch_next_polygon = not has_vertical_leftmost_segment(
+                    polygon_to_border_multisegment(polygon))
+            start += step - can_touch_next_polygon
+        return multipolygon
 
     @strategies.composite
     def ys_to_multipolygons(draw: Callable[[Strategy[Domain]], Domain],
@@ -1890,16 +1898,24 @@ def multipolygons(x_coordinates: Strategy[Coordinate],
         if not size:
             return []
         ys = sorted(ys)
+        multipolygon = []
+        start = 0
         step = ceil_division(len(ys), size)
-        return [draw(polygons(x_coordinates,
-                              strategies.sampled_from(ys[start:start + step]),
-                              min_size=min_border_size,
-                              max_size=max_border_size,
-                              min_holes_size=min_holes_size,
-                              max_holes_size=max_holes_size,
-                              min_hole_size=min_hole_size,
-                              max_hole_size=max_hole_size))
-                for start in range(0, len(ys), step)]
+        for _ in repeat(None, size):
+            polygon = draw(
+                    polygons(x_coordinates,
+                             strategies.sampled_from(ys[start:start + step]),
+                             min_size=min_border_size,
+                             max_size=max_border_size,
+                             min_holes_size=min_holes_size,
+                             max_holes_size=max_holes_size,
+                             min_hole_size=min_hole_size,
+                             max_hole_size=max_hole_size))
+            multipolygon.append(polygon)
+            can_touch_next_polygon = not has_horizontal_lowermost_segment(
+                    polygon_to_border_multisegment(polygon))
+            start += step - can_touch_next_polygon
+        return multipolygon
 
     min_points_count = min_size * min_polygon_points_count
     max_points_count = (None
