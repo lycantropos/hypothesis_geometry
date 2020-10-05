@@ -15,6 +15,7 @@ from typing import (Callable,
 
 from dendroid import red_black
 from dendroid.hints import Key
+from locus import segmental
 from robust.linear import (SegmentsRelationship,
                            segments_relationship)
 
@@ -148,37 +149,56 @@ def to_multicontour(vertices: List[Point],
 def to_polygon(points: Sequence[Point],
                border_size: int,
                holes_sizes: List[int],
-               random: Random) -> Polygon:
+               chooser: Chooser) -> Polygon:
     triangulation = triangular.delaunay(points)
     boundary_edges = triangular.to_boundary_edges(triangulation)
     boundary_vertices = {edge.start for edge in boundary_edges}
-    inner_points = sorted(set(points) - boundary_vertices)
-    start = 0
+    sorting_key_chooser = partial(chooser, [None, itemgetter(1, 0)])
+    current_sorting_key = sorting_key_chooser()
+    inner_points = sorted(set(points) - boundary_vertices,
+                          key=current_sorting_key)
+    predicates = cycle((has_vertical_leftmost_segment,
+                        has_horizontal_lowermost_segment)
+                       if current_sorting_key is None
+                       else (has_horizontal_lowermost_segment,
+                             has_vertical_leftmost_segment))
+    current_predicate = next(predicates)
     holes = []
-    holes_segments = []
-    random_flag = partial(random.getrandbits, 1)
-    random_sorting_key = partial(random.choice, [itemgetter(1, 0), None])
+    holes_multisegment = []
     for hole_size in holes_sizes:
         hole_points = inner_points[:hole_size]
         hole = to_contour(hole_points, hole_size)[::-1]
         holes.append(hole)
-        holes_segments.extend(contour_to_multisegment(hole))
+        hole_multisegment = contour_to_multisegment(hole)
+        holes_multisegment.extend(hole_multisegment)
         boundary_vertices.update(hole_points)
-        start += hole_size
-        inner_points = inner_points[hole_size:]
-        if random_flag():
-            inner_points = sorted(inner_points,
-                                  key=random_sorting_key(),
-                                  reverse=random_flag())
+        can_touch_next_hole = current_predicate(hole_multisegment)
+        inner_points = inner_points[hole_size - can_touch_next_hole:]
+        next_sorting_key = sorting_key_chooser()
+        if next_sorting_key is not current_sorting_key:
+            (current_sorting_key, inner_points,
+             current_predicate) = (next_sorting_key,
+                                   sorted(inner_points,
+                                          key=next_sorting_key),
+                                   next(predicates))
 
-    def is_mouth(edge: QuadEdge) -> bool:
+    def to_segment_cross_or_overlap_detector(multisegment: Multisegment
+                                             ) -> Callable[[Segment], bool]:
+        return (
+            (lambda segment, to_nearest_segment=(segmental.Tree(multisegment)
+                                                 .nearest_segment)
+             : segments_cross_or_overlap(to_nearest_segment(segment), segment))
+            if multisegment
+            else (lambda segment: False))
+
+    def is_mouth(edge: QuadEdge,
+                 cross_or_overlap_holes: Callable[[Segment], bool]
+                 = to_segment_cross_or_overlap_detector(holes_multisegment)
+                 ) -> bool:
         neighbour_end = edge.left_from_start.end
         return (neighbour_end not in boundary_vertices
-                and not any(segments_cross_or_overlap((endpoint,
-                                                       neighbour_end),
-                                                      hole_segment)
-                            for hole_segment in holes_segments
-                            for endpoint in (edge.start, edge.end)))
+                and not cross_or_overlap_holes((edge.start, neighbour_end))
+                and not cross_or_overlap_holes((edge.end, neighbour_end)))
 
     def segments_cross_or_overlap(left: Segment, right: Segment) -> bool:
         relationship = segments_relationship(left, right)

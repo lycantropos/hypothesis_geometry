@@ -1594,7 +1594,7 @@ def polygons(x_coordinates: Strategy[Coordinate],
                                  strategies.integers(min_border_size,
                                                      max_border_size),
                                  to_holes_sizes(points),
-                                 strategies.randoms(use_true_random=True))
+                                 _choosers())
 
     def to_holes_sizes(points: List[Point]) -> Strategy[List[int]]:
         max_inner_points_count = len(points) - len(to_convex_hull(points))
