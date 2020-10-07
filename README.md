@@ -368,6 +368,132 @@ True
 
 ```
 
+
+### Mixes
+```python
+>>> min_multipoint_size, max_multipoint_size = 2, 3
+>>> min_multisegment_size, max_multisegment_size = 1, 4
+>>> min_multipolygon_size, max_multipolygon_size = 0, 5
+>>> min_multipolygon_border_size, max_multipolygon_border_size = 5, 10
+>>> min_multipolygon_holes_size, max_multipolygon_holes_size = 1, 4
+>>> min_multipolygon_hole_size, max_multipolygon_hole_size = 3, 5
+>>> mixes = planar.mixes(coordinates,
+...                      min_multipoint_size=min_multipoint_size,
+...                      max_multipoint_size=max_multipoint_size,
+...                      min_multisegment_size=min_multisegment_size,
+...                      max_multisegment_size=max_multisegment_size,
+...                      min_multipolygon_size=min_multipolygon_size,
+...                      max_multipolygon_size=max_multipolygon_size,
+...                      min_multipolygon_border_size=min_multipolygon_border_size,
+...                      max_multipolygon_border_size=max_multipolygon_border_size,
+...                      min_multipolygon_holes_size=min_multipolygon_holes_size,
+...                      max_multipolygon_holes_size=max_multipolygon_holes_size,
+...                      min_multipolygon_hole_size=min_multipolygon_hole_size,
+...                      max_multipolygon_hole_size=max_multipolygon_hole_size)
+>>> mix = mixes.example()
+>>> isinstance(mix, tuple)
+True
+>>> len(mix) == 3
+True
+>>> multipoint, multisegment, multipolygon = mix
+>>> isinstance(multipoint, list)
+True
+>>> min_multipoint_size <= len(multipoint) <= max_multipoint_size
+True
+>>> all(isinstance(point, tuple) for point in multipoint)
+True
+>>> all(len(point) == 2 for point in multipoint)
+True
+>>> all(isinstance(coordinate, coordinates_type)
+...     for point in multipoint
+...     for coordinate in point)
+True
+>>> all(min_coordinate <= coordinate <= max_coordinate
+...     for point in multipoint
+...     for coordinate in point)
+True
+>>> isinstance(multisegment, list)
+True
+>>> min_multisegment_size <= len(multisegment) <= max_multisegment_size
+True
+>>> all(isinstance(segment, tuple) for segment in multisegment)
+True
+>>> all(isinstance(endpoint, tuple)
+...     for segment in multisegment
+...     for endpoint in segment)
+True
+>>> all(len(segment) == 2 for segment in multisegment)
+True
+>>> all(len(endpoint) == 2
+...     for segment in multisegment
+...     for endpoint in segment)
+True
+>>> all(isinstance(coordinate, coordinates_type)
+...     for segment in multisegment
+...     for endpoint in segment
+...     for coordinate in endpoint)
+True
+>>> all(min_coordinate <= coordinate <= max_coordinate
+...     for segment in multisegment
+...     for endpoint in segment
+...     for coordinate in endpoint)
+True
+>>> isinstance(multipolygon, list)
+True
+>>> min_multipolygon_size <= len(multipolygon) <= max_multipolygon_size
+True
+>>> all(isinstance(polygon, tuple) for polygon in multipolygon)
+True
+>>> all(len(polygon) == 2 for polygon in multipolygon)
+True
+>>> all(isinstance(border, list)
+...     and isinstance(holes, list)
+...     and all(isinstance(hole, list) for hole in holes)
+...     for border, holes in multipolygon)
+True
+>>> all(min_multipolygon_border_size
+...     <= len(border)
+...     <= max_multipolygon_border_size
+...     and (min_multipolygon_holes_size
+...          <= len(holes)
+...          <= max_multipolygon_holes_size)
+...     and all(min_multipolygon_hole_size
+...             <= len(hole)
+...             <= max_multipolygon_hole_size
+...             for hole in holes)
+...     for border, holes in multipolygon)
+True
+>>> all(all(isinstance(vertex, tuple) for vertex in border)
+...     and all(isinstance(vertex, tuple)
+...             for hole in holes
+...             for vertex in hole)
+...     for border, holes in multipolygon)
+True
+>>> all(all(len(vertex) == 2 for vertex in border)
+...     and all(len(vertex) == 2 for hole in holes for vertex in hole)
+...     for border, holes in multipolygon)
+True
+>>> all(all(isinstance(coordinate, coordinates_type)
+...         for vertex in border
+...         for coordinate in vertex)
+...     and all(isinstance(coordinate, coordinates_type)
+...             for hole in holes
+...             for vertex in hole
+...             for coordinate in vertex)
+...     for border, holes in multipolygon)
+True
+>>> all(all(all(min_coordinate <= coordinate <= max_coordinate
+...             for coordinate in vertex)
+...         for vertex in border)
+...     and all(min_coordinate <= coordinate <= max_coordinate
+...             for hole in holes
+...             for vertex in hole
+...             for coordinate in vertex)
+...     for border, holes in multipolygon)
+True
+
+```
+
 #### Caveats
 - Strategies may be slow depending on domain,
 so it may be necessary to add `HealthCheck.filter_too_much`, `HealthCheck.too_slow`
