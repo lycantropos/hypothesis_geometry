@@ -1953,16 +1953,12 @@ def multipolygons(x_coordinates: Strategy[Coordinate],
 
     result = ((strategies.lists(x_coordinates,
                                 min_size=min_points_count,
-                                max_size=(None
-                                          if max_points_count is None
-                                          else max_points_count),
+                                max_size=max_points_count,
                                 unique=True)
                .flatmap(xs_to_multipolygons))
               | (strategies.lists(y_coordinates,
                                   min_size=min_points_count,
-                                  max_size=(None
-                                            if max_points_count is None
-                                            else max_points_count),
+                                  max_size=max_points_count,
                                   unique=True)
                  .flatmap(ys_to_multipolygons)))
 
