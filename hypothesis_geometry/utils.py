@@ -68,7 +68,7 @@ def to_contour(points: Sequence[Point], size: int) -> Contour:
     while current_size < size:
         try:
             edge = candidates.popmax()
-        except KeyError:
+        except ValueError:
             break
         if not is_mouth(edge):
             continue
@@ -213,7 +213,7 @@ def to_polygon(points: Sequence[Point],
     while current_border_size < border_size:
         try:
             edge = candidates.popmax()
-        except KeyError:
+        except ValueError:
             break
         if not is_mouth(edge):
             continue
