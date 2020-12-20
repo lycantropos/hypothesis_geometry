@@ -141,8 +141,7 @@ def to_multicontour(vertices: List[Point],
             (vertices, current_sorting_key,
              current_predicate) = (sorted(vertices,
                                           key=new_sorting_key),
-                                   new_sorting_key,
-                                   next(predicates))
+                                   new_sorting_key, next(predicates))
     return result
 
 

@@ -17,7 +17,7 @@ from .utils import (Orientation,
 
 
 class Triangulation:
-    __slots__ = ('left_edge', 'right_edge')
+    __slots__ = 'left_edge', 'right_edge'
 
     def __init__(self, left_edge: QuadEdge, right_edge: QuadEdge) -> None:
         self.left_edge = left_edge
