@@ -13,6 +13,7 @@ from typing import (Any,
 from bentley_ottmann.planar import (edges_intersect,
                                     segments_cross_or_overlap)
 from ground.base import get_context
+from ground.hints import Coordinate
 from hypothesis import strategies
 
 from hypothesis_geometry.core.contracts import is_contour_strict
@@ -21,7 +22,6 @@ from hypothesis_geometry.core.utils import (Orientation,
                                             flatten,
                                             orientation)
 from hypothesis_geometry.hints import (Contour,
-                                       Coordinate,
                                        Mix,
                                        Multicontour,
                                        Multipolygon,

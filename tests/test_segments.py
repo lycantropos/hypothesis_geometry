@@ -1,14 +1,13 @@
 from typing import Tuple
 
+from ground.hints import Coordinate
 from hypothesis import given
 from hypothesis.strategies import DataObject
 
-from hypothesis_geometry.hints import (Coordinate,
-                                       Strategy)
+from hypothesis_geometry.hints import Strategy
 from hypothesis_geometry.planar import segments
 from tests import strategies
 from tests.utils import (CoordinatesLimitsType,
-                         all_unique,
                          is_segment,
                          segment_has_coordinates_in_range,
                          segment_has_coordinates_types)

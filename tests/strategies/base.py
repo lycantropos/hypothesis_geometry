@@ -5,10 +5,10 @@ from typing import (Optional,
                     Tuple,
                     Type)
 
+from ground.hints import Coordinate
 from hypothesis import strategies
 
-from hypothesis_geometry.hints import (Coordinate,
-                                       Strategy)
+from hypothesis_geometry.hints import Strategy
 from hypothesis_geometry.planar import (EMPTY_MULTICONTOUR_SIZE,
                                         EMPTY_MULTIPOINT_SIZE,
                                         EMPTY_MULTIPOLYGON_SIZE,
