@@ -52,7 +52,7 @@ def test_properties(data: DataObject,
     result = data.draw(strategy)
 
     assert is_multipoint(result)
-    assert has_valid_size(result,
+    assert has_valid_size(result.points,
                           min_size=min_size,
                           max_size=max_size)
     assert multipoint_has_coordinates_types(result,
@@ -63,7 +63,7 @@ def test_properties(data: DataObject,
                                                max_x_value=max_x_value,
                                                min_y_value=min_y_value,
                                                max_y_value=max_y_value)
-    assert all_unique(result)
+    assert all_unique(result.points)
 
 
 @given(strategies.data,
@@ -82,7 +82,7 @@ def test_same_coordinates(data: DataObject,
     result = data.draw(strategy)
 
     assert is_multipoint(result)
-    assert has_valid_size(result,
+    assert has_valid_size(result.points,
                           min_size=min_size,
                           max_size=max_size)
     assert multipoint_has_coordinates_types(result,
@@ -93,7 +93,7 @@ def test_same_coordinates(data: DataObject,
                                                max_x_value=max_value,
                                                min_y_value=min_value,
                                                max_y_value=max_value)
-    assert all_unique(result)
+    assert all_unique(result.points)
 
 
 @given(strategies.coordinates_strategies,
