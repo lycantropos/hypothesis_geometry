@@ -1078,10 +1078,10 @@ def boxes(x_coordinates: Strategy[Coordinate],
         ``None`` for reusing x-coordinates strategy.
 
     >>> from ground.base import get_context
-    >>> context = get_context()
-    >>> Box = context.box_cls
     >>> from hypothesis import strategies
     >>> from hypothesis_geometry import planar
+    >>> context = get_context()
+    >>> Box = context.box_cls
 
     For same coordinates' domain:
 
