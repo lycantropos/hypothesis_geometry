@@ -1,4 +1,3 @@
-from numbers import Real
 from typing import (List,
                     Tuple,
                     TypeVar)
@@ -11,7 +10,6 @@ from hypothesis.strategies import SearchStrategy
 Domain = TypeVar('Domain')
 Range = TypeVar('Range')
 Strategy = SearchStrategy
-Coordinate = Real
 Contour = List[Point]
 Polyline = List[Point]
 Multicontour = List[Contour]
