@@ -4,6 +4,7 @@ from itertools import (chain,
                        cycle,
                        groupby,
                        repeat)
+from operator import add
 from random import Random
 from typing import (Callable,
                     List,
@@ -11,6 +12,8 @@ from typing import (Callable,
                     Sized,
                     Tuple)
 
+from ground.base import get_context
+from ground.hints import Box
 from hypothesis import strategies
 from hypothesis.errors import HypothesisWarning
 
@@ -23,8 +26,7 @@ from .core.contracts import (has_horizontal_lowermost_segment,
 from .core.utils import (Orientation,
                          orientation,
                          pairwise)
-from .hints import (BoundingBox,
-                    Contour,
+from .hints import (Contour,
                     Coordinate,
                     Domain,
                     Mix,
@@ -1056,26 +1058,28 @@ def rectangular_contours(x_coordinates: Strategy[Coordinate],
     True
     """
 
-    def bounding_box_to_contour(bounding_box: BoundingBox) -> Contour:
-        x_min, x_max, y_min, y_max = bounding_box
-        return [(x_min, y_min), (x_max, y_min), (x_max, y_max), (x_min, y_max)]
+    def box_to_contour(box: Box) -> Contour:
+        return [(box.min_x, box.min_y), (box.max_x, box.min_y),
+                (box.max_x, box.max_y), (box.min_x, box.max_y)]
 
-    return (bounding_boxes(x_coordinates, y_coordinates)
-            .map(bounding_box_to_contour))
+    return (boxes(x_coordinates, y_coordinates)
+            .map(box_to_contour))
 
 
-def bounding_boxes(x_coordinates: Strategy[Coordinate],
-                   y_coordinates: Optional[Strategy[Coordinate]] = None,
-                   ) -> Strategy[BoundingBox]:
+def boxes(x_coordinates: Strategy[Coordinate],
+          y_coordinates: Optional[Strategy[Coordinate]] = None
+          ) -> Strategy[Box]:
     """
-    Returns a strategy for bounding boxes.
-    Bounding box is a quadruple of ``x_min``, ``x_max``, ``y_min``, ``y_max``.
+    Returns a strategy for boxes.
 
     :param x_coordinates: strategy for vertices' x-coordinates.
     :param y_coordinates:
         strategy for vertices' y-coordinates,
         ``None`` for reusing x-coordinates strategy.
 
+    >>> from ground.base import get_context
+    >>> context = get_context()
+    >>> Box = context.box_cls
     >>> from hypothesis import strategies
     >>> from hypothesis_geometry import planar
 
@@ -1086,17 +1090,19 @@ def bounding_boxes(x_coordinates: Strategy[Coordinate],
     >>> coordinates = strategies.floats(min_coordinate, max_coordinate,
     ...                                 allow_infinity=False,
     ...                                 allow_nan=False)
-    >>> bounding_boxes = planar.bounding_boxes(coordinates)
-    >>> bounding_box = bounding_boxes.example()
-    >>> isinstance(bounding_box, tuple)
+    >>> boxes = planar.boxes(coordinates)
+    >>> box = boxes.example()
+    >>> isinstance(box, Box)
     True
-    >>> len(bounding_box) == 4
+    >>> (isinstance(box.min_x, coordinates_type)
+    ...  and isinstance(box.max_x, coordinates_type)
+    ...  and isinstance(box.min_y, coordinates_type)
+    ...  and isinstance(box.max_y, coordinates_type))
     True
-    >>> all(isinstance(coordinate, coordinates_type)
-    ...     for coordinate in bounding_box)
-    True
-    >>> all(min_coordinate <= coordinate <= max_coordinate
-    ...     for coordinate in bounding_box)
+    >>> (min_coordinate <= box.min_x <= max_coordinate
+    ...  and min_coordinate <= box.max_x <= max_coordinate
+    ...  and min_coordinate <= box.min_y <= max_coordinate
+    ...  and min_coordinate <= box.max_y <= max_coordinate)
     True
 
     For different coordinates' domains:
@@ -1110,43 +1116,36 @@ def bounding_boxes(x_coordinates: Strategy[Coordinate],
     >>> y_coordinates = strategies.floats(min_y_coordinate, max_y_coordinate,
     ...                                   allow_infinity=False,
     ...                                   allow_nan=False)
-    >>> bounding_boxes = planar.bounding_boxes(x_coordinates, y_coordinates)
-    >>> bounding_box = bounding_boxes.example()
-    >>> isinstance(bounding_box, tuple)
+    >>> boxes = planar.boxes(x_coordinates, y_coordinates)
+    >>> box = boxes.example()
+    >>> isinstance(box, Box)
     True
-    >>> len(bounding_box) == 4
+    >>> (isinstance(box.min_x, coordinates_type)
+    ...  and isinstance(box.max_x, coordinates_type)
+    ...  and isinstance(box.min_y, coordinates_type)
+    ...  and isinstance(box.max_y, coordinates_type))
     True
-    >>> all(isinstance(coordinate, coordinates_type)
-    ...     for coordinate in bounding_box)
+    >>> (min_x_coordinate <= box.min_x <= max_x_coordinate
+    ...  and min_x_coordinate <= box.max_x <= max_x_coordinate)
     True
-    >>> all(min_x_coordinate <= coordinate <= max_x_coordinate
-    ...     for coordinate in bounding_box[:2])
-    True
-    >>> all(min_y_coordinate <= coordinate <= max_y_coordinate
-    ...     for coordinate in bounding_box[2:])
+    >>> (min_y_coordinate <= box.min_y <= max_y_coordinate
+    ...  and min_y_coordinate <= box.max_y <= max_y_coordinate)
     True
     """
-    if y_coordinates is None:
-        y_coordinates = x_coordinates
-
-    def to_bounding_box(x_bounds: Tuple[Coordinate, Coordinate],
-                        y_bounds: Tuple[Coordinate, Coordinate]
-                        ) -> BoundingBox:
-        x_min, x_max = x_bounds
-        y_min, y_max = y_bounds
-        return x_min, x_max, y_min, y_max
-
-    return strategies.builds(to_bounding_box,
-                             strategies.lists(x_coordinates,
-                                              min_size=2,
-                                              max_size=2,
-                                              unique=True)
-                             .map(sort_pair),
-                             strategies.lists(y_coordinates,
-                                              min_size=2,
-                                              max_size=2,
-                                              unique=True)
-                             .map(sort_pair))
+    return (strategies.builds(add,
+                              strategies.lists(x_coordinates,
+                                               min_size=2,
+                                               max_size=2,
+                                               unique=True)
+                              .map(sort_pair),
+                              strategies.lists(x_coordinates
+                                               if y_coordinates is None
+                                               else y_coordinates,
+                                               min_size=2,
+                                               max_size=2,
+                                               unique=True)
+                              .map(sort_pair))
+            .map(pack(get_context().box_cls)))
 
 
 def star_contours(x_coordinates: Strategy[Coordinate],
