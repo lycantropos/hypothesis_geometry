@@ -2,9 +2,9 @@ from typing import (Iterable,
                     Optional,
                     Sequence)
 
+from ground.hints import Point
 from reprit.base import generate_repr
 
-from hypothesis_geometry.hints import Point
 from .utils import (Orientation,
                     orientation)
 
