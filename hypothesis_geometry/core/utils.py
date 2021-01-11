@@ -30,10 +30,10 @@ def orientation(first, vertex, second):
     return context.angle_orientation(vertex, first, second)
 
 
-def to_orientations(contour: Contour) -> Iterator[Orientation]:
-    return (orientation(contour[index - 1], contour[index],
-                        contour[(index + 1) % len(contour)])
-            for index in range(len(contour)))
+def to_orientations(vertices: Sequence[Point]) -> Iterator[Orientation]:
+    return (orientation(vertices[index - 1], vertices[index],
+                        vertices[(index + 1) % len(vertices)])
+            for index in range(len(vertices)))
 
 
 def points_to_centroid(points: Sequence[Point]) -> Point:

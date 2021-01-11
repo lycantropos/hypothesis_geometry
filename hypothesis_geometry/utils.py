@@ -12,13 +12,16 @@ from typing import (Callable,
                     List,
                     Optional,
                     Sequence,
-                    Tuple)
+                    Tuple,
+                    Type)
 
 from dendroid import red_black
 from dendroid.hints import Key
-from ground.base import (Relation,
+from ground.base import (Context,
+                         Relation,
                          get_context)
-from ground.hints import Point
+from ground.hints import (Point,
+                          Segment)
 from locus import segmental
 
 from .core import triangular
@@ -37,10 +40,12 @@ from .hints import (Contour,
                     Multicontour,
                     Multisegment,
                     Polygon,
-                    Range,
-                    Segment)
+                    Range)
 
 Chooser = Callable[[Sequence[Domain]], Domain]
+ContourEdgesConstructor = Callable[[Contour], Sequence[Segment]]
+PolygonEdgesConstructor = Callable[[Polygon], Sequence[Segment]]
+QuaternaryPointFunction = Callable[[Point, Point, Point, Point], Range]
 
 
 def to_contour(points: Sequence[Point], size: int) -> Contour:
@@ -114,9 +119,14 @@ def _to_segment_angle(start: Point, end: Point) -> Coordinate:
     return math.atan2(end.y - start.y, end.x - start.x)
 
 
-def to_multicontour(vertices: List[Point],
-                    sizes: List[int],
-                    chooser: Chooser) -> Multicontour:
+def to_multicontour_factory(context: Context) -> Callable[[], Multicontour]:
+    return partial(_to_multicontour, to_contour_edges_constructor(context))
+
+
+def _to_multicontour(contour_edges_constructor: ContourEdgesConstructor,
+                     vertices: List[Point],
+                     sizes: List[int],
+                     chooser: Chooser) -> Multicontour:
     sorting_key_chooser = partial(chooser, [None, attrgetter('y', 'x'),
                                             attrgetter('x', 'y')])
     current_sorting_key = sorting_key_chooser()
@@ -133,7 +143,7 @@ def to_multicontour(vertices: List[Point],
         contour = to_contour(vertices[:size], size)
         result.append(contour)
         can_touch_next_contour = current_predicate(
-                contour_to_multisegment(contour))
+                contour_edges_constructor(contour))
         vertices = vertices[size - can_touch_next_contour:]
         new_sorting_key = sorting_key_chooser()
         if new_sorting_key is not current_sorting_key:
@@ -144,10 +154,21 @@ def to_multicontour(vertices: List[Point],
     return result
 
 
-def to_polygon(points: Sequence[Point],
-               border_size: int,
-               holes_sizes: List[int],
-               chooser: Chooser) -> Polygon:
+def to_polygon_factory(context: Context
+                       ) -> Callable[[Sequence[Point], int, List[int],
+                                      Chooser], Polygon]:
+    return partial(_to_polygon, to_contour_edges_constructor(context),
+                   context.segment_cls, context.segments_relation)
+
+
+def _to_polygon(
+        contour_edges_constructor: Callable[[Contour], Sequence[Segment]],
+        segment_cls: Type[Segment],
+        segments_relater: QuaternaryPointFunction[Relation],
+        points: Sequence[Point],
+        border_size: int,
+        holes_sizes: List[int],
+        chooser: Chooser) -> Polygon:
     triangulation = triangular.delaunay(points)
     boundary_edges = triangular.to_boundary_edges(triangulation)
     boundary_vertices = {edge.start for edge in boundary_edges}
@@ -168,7 +189,7 @@ def to_polygon(points: Sequence[Point],
         hole_points = inner_points[:hole_size]
         hole = to_contour(hole_points, hole_size)[::-1]
         holes.append(hole)
-        hole_multisegment = contour_to_multisegment(hole)
+        hole_multisegment = contour_edges_constructor(hole)
         holes_multisegment.extend(hole_multisegment)
         boundary_vertices.update(hole_points)
         can_touch_next_hole = current_predicate(hole_multisegment)
@@ -181,19 +202,15 @@ def to_polygon(points: Sequence[Point],
                                           key=next_sorting_key),
                                    next(predicates))
 
-    def to_segment_cross_or_overlap_detector(multisegment: Multisegment
+    def to_segment_cross_or_overlap_detector(segments: Sequence[Segment]
                                              ) -> Callable[[Segment], bool]:
         context = get_context()
-        return (
-            (lambda segment, to_nearest_segment=(segmental.Tree(
-                    [context.segment_cls(start, end)
-                     for start, end in multisegment])
-                                                 .nearest_segment)
-             : segments_cross_or_overlap(to_nearest_segment(
-                    context.segment_cls(segment[0], segment[1])),
-                    segment))
-            if multisegment
-            else (lambda segment: False))
+        return ((lambda segment, to_nearest_segment=(segmental.Tree(segments)
+                                                     .nearest_segment)
+                 : segments_cross_or_overlap(to_nearest_segment(segment),
+                                             segment))
+                if segments
+                else (lambda segment: False))
 
     def is_mouth(edge: QuadEdge,
                  cross_or_overlap_holes: Callable[[Segment], bool]
@@ -201,15 +218,14 @@ def to_polygon(points: Sequence[Point],
                  ) -> bool:
         neighbour_end = edge.left_from_start.end
         return (neighbour_end not in boundary_vertices
-                and not cross_or_overlap_holes((edge.start, neighbour_end))
-                and not cross_or_overlap_holes((edge.end, neighbour_end)))
+                and not cross_or_overlap_holes(segment_cls(edge.start,
+                                                           neighbour_end))
+                and not cross_or_overlap_holes(segment_cls(edge.end,
+                                                           neighbour_end)))
 
     def segments_cross_or_overlap(left: Segment, right: Segment) -> bool:
-        right_start, right_end = right
-        context = get_context()
-        point_cls = context.point_cls
-        relation = context.segments_relation(left.start, left.end,
-                                             right_start, right_end)
+        relation = segments_relater(left.start, left.end, right.start,
+                                    right.end)
         return (relation is not Relation.DISJOINT
                 or relation is not Relation.TOUCH)
 
@@ -415,11 +431,24 @@ def sort_pair(pair: Sequence[Domain]) -> Tuple[Domain, Domain]:
     return (first, second) if first < second else (second, first)
 
 
-def contour_to_multisegment(contour: Contour) -> Multisegment:
-    return [(contour[index - 1], contour[index])
+def to_contour_edges_constructor(context: Context) -> ContourEdgesConstructor:
+    return partial(_contour_to_edges, context.segment_cls)
+
+
+def _contour_to_edges(segments_cls: Type[Segment],
+                      contour: Contour) -> Multisegment:
+    return [segments_cls(contour[index - 1], contour[index])
             for index in range(len(contour))]
 
 
-def polygon_to_border_multisegment(polygon: Polygon) -> Multisegment:
+def to_polygon_border_edges_constructor(context: Context
+                                        ) -> PolygonEdgesConstructor:
+    return partial(_polygon_to_border_edges,
+                   to_contour_edges_constructor(context))
+
+
+def _polygon_to_border_edges(contour_edges_constructor
+                             : ContourEdgesConstructor,
+                             polygon: Polygon) -> Sequence[Segment]:
     border, _ = polygon
-    return contour_to_multisegment(border)
+    return contour_edges_constructor(border)
