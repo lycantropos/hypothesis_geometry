@@ -52,7 +52,7 @@ def test_properties(data: DataObject,
     result = data.draw(strategy)
 
     assert is_multisegment(result)
-    assert has_valid_size(result,
+    assert has_valid_size(result.segments,
                           min_size=min_size,
                           max_size=max_size)
     assert multisegment_has_coordinates_types(result, x_type=x_type,
@@ -62,7 +62,7 @@ def test_properties(data: DataObject,
                                                  max_x_value=max_x_value,
                                                  min_y_value=min_y_value,
                                                  max_y_value=max_y_value)
-    assert segments_do_not_cross_or_overlap(result)
+    assert segments_do_not_cross_or_overlap(result.segments)
 
 
 @given(strategies.data,
@@ -81,7 +81,7 @@ def test_same_coordinates(data: DataObject,
     result = data.draw(strategy)
 
     assert is_multisegment(result)
-    assert has_valid_size(result,
+    assert has_valid_size(result.segments,
                           min_size=min_size,
                           max_size=max_size)
     assert multisegment_has_coordinates_types(result,
@@ -92,7 +92,7 @@ def test_same_coordinates(data: DataObject,
                                                  max_x_value=max_value,
                                                  min_y_value=min_value,
                                                  max_y_value=max_value)
-    assert segments_do_not_cross_or_overlap(result)
+    assert segments_do_not_cross_or_overlap(result.segments)
 
 
 @given(strategies.coordinates_strategies,
