@@ -24,7 +24,6 @@ from hypothesis_geometry.hints import (Contour,
                                        Coordinate,
                                        Mix,
                                        Multicontour,
-                                       Multipoint,
                                        Multipolygon,
                                        Multisegment,
                                        Polygon,
@@ -43,6 +42,7 @@ CoordinatesLimitsType = Tuple[Tuple[Strategy[Coordinate], Limits],
 SizesPair = Tuple[int, Optional[int]]
 context = get_context()
 Box = context.box_cls
+Multipoint = context.multipoint_cls
 Point = context.point_cls
 Segment = context.segment_cls
 
@@ -91,7 +91,7 @@ def mix_has_valid_sizes(mix: Mix,
                         max_multipolygon_hole_size: Optional[int]
                         ) -> bool:
     multipoint, multisegment, multipolygon = mix
-    return (has_valid_size(multipoint,
+    return (has_valid_size(multipoint.points,
                            min_size=min_multipoint_size,
                            max_size=max_multipoint_size)
             and has_valid_size(multisegment,
@@ -220,7 +220,7 @@ def multipoint_has_coordinates_in_range(multipoint: Multipoint,
                                               max_x_value=max_x_value,
                                               min_y_value=min_y_value,
                                               max_y_value=max_y_value)
-               for point in multipoint)
+               for point in multipoint.points)
 
 
 def multipolygon_has_coordinates_in_range(multipolygon: Multipolygon,
@@ -366,7 +366,7 @@ def multipoint_has_coordinates_types(multipoint: Multipoint,
     return all(point_has_coordinates_types(point,
                                            x_type=x_type,
                                            y_type=y_type)
-               for point in multipoint)
+               for point in multipoint.points)
 
 
 def multipolygon_has_coordinates_types(multipolygon: Multipolygon,
@@ -473,8 +473,7 @@ def is_contour(object_: Any) -> bool:
             and all(map(is_point, object_)))
 
 
-def is_multipoint(object_: Any) -> bool:
-    return isinstance(object_, list) and all(map(is_point, object_))
+is_multipoint = Multipoint.__instancecheck__
 
 
 def is_mix(object_: Any) -> bool:
