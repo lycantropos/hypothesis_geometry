@@ -57,7 +57,11 @@ def is_contour_strict(contour: Contour) -> bool:
 
 
 def is_multisegment_valid(multisegment: Multisegment) -> bool:
-    return not segments_cross_or_overlap(multisegment)
+    context = get_context()
+    point_cls, segment_cls = context.point_cls, context.segment_cls
+    return not segments_cross_or_overlap([segment_cls(point_cls(*start),
+                                                      point_cls(*end))
+                                          for start, end in multisegment])
 
 
 def is_point_inside_circumcircle(first_vertex: Point,
