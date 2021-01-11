@@ -17,16 +17,16 @@ from typing import (Callable,
 from ground.base import get_context
 from ground.hints import (Box,
                           Multipoint,
+                          Multisegment,
                           Point,
                           Segment)
 from hypothesis import strategies
 from hypothesis.errors import HypothesisWarning
 
-from .core.contracts import (has_horizontal_lowermost_segment,
+from .core.contracts import (are_segments_non_crossing_non_overlapping,
+                             has_horizontal_lowermost_segment,
                              has_vertical_leftmost_segment,
-                             is_contour_non_convex,
-                             is_contour_strict,
-                             is_multisegment_valid,
+                             is_contour_non_convex, is_contour_strict,
                              points_do_not_lie_on_the_same_line)
 from .core.utils import (Orientation,
                          orientation,
@@ -37,7 +37,6 @@ from .hints import (Contour,
                     Mix,
                     Multicontour,
                     Multipolygon,
-                    Multisegment,
                     Polygon,
                     Polyline,
                     Strategy)
@@ -321,7 +320,7 @@ def multisegments(x_coordinates: Strategy[Coordinate],
     >>> from hypothesis import strategies
     >>> from hypothesis_geometry import planar
     >>> context = get_context()
-    >>> Point, Segment = context.point_cls, context.segment_cls
+    >>> Multisegment = context.multisegment_cls
 
     For same coordinates' domain:
 
@@ -335,23 +334,21 @@ def multisegments(x_coordinates: Strategy[Coordinate],
     ...                                      min_size=min_size,
     ...                                      max_size=max_size)
     >>> multisegment = multisegments.example()
-    >>> isinstance(multisegment, list)
+    >>> isinstance(multisegment, Multisegment)
     True
-    >>> min_size <= len(multisegment) <= max_size
-    True
-    >>> all(isinstance(segment, Segment) for segment in multisegment)
+    >>> min_size <= len(multisegment.segments) <= max_size
     True
     >>> all(isinstance(segment.start.x, coordinates_type)
     ...     and isinstance(segment.start.y, coordinates_type)
     ...     and isinstance(segment.start.x, coordinates_type)
     ...     and isinstance(segment.start.y, coordinates_type)
-    ...     for segment in multisegment)
+    ...     for segment in multisegment.segments)
     True
     >>> all(min_coordinate <= segment.start.x <= max_coordinate
     ...     and min_coordinate <= segment.start.y <= max_coordinate
     ...     and min_coordinate <= segment.end.x <= max_coordinate
     ...     and min_coordinate <= segment.end.y <= max_coordinate
-    ...     for segment in multisegment)
+    ...     for segment in multisegment.segments)
     True
 
     For different coordinates' domains:
@@ -370,27 +367,39 @@ def multisegments(x_coordinates: Strategy[Coordinate],
     ...                                      min_size=min_size,
     ...                                      max_size=max_size)
     >>> multisegment = multisegments.example()
-    >>> isinstance(multisegment, list)
+    >>> isinstance(multisegment, Multisegment)
     True
-    >>> min_size <= len(multisegment) <= max_size
-    True
-    >>> all(isinstance(segment, Segment) for segment in multisegment)
+    >>> min_size <= len(multisegment.segments) <= max_size
     True
     >>> all(isinstance(segment.start.x, coordinates_type)
     ...     and isinstance(segment.start.y, coordinates_type)
     ...     and isinstance(segment.start.x, coordinates_type)
     ...     and isinstance(segment.start.y, coordinates_type)
-    ...     for segment in multisegment)
+    ...     for segment in multisegment.segments)
     True
     >>> all(min_x_coordinate <= segment.start.x <= max_x_coordinate
     ...     and min_y_coordinate <= segment.start.y <= max_y_coordinate
     ...     and min_x_coordinate <= segment.end.x <= max_x_coordinate
     ...     and min_y_coordinate <= segment.end.y <= max_y_coordinate
-    ...     for segment in multisegment)
+    ...     for segment in multisegment.segments)
     True
     """
     _validate_sizes(min_size, max_size, EMPTY_MULTISEGMENT_SIZE)
     min_size = max(min_size, EMPTY_MULTISEGMENT_SIZE)
+    return (_to_non_crossing_non_overlapping_segments_sequences(
+            x_coordinates,
+            y_coordinates,
+            min_size=min_size,
+            max_size=max_size)
+            .map(get_context().multisegment_cls))
+
+
+def _to_non_crossing_non_overlapping_segments_sequences(
+        x_coordinates: Strategy[Coordinate],
+        y_coordinates: Optional[Strategy[Coordinate]],
+        *,
+        min_size: int,
+        max_size: Optional[int]) -> Strategy[Sequence[Segment]]:
     if y_coordinates is None:
         y_coordinates = x_coordinates
     if max_size is not None and max_size < 2:
@@ -402,12 +411,12 @@ def multisegments(x_coordinates: Strategy[Coordinate],
     point_cls, segment_cls = context.point_cls, context.segment_cls
 
     def to_vertical_multisegment(x: Coordinate,
-                                 ys: List[Coordinate]) -> Multisegment:
+                                 ys: List[Coordinate]) -> Sequence[Segment]:
         return [segment_cls(point_cls(x, y), point_cls(x, next_y))
                 for y, next_y in pairwise(sorted(ys))]
 
     def to_horizontal_multisegment(xs: List[Coordinate],
-                                   y: Coordinate) -> Multisegment:
+                                   y: Coordinate) -> Sequence[Segment]:
         return [segment_cls(point_cls(x, y), point_cls(next_x, y))
                 for x, next_x in pairwise(sorted(xs))]
 
@@ -436,7 +445,7 @@ def multisegments(x_coordinates: Strategy[Coordinate],
     return result | (strategies.lists(segments(x_coordinates, y_coordinates),
                                       min_size=min_size,
                                       max_size=max_size)
-                     .filter(is_multisegment_valid))
+                     .filter(are_segments_non_crossing_non_overlapping))
 
 
 def _to_sub_lists(values: Sequence[Domain],
@@ -2287,7 +2296,8 @@ def mixes(x_coordinates: Strategy[Coordinate],
     min_points_count = (min_multipoint_size + min_multisegment_points_count
                         + min_multipolygon_points_count)
     context = get_context()
-    multipoint_cls = context.multipoint_cls
+    multipoint_cls, multisegments_cls = (context.multipoint_cls,
+                                         context.multisegment_cls)
 
     @strategies.composite
     def xs_to_mix(draw: Callable[[Strategy[Domain]], Domain],
@@ -2297,7 +2307,7 @@ def mixes(x_coordinates: Strategy[Coordinate],
         (multipoint_points_counts, multisegment_points_counts,
          multipolygon_points_counts) = _to_points_counts(draw, len(xs))
         xs = sorted(xs)
-        points_sequence, multisegment, multipolygon = [], [], []
+        points_sequence, segments_sequence, multipolygon = [], [], []
 
         def draw_multipoint(points_count: int) -> None:
             points_sequence.extend(draw(_unique_points_sequences(
@@ -2307,10 +2317,12 @@ def mixes(x_coordinates: Strategy[Coordinate],
 
         def draw_multisegment(points_count: int) -> None:
             size = points_count // 2
-            multisegment.extend(draw(multisegments(
-                    strategies.sampled_from(xs[:points_count]), y_coordinates,
-                    min_size=size,
-                    max_size=size)))
+            segments_sequence.extend(draw(
+                    _to_non_crossing_non_overlapping_segments_sequences(
+                            strategies.sampled_from(xs[:points_count]),
+                            y_coordinates,
+                            min_size=size,
+                            max_size=size)))
 
         def draw_polygon(points_count: int) -> None:
             multipolygon.append(draw(polygons(
@@ -2336,7 +2348,7 @@ def mixes(x_coordinates: Strategy[Coordinate],
                     and index < len(drawers_with_points_counts) - 1
                     and (drawers_with_points_counts[index + 1]
                          is not draw_multipoint)
-                    and not has_vertical_leftmost_segment(multisegment)
+                    and not has_vertical_leftmost_segment(segments_sequence)
                     or drawer is draw_polygon
                     and index < len(drawers_with_points_counts) - 1
                     and (drawers_with_points_counts[index + 1]
@@ -2345,7 +2357,8 @@ def mixes(x_coordinates: Strategy[Coordinate],
                     not has_vertical_leftmost_segment(
                             edges_constructor(multipolygon[-1])))
             xs = xs[count - can_touch_next_geometry:]
-        return multipoint_cls(points_sequence), multisegment, multipolygon
+        return (multipoint_cls(points_sequence),
+                multisegments_cls(segments_sequence), multipolygon)
 
     @strategies.composite
     def ys_to_mix(draw: Callable[[Strategy[Domain]], Domain],
@@ -2355,7 +2368,7 @@ def mixes(x_coordinates: Strategy[Coordinate],
         (multipoint_points_counts, multisegment_points_counts,
          multipolygon_points_counts) = _to_points_counts(draw, len(ys))
         ys = sorted(ys)
-        points_sequence, multisegment, multipolygon = [], [], []
+        points_sequence, segments_sequence, multipolygon = [], [], []
 
         def draw_multipoint(points_count: int) -> None:
             points_sequence.extend(draw(_unique_points_sequences(
@@ -2365,10 +2378,12 @@ def mixes(x_coordinates: Strategy[Coordinate],
 
         def draw_multisegment(points_count: int) -> None:
             size = points_count // 2
-            multisegment.extend(draw(multisegments(
-                    x_coordinates, strategies.sampled_from(ys[:points_count]),
-                    min_size=size,
-                    max_size=size)))
+            segments_sequence.extend(draw(
+                    _to_non_crossing_non_overlapping_segments_sequences(
+                            x_coordinates,
+                            strategies.sampled_from(ys[:points_count]),
+                            min_size=size,
+                            max_size=size)))
 
         def draw_polygon(points_count: int) -> None:
             multipolygon.append(draw(polygons(
@@ -2394,7 +2409,7 @@ def mixes(x_coordinates: Strategy[Coordinate],
                     and index < len(drawers_with_points_counts) - 1
                     and (drawers_with_points_counts[index + 1]
                          is not draw_multipoint)
-                    and not has_horizontal_lowermost_segment(multisegment)
+                    and not has_horizontal_lowermost_segment(segments_sequence)
                     or drawer is draw_polygon
                     and index < len(drawers_with_points_counts) - 1
                     and (drawers_with_points_counts[index + 1]
@@ -2403,7 +2418,8 @@ def mixes(x_coordinates: Strategy[Coordinate],
                     not has_horizontal_lowermost_segment(
                             edges_constructor(multipolygon[-1])))
             ys = ys[count - can_touch_next_geometry:]
-        return multipoint_cls(points_sequence), multisegment, multipolygon
+        return (multipoint_cls(points_sequence),
+                multisegments_cls(segments_sequence), multipolygon)
 
     def _to_points_counts(draw: Callable[[Strategy[Domain]], Domain],
                           max_points_count: int

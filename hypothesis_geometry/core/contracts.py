@@ -6,8 +6,7 @@ from ground.hints import (Point,
                           Segment)
 
 from hypothesis_geometry.hints import (Contour,
-                                       Coordinate,
-                                       Multisegment)
+                                       Coordinate)
 from .utils import (Orientation,
                     to_orientations)
 
@@ -54,8 +53,9 @@ def is_contour_strict(contour: Contour) -> bool:
                for orientation in to_orientations(contour))
 
 
-def is_multisegment_valid(multisegment: Multisegment) -> bool:
-    return not segments_cross_or_overlap(multisegment)
+def are_segments_non_crossing_non_overlapping(segments: Sequence[Segment]
+                                              ) -> bool:
+    return not segments_cross_or_overlap(segments)
 
 
 def is_point_inside_circumcircle(first_vertex: Point,

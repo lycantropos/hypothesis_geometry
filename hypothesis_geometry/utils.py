@@ -38,7 +38,6 @@ from .hints import (Contour,
                     Coordinate,
                     Domain,
                     Multicontour,
-                    Multisegment,
                     Polygon,
                     Range)
 
@@ -436,7 +435,7 @@ def to_contour_edges_constructor(context: Context) -> ContourEdgesConstructor:
 
 
 def _contour_to_edges(segments_cls: Type[Segment],
-                      contour: Contour) -> Multisegment:
+                      contour: Contour) -> Sequence[Segment]:
     return [segments_cls(contour[index - 1], contour[index])
             for index in range(len(contour))]
 
