@@ -51,8 +51,10 @@ With setup
 >>> from hypothesis import strategies
 >>> from hypothesis_geometry import planar
 >>> context = get_context()
->>> Multipoint, Point, Segment = (context.multipoint_cls, context.point_cls,
-...                               context.segment_cls)
+>>> Multipoint, Multisegment, Point, Segment = (context.multipoint_cls,
+...                                             context.multisegment_cls,
+...                                             context.point_cls,
+...                                             context.segment_cls)
 >>> min_coordinate, max_coordinate = -100, 100
 >>> coordinates_type = int
 >>> coordinates = strategies.integers(min_coordinate, max_coordinate)
@@ -127,23 +129,21 @@ True
 ...                                      min_size=min_size,
 ...                                      max_size=max_size)
 >>> multisegment = multisegments.example()
->>> isinstance(multisegment, list)
+>>> isinstance(multisegment, Multisegment)
 True
->>> min_size <= len(multisegment) <= max_size
-True
->>> all(isinstance(segment, Segment) for segment in multisegment)
+>>> min_size <= len(multisegment.segments) <= max_size
 True
 >>> all(isinstance(segment.start.x, coordinates_type)
 ...     and isinstance(segment.start.y, coordinates_type)
 ...     and isinstance(segment.end.x, coordinates_type)
 ...     and isinstance(segment.end.y, coordinates_type)
-...     for segment in multisegment)
+...     for segment in multisegment.segments)
 True
 >>> all(min_coordinate <= segment.start.x <= max_coordinate
 ...     and min_coordinate <= segment.start.y <= max_coordinate
 ...     and min_coordinate <= segment.end.x <= max_coordinate
 ...     and min_coordinate <= segment.end.y <= max_coordinate
-...     for segment in multisegment)
+...     for segment in multisegment.segments)
 True
 
 ```
@@ -383,23 +383,21 @@ True
 ...     and min_coordinate <= point.y <= max_coordinate
 ...     for point in multipoint.points)
 True
->>> isinstance(multisegment, list)
+>>> isinstance(multisegment, Multisegment)
 True
->>> min_multisegment_size <= len(multisegment) <= max_multisegment_size
-True
->>> all(isinstance(segment, Segment) for segment in multisegment)
+>>> min_multisegment_size <= len(multisegment.segments) <= max_multisegment_size
 True
 >>> all(isinstance(segment.start.x, coordinates_type)
 ...     and isinstance(segment.start.y, coordinates_type)
 ...     and isinstance(segment.end.x, coordinates_type)
 ...     and isinstance(segment.end.y, coordinates_type)
-...     for segment in multisegment)
+...     for segment in multisegment.segments)
 True
 >>> all(min_coordinate <= segment.start.x <= max_coordinate
 ...     and min_coordinate <= segment.start.y <= max_coordinate
 ...     and min_coordinate <= segment.end.x <= max_coordinate
 ...     and min_coordinate <= segment.end.y <= max_coordinate
-...     for segment in multisegment)
+...     for segment in multisegment.segments)
 True
 >>> isinstance(multipolygon, list)
 True
