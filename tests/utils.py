@@ -44,6 +44,8 @@ Limits = Tuple[Coordinate, Optional[Coordinate]]
 CoordinatesLimitsType = Tuple[Tuple[Strategy[Coordinate], Limits],
                               Type[Coordinate]]
 SizesPair = Tuple[int, Optional[int]]
+context = get_context()
+Box = context.box_cls
 
 
 def identity(argument: Domain) -> Domain:
@@ -52,6 +54,26 @@ def identity(argument: Domain) -> Domain:
 
 def to_pairs(strategy: Strategy[Domain]) -> Strategy[Tuple[Domain, Domain]]:
     return strategies.tuples(strategy, strategy)
+
+
+def box_has_coordinates_in_range(box: Box,
+                                 *,
+                                 min_x_value: Coordinate,
+                                 max_x_value: Optional[Coordinate],
+                                 min_y_value: Coordinate,
+                                 max_y_value: Optional[Coordinate]) -> bool:
+    return (is_coordinate_in_range(box.min_x,
+                                   min_value=min_x_value,
+                                   max_value=max_x_value)
+            and is_coordinate_in_range(box.max_x,
+                                       min_value=min_x_value,
+                                       max_value=max_x_value)
+            and is_coordinate_in_range(box.min_y,
+                                       min_value=min_y_value,
+                                       max_value=max_y_value)
+            and is_coordinate_in_range(box.max_y,
+                                       min_value=min_y_value,
+                                       max_value=max_y_value))
 
 
 def mix_has_valid_sizes(mix: Mix,
@@ -295,7 +317,17 @@ def is_coordinate_in_range(coordinate: Coordinate,
             and (max_value is None or coordinate <= max_value))
 
 
-def contour_has_coordinates_types(contour: Contour, *,
+def box_has_coordinates_types(box: Box,
+                              *,
+                              x_type: Type[Coordinate],
+                              y_type: Type[Coordinate]) -> bool:
+    return (isinstance(box.min_x, x_type) and isinstance(box.max_x, x_type)
+            and isinstance(box.min_y, y_type)
+            and isinstance(box.max_y, y_type))
+
+
+def contour_has_coordinates_types(contour: Contour,
+                                  *,
                                   x_type: Type[Coordinate],
                                   y_type: Type[Coordinate]) -> bool:
     return all(point_has_coordinates_types(vertex,
@@ -437,12 +469,7 @@ def all_unique(iterable: Iterable[Hashable]) -> bool:
     return True
 
 
-def is_bounding_box(object_: Any) -> bool:
-    return (isinstance(object_, tuple)
-            and len(object_) == 4
-            and all(isinstance(coordinate, Number)
-                    for coordinate in object_)
-            and len(set(map(type, object_))) == 1)
+is_box = Box.__instancecheck__
 
 
 def is_contour(object_: Any) -> bool:
@@ -503,7 +530,6 @@ def is_segment(object_: Any) -> bool:
 
 
 def is_non_self_intersecting_contour(contour: Contour) -> bool:
-    context = get_context()
     return not edges_intersect(context.contour_cls(
             [context.point_cls(x, y) for x, y in contour]))
 
@@ -537,10 +563,9 @@ def contours_do_not_cross_or_overlap(contours: List[Contour]) -> bool:
 
 
 def segments_do_not_cross_or_overlap(segments: List[Segment]) -> bool:
-    context = get_context()
     return not segments_cross_or_overlap([context.segment_cls(
-        context.point_cls(*start), context.point_cls(*end))
-                                          for start, end in segments])
+            context.point_cls(*start), context.point_cls(*end))
+        for start, end in segments])
 
 
 def is_multicontour_strict(multicontour: Multicontour) -> bool:
