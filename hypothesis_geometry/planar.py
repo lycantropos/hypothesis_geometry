@@ -1437,8 +1437,11 @@ def polygons(x_coordinates: Strategy[Coordinate],
     :param min_hole_size: lower bound for hole size.
     :param max_hole_size: upper bound for hole size, ``None`` for unbound.
 
+    >>> from ground.base import get_context
     >>> from hypothesis import strategies
     >>> from hypothesis_geometry import planar
+    >>> context = get_context()
+    >>> Point = context.point_cls
 
     For same coordinates' domain:
 
@@ -1475,31 +1478,27 @@ def polygons(x_coordinates: Strategy[Coordinate],
     True
     >>> all(min_hole_size <= len(hole) <= max_hole_size for hole in holes)
     True
-    >>> all(isinstance(vertex, tuple) for vertex in border)
+    >>> all(isinstance(vertex, Point) for vertex in border)
     True
-    >>> all(isinstance(vertex, tuple) for hole in holes for vertex in hole)
+    >>> all(isinstance(vertex, Point) for hole in holes for vertex in hole)
     True
-    >>> all(len(vertex) == 2 for vertex in border)
-    True
-    >>> all(len(vertex) == 2 for hole in holes for vertex in hole)
-    True
-    >>> all(isinstance(coordinate, coordinates_type)
-    ...     for vertex in border
-    ...     for coordinate in vertex)
-    True
-    >>> all(isinstance(coordinate, coordinates_type)
-    ...     for hole in holes
-    ...     for vertex in hole
-    ...     for coordinate in vertex)
-    True
-    >>> all(all(min_coordinate <= coordinate <= max_coordinate
-    ...         for coordinate in vertex)
+    >>> all(isinstance(vertex.x, coordinates_type)
+    ...     and isinstance(vertex.y, coordinates_type)
     ...     for vertex in border)
     True
-    >>> all(min_coordinate <= coordinate <= max_coordinate
+    >>> all(isinstance(vertex.x, coordinates_type)
+    ...     and isinstance(vertex.y, coordinates_type)
     ...     for hole in holes
-    ...     for vertex in hole
-    ...     for coordinate in vertex)
+    ...     for vertex in hole)
+    True
+    >>> all(min_coordinate <= vertex.x <= max_coordinate
+    ...     and min_coordinate <= vertex.y <= max_coordinate
+    ...     for vertex in border)
+    True
+    >>> all(min_coordinate <= vertex.x <= max_coordinate
+    ...     and min_coordinate <= vertex.y <= max_coordinate
+    ...     for hole in holes
+    ...     for vertex in hole)
     True
 
     For different coordinates' domains:
@@ -1541,31 +1540,27 @@ def polygons(x_coordinates: Strategy[Coordinate],
     True
     >>> all(min_hole_size <= len(hole) <= max_hole_size for hole in holes)
     True
-    >>> all(isinstance(vertex, tuple) for vertex in border)
+    >>> all(isinstance(vertex, Point) for vertex in border)
     True
-    >>> all(isinstance(vertex, tuple) for hole in holes for vertex in hole)
+    >>> all(isinstance(vertex, Point) for hole in holes for vertex in hole)
     True
-    >>> all(len(vertex) == 2 for vertex in border)
+    >>> all(isinstance(vertex.x, coordinates_type)
+    ...     and isinstance(vertex.y, coordinates_type)
+    ...     for vertex in border)
     True
-    >>> all(len(vertex) == 2 for hole in holes for vertex in hole)
-    True
-    >>> all(isinstance(coordinate, coordinates_type)
-    ...     for vertex in border
-    ...     for coordinate in vertex)
-    True
-    >>> all(isinstance(coordinate, coordinates_type)
+    >>> all(isinstance(vertex.x, coordinates_type)
+    ...     and isinstance(vertex.y, coordinates_type)
     ...     for hole in holes
-    ...     for vertex in hole
-    ...     for coordinate in vertex)
+    ...     for vertex in hole)
     True
-    >>> all(min_x_coordinate <= vertex_x <= max_x_coordinate
-    ...     and min_y_coordinate <= vertex_y <= max_y_coordinate
-    ...     for vertex_x, vertex_y in border)
+    >>> all(min_x_coordinate <= vertex.x <= max_x_coordinate
+    ...     and min_y_coordinate <= vertex.y <= max_y_coordinate
+    ...     for vertex in border)
     True
-    >>> all(min_x_coordinate <= vertex_x <= max_x_coordinate
-    ...     and min_y_coordinate <= vertex_y <= max_y_coordinate
+    >>> all(min_x_coordinate <= vertex.x <= max_x_coordinate
+    ...     and min_y_coordinate <= vertex.y <= max_y_coordinate
     ...     for hole in holes
-    ...     for vertex_x, vertex_y in hole)
+    ...     for vertex in hole)
     True
     """
     _validate_sizes(min_size, max_size, TRIANGULAR_CONTOUR_SIZE)
