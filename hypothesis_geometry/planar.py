@@ -992,8 +992,11 @@ def rectangular_contours(x_coordinates: Strategy[Coordinate],
         strategy for vertices' y-coordinates,
         ``None`` for reusing x-coordinates strategy.
 
+    >>> from ground.base import get_context
     >>> from hypothesis import strategies
     >>> from hypothesis_geometry import planar
+    >>> context = get_context()
+    >>> Point = context.point_cls
 
     For same coordinates' domain:
 
@@ -1008,17 +1011,15 @@ def rectangular_contours(x_coordinates: Strategy[Coordinate],
     True
     >>> len(contour) == 4
     True
-    >>> all(isinstance(vertex, tuple) for vertex in contour)
+    >>> all(isinstance(vertex, Point) for vertex in contour)
     True
-    >>> all(len(vertex) == 2 for vertex in contour)
+    >>> all(isinstance(vertex.x, coordinates_type)
+    ...     and isinstance(vertex.y, coordinates_type)
+    ...     for vertex in contour)
     True
-    >>> all(isinstance(coordinate, coordinates_type)
-    ...     for vertex in contour
-    ...     for coordinate in vertex)
-    True
-    >>> all(min_coordinate <= coordinate <= max_coordinate
-    ...     for vertex in contour
-    ...     for coordinate in vertex)
+    >>> all(min_coordinate <= vertex.x <= max_coordinate
+    ...     and min_coordinate <= vertex.y <= max_coordinate
+    ...     for vertex in contour)
     True
 
     For different coordinates' domains:
@@ -1038,17 +1039,15 @@ def rectangular_contours(x_coordinates: Strategy[Coordinate],
     True
     >>> len(contour) == 4
     True
-    >>> all(isinstance(vertex, tuple) for vertex in contour)
+    >>> all(isinstance(vertex, Point) for vertex in contour)
     True
-    >>> all(len(vertex) == 2 for vertex in contour)
+    >>> all(isinstance(vertex.x, coordinates_type)
+    ...     and isinstance(vertex.y, coordinates_type)
+    ...     for vertex in contour)
     True
-    >>> all(isinstance(coordinate, coordinates_type)
-    ...     for vertex in contour
-    ...     for coordinate in vertex)
-    True
-    >>> all(min_x_coordinate <= vertex_x <= max_x_coordinate
-    ...     and min_y_coordinate <= vertex_y <= max_y_coordinate
-    ...     for vertex_x, vertex_y in contour)
+    >>> all(min_x_coordinate <= vertex.x <= max_x_coordinate
+    ...     and min_y_coordinate <= vertex.y <= max_y_coordinate
+    ...     for vertex in contour)
     True
     """
 
