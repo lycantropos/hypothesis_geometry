@@ -15,9 +15,9 @@ from typing import (Callable,
 
 from dendroid import red_black
 from dendroid.hints import Key
+from ground.base import (Relation,
+                         get_context)
 from locus import segmental
-from robust.linear import (SegmentsRelationship,
-                           segments_relationship)
 
 from .core import triangular
 from .core.contracts import (has_horizontal_lowermost_segment,
@@ -183,10 +183,12 @@ def to_polygon(points: Sequence[Point],
 
     def to_segment_cross_or_overlap_detector(multisegment: Multisegment
                                              ) -> Callable[[Segment], bool]:
+        context = get_context()
         return (
-            (lambda segment, to_nearest_segment=(segmental.Tree(multisegment)
+            (lambda segment, to_nearest_segment=(segmental.Tree([context.segment_cls(context.point_cls(*start), context.point_cls(*end)) for start, end in multisegment])
                                                  .nearest_segment)
-             : segments_cross_or_overlap(to_nearest_segment(segment), segment))
+             : segments_cross_or_overlap(to_nearest_segment(context.segment_cls(context.point_cls(*segment[0]),
+                                                                                context.point_cls(*segment[1]))), segment))
             if multisegment
             else (lambda segment: False))
 
@@ -200,9 +202,14 @@ def to_polygon(points: Sequence[Point],
                 and not cross_or_overlap_holes((edge.end, neighbour_end)))
 
     def segments_cross_or_overlap(left: Segment, right: Segment) -> bool:
-        relationship = segments_relationship(left, right)
-        return (relationship is SegmentsRelationship.CROSS
-                or relationship is SegmentsRelationship.OVERLAP)
+        right_start, right_end = right
+        context = get_context()
+        point_cls = context.point_cls
+        relation = context.segments_relation(left.start, left.end,
+                                             point_cls(*right_start),
+                                             point_cls(*right_end))
+        return (relation is not Relation.DISJOINT
+                or relation is not Relation.TOUCH)
 
     edges_neighbours = {edge: to_edge_neighbours(edge)
                         for edge in boundary_edges}

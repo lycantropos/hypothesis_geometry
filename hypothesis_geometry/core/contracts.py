@@ -1,7 +1,7 @@
 from typing import List
 
 from bentley_ottmann.planar import segments_cross_or_overlap
-from robust import cocircular
+from ground.base import get_context
 
 from hypothesis_geometry.hints import (Contour,
                                        Coordinate,
@@ -64,8 +64,11 @@ def is_point_inside_circumcircle(first_vertex: Point,
                                  second_vertex: Point,
                                  third_vertex: Point,
                                  point: Point) -> bool:
-    return cocircular.determinant(first_vertex, second_vertex, third_vertex,
-                                  point) > 0
+    context = get_context()
+    point_cls = context.point_cls
+    return context.point_point_point_incircle_test(
+            point_cls(*first_vertex), point_cls(*second_vertex),
+            point_cls(*third_vertex), point_cls(*point)) > 0
 
 
 def is_segment_horizontal(segment: Segment) -> bool:

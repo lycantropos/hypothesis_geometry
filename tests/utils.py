@@ -13,13 +13,14 @@ from typing import (Any,
 
 from bentley_ottmann.planar import (edges_intersect,
                                     segments_cross_or_overlap)
+from ground.base import get_context
 from hypothesis import strategies
-from robust.angular import (Orientation,
-                            orientation)
 
 from hypothesis_geometry.core.contracts import is_contour_strict
-from hypothesis_geometry.core.utils import (contour_to_centroid,
-                                            flatten)
+from hypothesis_geometry.core.utils import (Orientation,
+                                            contour_to_centroid,
+                                            flatten,
+                                            orientation)
 from hypothesis_geometry.hints import (Contour,
                                        Coordinate,
                                        Mix,
@@ -502,8 +503,9 @@ def is_segment(object_: Any) -> bool:
 
 
 def is_non_self_intersecting_contour(contour: Contour) -> bool:
-    return not edges_intersect(contour,
-                               accurate=False)
+    context = get_context()
+    return not edges_intersect(context.contour_cls(
+            [context.point_cls(x, y) for x, y in contour]))
 
 
 def is_star_contour(contour: Contour) -> bool:
@@ -535,7 +537,10 @@ def contours_do_not_cross_or_overlap(contours: List[Contour]) -> bool:
 
 
 def segments_do_not_cross_or_overlap(segments: List[Segment]) -> bool:
-    return not segments_cross_or_overlap(segments)
+    context = get_context()
+    return not segments_cross_or_overlap([context.segment_cls(
+        context.point_cls(*start), context.point_cls(*end))
+                                          for start, end in segments])
 
 
 def is_multicontour_strict(multicontour: Multicontour) -> bool:
