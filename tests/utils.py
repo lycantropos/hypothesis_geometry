@@ -1,6 +1,5 @@
 from itertools import (chain,
                        groupby)
-from numbers import Number
 from typing import (Any,
                     Callable,
                     Hashable,
@@ -28,7 +27,6 @@ from hypothesis_geometry.hints import (Contour,
                                        Multipoint,
                                        Multipolygon,
                                        Multisegment,
-                                       Point,
                                        Polygon,
                                        Segment,
                                        Strategy)
@@ -46,6 +44,7 @@ CoordinatesLimitsType = Tuple[Tuple[Strategy[Coordinate], Limits],
 SizesPair = Tuple[int, Optional[int]]
 context = get_context()
 Box = context.box_cls
+Point = context.point_cls
 
 
 def identity(argument: Domain) -> Domain:
@@ -260,11 +259,10 @@ def point_has_coordinates_in_range(point: Point,
                                    max_x_value: Optional[Coordinate],
                                    min_y_value: Coordinate,
                                    max_y_value: Optional[Coordinate]) -> bool:
-    x, y = point
-    return (is_coordinate_in_range(x,
+    return (is_coordinate_in_range(point.x,
                                    min_value=min_x_value,
                                    max_value=max_x_value)
-            and is_coordinate_in_range(y,
+            and is_coordinate_in_range(point.y,
                                        min_value=min_y_value,
                                        max_value=max_y_value))
 
@@ -396,8 +394,7 @@ def point_has_coordinates_types(point: Point,
                                 *,
                                 x_type: Type[Coordinate],
                                 y_type: Type[Coordinate]) -> bool:
-    x, y = point
-    return isinstance(x, x_type) and isinstance(y, y_type)
+    return isinstance(point.x, x_type) and isinstance(point.y, y_type)
 
 
 def polygon_has_coordinates_types(polygon: Polygon,
@@ -501,12 +498,7 @@ def is_multicontour(object_: Any) -> bool:
     return isinstance(object_, list) and all(map(is_contour, object_))
 
 
-def is_point(object_: Any) -> bool:
-    return (isinstance(object_, tuple)
-            and len(object_) == 2
-            and all(isinstance(coordinate, Number)
-                    for coordinate in object_)
-            and len(set(map(type, object_))) == 1)
+is_point = Point.__instancecheck__
 
 
 def is_polygon(object_: Any) -> bool:
@@ -530,8 +522,7 @@ def is_segment(object_: Any) -> bool:
 
 
 def is_non_self_intersecting_contour(contour: Contour) -> bool:
-    return not edges_intersect(context.contour_cls(
-            [context.point_cls(x, y) for x, y in contour]))
+    return not edges_intersect(context.contour_cls(contour))
 
 
 def is_star_contour(contour: Contour) -> bool:
