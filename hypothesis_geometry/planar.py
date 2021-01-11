@@ -138,8 +138,11 @@ def multipoints(x_coordinates: Strategy[Coordinate],
     :param min_size: lower bound for multipoint size.
     :param max_size: upper bound for multipoint size, ``None`` for unbound.
 
+    >>> from ground.base import get_context
     >>> from hypothesis import strategies
     >>> from hypothesis_geometry import planar
+    >>> context = get_context()
+    >>> Point = context.point_cls
 
     For same coordinates' domain:
 
@@ -157,17 +160,15 @@ def multipoints(x_coordinates: Strategy[Coordinate],
     True
     >>> min_size <= len(multipoint) <= max_size
     True
-    >>> all(isinstance(point, tuple) for point in multipoint)
+    >>> all(isinstance(point, Point) for point in multipoint)
     True
-    >>> all(len(point) == 2 for point in multipoint)
+    >>> all(isinstance(point.x, coordinates_type)
+    ...     and isinstance(point.y, coordinates_type)
+    ...     for point in multipoint)
     True
-    >>> all(isinstance(coordinate, coordinates_type)
-    ...     for point in multipoint
-    ...     for coordinate in point)
-    True
-    >>> all(min_coordinate <= coordinate <= max_coordinate
-    ...     for point in multipoint
-    ...     for coordinate in point)
+    >>> all(min_coordinate <= point.x <= max_coordinate
+    ...     and min_coordinate <= point.y <= max_coordinate
+    ...     for point in multipoint)
     True
 
     For different coordinates' domains:
@@ -190,17 +191,15 @@ def multipoints(x_coordinates: Strategy[Coordinate],
     True
     >>> min_size <= len(multipoint) <= max_size
     True
-    >>> all(isinstance(point, tuple) for point in multipoint)
+    >>> all(isinstance(point, Point) for point in multipoint)
     True
-    >>> all(len(point) == 2 for point in multipoint)
+    >>> all(isinstance(point.x, coordinates_type)
+    ...     and isinstance(point.y, coordinates_type)
+    ...     for point in multipoint)
     True
-    >>> all(isinstance(coordinate, coordinates_type)
-    ...     for point in multipoint
-    ...     for coordinate in point)
-    True
-    >>> all(min_x_coordinate <= point_x <= max_x_coordinate
-    ...     and min_y_coordinate <= point_y <= max_y_coordinate
-    ...     for point_x, point_y in multipoint)
+    >>> all(min_x_coordinate <= point.x <= max_x_coordinate
+    ...     and min_y_coordinate <= point.y <= max_y_coordinate
+    ...     for point in multipoint)
     True
     """
     _validate_sizes(min_size, max_size, EMPTY_MULTIPOINT_SIZE)
