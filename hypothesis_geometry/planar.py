@@ -27,7 +27,8 @@ from hypothesis.errors import HypothesisWarning
 from .core.contracts import (are_segments_non_crossing_non_overlapping,
                              has_horizontal_lowermost_segment,
                              has_vertical_leftmost_segment,
-                             is_contour_non_convex, is_contour_strict,
+                             is_contour_non_convex,
+                             is_contour_strict,
                              points_do_not_lie_on_the_same_line)
 from .core.utils import (Orientation,
                          orientation,
