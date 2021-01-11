@@ -2022,8 +2022,11 @@ def mixes(x_coordinates: Strategy[Coordinate],
     :param max_multipolygon_hole_size:
         upper bound for polygons' hole size, ``None`` for unbound.
 
+    >>> from ground.base import get_context
     >>> from hypothesis import strategies
     >>> from hypothesis_geometry import planar
+    >>> context = get_context()
+    >>> Point = context.point_cls
 
     For same coordinates' domain:
 
@@ -2062,17 +2065,15 @@ def mixes(x_coordinates: Strategy[Coordinate],
     True
     >>> min_multipoint_size <= len(multipoint) <= max_multipoint_size
     True
-    >>> all(isinstance(point, tuple) for point in multipoint)
+    >>> all(isinstance(point, Point) for point in multipoint)
     True
-    >>> all(len(point) == 2 for point in multipoint)
+    >>> all(isinstance(point.x, coordinates_type)
+    ...     and isinstance(point.y, coordinates_type)
+    ...     for point in multipoint)
     True
-    >>> all(isinstance(coordinate, coordinates_type)
-    ...     for point in multipoint
-    ...     for coordinate in point)
-    True
-    >>> all(min_coordinate <= coordinate <= max_coordinate
-    ...     for point in multipoint
-    ...     for coordinate in point)
+    >>> all(min_coordinate <= point.x <= max_coordinate
+    ...     and min_coordinate <= point.y <= max_coordinate
+    ...     for point in multipoint)
     True
     >>> isinstance(multisegment, list)
     True
@@ -2080,25 +2081,21 @@ def mixes(x_coordinates: Strategy[Coordinate],
     True
     >>> all(isinstance(segment, tuple) for segment in multisegment)
     True
-    >>> all(isinstance(endpoint, tuple)
+    >>> all(isinstance(endpoint, Point)
     ...     for segment in multisegment
     ...     for endpoint in segment)
     True
     >>> all(len(segment) == 2 for segment in multisegment)
     True
-    >>> all(len(endpoint) == 2
+    >>> all(isinstance(endpoint.x, coordinates_type)
+    ...     and isinstance(endpoint.y, coordinates_type)
     ...     for segment in multisegment
     ...     for endpoint in segment)
     True
-    >>> all(isinstance(coordinate, coordinates_type)
+    >>> all(min_coordinate <= endpoint.x <= max_coordinate
+    ...     and min_coordinate <= endpoint.y <= max_coordinate
     ...     for segment in multisegment
-    ...     for endpoint in segment
-    ...     for coordinate in endpoint)
-    True
-    >>> all(min_coordinate <= coordinate <= max_coordinate
-    ...     for segment in multisegment
-    ...     for endpoint in segment
-    ...     for coordinate in endpoint)
+    ...     for endpoint in segment)
     True
     >>> isinstance(multipolygon, list)
     True
@@ -2125,32 +2122,28 @@ def mixes(x_coordinates: Strategy[Coordinate],
     ...             for hole in holes)
     ...     for border, holes in multipolygon)
     True
-    >>> all(all(isinstance(vertex, tuple) for vertex in border)
-    ...     and all(isinstance(vertex, tuple)
+    >>> all(all(isinstance(vertex, Point) for vertex in border)
+    ...     and all(isinstance(vertex, Point)
     ...             for hole in holes
     ...             for vertex in hole)
     ...     for border, holes in multipolygon)
     True
-    >>> all(all(len(vertex) == 2 for vertex in border)
-    ...     and all(len(vertex) == 2 for hole in holes for vertex in hole)
-    ...     for border, holes in multipolygon)
-    True
-    >>> all(all(isinstance(coordinate, coordinates_type)
-    ...         for vertex in border
-    ...         for coordinate in vertex)
-    ...     and all(isinstance(coordinate, coordinates_type)
-    ...             for hole in holes
-    ...             for vertex in hole
-    ...             for coordinate in vertex)
-    ...     for border, holes in multipolygon)
-    True
-    >>> all(all(all(min_coordinate <= coordinate <= max_coordinate
-    ...             for coordinate in vertex)
+    >>> all(all(isinstance(vertex.x, coordinates_type)
+    ...         and isinstance(vertex.y, coordinates_type)
     ...         for vertex in border)
-    ...     and all(min_coordinate <= coordinate <= max_coordinate
+    ...     and all(isinstance(vertex.x, coordinates_type)
+    ...             and isinstance(vertex.y, coordinates_type)
     ...             for hole in holes
-    ...             for vertex in hole
-    ...             for coordinate in vertex)
+    ...             for vertex in hole)
+    ...     for border, holes in multipolygon)
+    True
+    >>> all(all(min_coordinate <= vertex.x <= max_coordinate
+    ...         and min_coordinate <= vertex.y <= max_coordinate
+    ...         for vertex in border)
+    ...     and all(min_coordinate <= vertex.x <= max_coordinate
+    ...             and min_coordinate <= vertex.y <= max_coordinate
+    ...             for hole in holes
+    ...             for vertex in hole)
     ...     for border, holes in multipolygon)
     True
 
@@ -2195,17 +2188,15 @@ def mixes(x_coordinates: Strategy[Coordinate],
     True
     >>> min_multipoint_size <= len(multipoint) <= max_multipoint_size
     True
-    >>> all(isinstance(point, tuple) for point in multipoint)
+    >>> all(isinstance(point, Point) for point in multipoint)
     True
-    >>> all(len(point) == 2 for point in multipoint)
+    >>> all(isinstance(point.x, coordinates_type)
+    ...     and isinstance(point.y, coordinates_type)
+    ...     for point in multipoint)
     True
-    >>> all(isinstance(coordinate, coordinates_type)
-    ...     for point in multipoint
-    ...     for coordinate in point)
-    True
-    >>> all(min_x_coordinate <= point_x <= max_x_coordinate
-    ...     and min_y_coordinate <= point_y <= max_y_coordinate
-    ...     for point_x, point_y in multipoint)
+    >>> all(min_x_coordinate <= point.x <= max_x_coordinate
+    ...     and min_y_coordinate <= point.y <= max_y_coordinate
+    ...     for point in multipoint)
     True
     >>> isinstance(multisegment, list)
     True
@@ -2213,25 +2204,21 @@ def mixes(x_coordinates: Strategy[Coordinate],
     True
     >>> all(isinstance(segment, tuple) for segment in multisegment)
     True
-    >>> all(isinstance(endpoint, tuple)
+    >>> all(isinstance(endpoint, Point)
     ...     for segment in multisegment
     ...     for endpoint in segment)
     True
     >>> all(len(segment) == 2 for segment in multisegment)
     True
-    >>> all(len(endpoint) == 2
+    >>> all(isinstance(endpoint.x, coordinates_type)
+    ...     and isinstance(endpoint.y, coordinates_type)
     ...     for segment in multisegment
     ...     for endpoint in segment)
     True
-    >>> all(isinstance(coordinate, coordinates_type)
+    >>> all(min_x_coordinate <= endpoint.x <= max_x_coordinate
+    ...     and min_y_coordinate <= endpoint.y <= max_y_coordinate
     ...     for segment in multisegment
-    ...     for endpoint in segment
-    ...     for coordinate in endpoint)
-    True
-    >>> all(min_x_coordinate <= endpoint_x <= max_x_coordinate
-    ...     and min_y_coordinate <= endpoint_y <= max_y_coordinate
-    ...     for segment in multisegment
-    ...     for endpoint_x, endpoint_y in segment)
+    ...     for endpoint in segment)
     True
     >>> isinstance(multipolygon, list)
     True
@@ -2258,32 +2245,28 @@ def mixes(x_coordinates: Strategy[Coordinate],
     ...             for hole in holes)
     ...     for border, holes in multipolygon)
     True
-    >>> all(all(isinstance(vertex, tuple) for vertex in border)
-    ...     and all(isinstance(vertex, tuple)
+    >>> all(all(isinstance(vertex, Point) for vertex in border)
+    ...     and all(isinstance(vertex, Point)
     ...             for hole in holes
     ...             for vertex in hole)
     ...     for border, holes in multipolygon)
     True
-    >>> all(all(len(vertex) == 2 for vertex in border)
-    ...     and all(len(vertex) == 2 for hole in holes for vertex in hole)
+    >>> all(all(isinstance(vertex.x, coordinates_type)
+    ...         and isinstance(vertex.y, coordinates_type)
+    ...         for vertex in border)
+    ...     and all(isinstance(vertex.x, coordinates_type)
+    ...             and isinstance(vertex.y, coordinates_type)
+    ...             for hole in holes
+    ...             for vertex in hole)
     ...     for border, holes in multipolygon)
     True
-    >>> all(all(isinstance(coordinate, coordinates_type)
-    ...         for vertex in border
-    ...         for coordinate in vertex)
-    ...     and all(isinstance(coordinate, coordinates_type)
+    >>> all(all(min_x_coordinate <= vertex.x <= max_x_coordinate
+    ...         and min_y_coordinate <= vertex.y <= max_y_coordinate
+    ...         for vertex in border)
+    ...     and all(min_x_coordinate <= vertex.x <= max_x_coordinate
+    ...             and min_y_coordinate <= vertex.y <= max_y_coordinate
     ...             for hole in holes
-    ...             for vertex in hole
-    ...             for coordinate in vertex)
-    ...     for border, holes in multipolygon)
-    True
-    >>> all(all(min_x_coordinate <= vertex_x <= max_x_coordinate
-    ...         and min_y_coordinate <= vertex_y <= max_y_coordinate
-    ...         for vertex_x, vertex_y in border)
-    ...     and all(min_x_coordinate <= vertex_x <= max_x_coordinate
-    ...             and min_y_coordinate <= vertex_y <= max_y_coordinate
-    ...             for hole in holes
-    ...             for vertex_x, vertex_y in hole)
+    ...             for vertex in hole)
     ...     for border, holes in multipolygon)
     True
     """
