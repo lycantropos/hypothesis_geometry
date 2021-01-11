@@ -1,5 +1,4 @@
-from typing import (Iterable,
-                    Optional,
+from typing import (Optional,
                     Sequence)
 
 from ground.hints import Point
@@ -123,12 +122,8 @@ class QuadEdge:
 
 
 def to_edge_neighbours(edge: QuadEdge) -> Sequence[QuadEdge]:
-    return tuple(_to_edge_neighbours(edge))
-
-
-def _to_edge_neighbours(edge: QuadEdge) -> Iterable[QuadEdge]:
     candidate = edge.left_from_start
-    if (edge.orientation_with(candidate.end)
-            is Orientation.COUNTERCLOCKWISE):
-        yield candidate
-        yield candidate.right_from_end
+    return ((candidate, candidate.right_from_end)
+            if (edge.orientation_with(candidate.end)
+                is Orientation.COUNTERCLOCKWISE)
+            else ())
