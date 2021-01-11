@@ -47,8 +47,11 @@ Usage
 -----
 With setup
 ```python
+>>> from ground.base import get_context
 >>> from hypothesis import strategies
 >>> from hypothesis_geometry import planar
+>>> context = get_context()
+>>> Point = context.point_cls
 >>> min_coordinate, max_coordinate = -100, 100
 >>> coordinates_type = int
 >>> coordinates = strategies.integers(min_coordinate, max_coordinate)
@@ -64,13 +67,13 @@ let's take a look at what can be generated and how.
 ```python
 >>> points = planar.points(coordinates)
 >>> point = points.example()
->>> isinstance(point, tuple)
+>>> isinstance(point, Point)
 True
->>> len(point) == 2
+>>> (isinstance(point.x, coordinates_type)
+...  and isinstance(point.y, coordinates_type))
 True
->>> all(isinstance(coordinate, coordinates_type) for coordinate in point)
-True
->>> all(min_coordinate <= coordinate <= max_coordinate for coordinate in point)
+>>> (min_coordinate <= point.x <= max_coordinate
+...  and min_coordinate <= point.y <= max_coordinate)
 True
 
 ```
@@ -83,17 +86,15 @@ True
 True
 >>> len(segment) == 2
 True
->>> all(isinstance(endpoint, tuple) for endpoint in segment)
+>>> all(isinstance(endpoint, Point) for endpoint in segment)
 True
->>> all(len(endpoint) == 2 for endpoint in segment)
+>>> all(isinstance(endpoint.x, coordinates_type) 
+...     and isinstance(endpoint.y, coordinates_type) 
+...     for endpoint in segment)
 True
->>> all(isinstance(coordinate, coordinates_type) 
-...     for endpoint in segment
-...     for coordinate in endpoint)
-True
->>> all(min_coordinate <= coordinate <= max_coordinate 
-...     for endpoint in segment
-...     for coordinate in endpoint)
+>>> all(min_coordinate <= endpoint.x <= max_coordinate 
+...     and min_coordinate <= endpoint.y <= max_coordinate 
+...     for endpoint in segment)
 True
 
 ```
@@ -112,25 +113,21 @@ True
 >>> all(isinstance(segment, tuple)
 ...     for segment in multisegment)
 True
->>> all(isinstance(endpoint, tuple)
+>>> all(isinstance(endpoint, Point)
 ...     for segment in multisegment
 ...     for endpoint in segment)
 True
 >>> all(len(segment) == 2 for segment in multisegment)
 True
->>> all(len(endpoint) == 2
+>>> all(isinstance(endpoint.x, coordinates_type)
+...     and isinstance(endpoint.y, coordinates_type)
 ...     for segment in multisegment
 ...     for endpoint in segment)
 True
->>> all(isinstance(coordinate, coordinates_type)
+>>> all(min_coordinate <= endpoint.x <= max_coordinate
+...     and min_coordinate <= endpoint.y <= max_coordinate
 ...     for segment in multisegment
-...     for endpoint in segment
-...     for coordinate in endpoint)
-True
->>> all(min_coordinate <= coordinate <= max_coordinate
-...     for segment in multisegment
-...     for endpoint in segment
-...     for coordinate in endpoint)
+...     for endpoint in segment)
 True
 
 ```
@@ -146,17 +143,15 @@ True
 True
 >>> min_size <= len(polyline) <= max_size
 True
->>> all(isinstance(vertex, tuple) for vertex in polyline)
+>>> all(isinstance(vertex, Point) for vertex in polyline)
 True
->>> all(len(vertex) == 2 for vertex in polyline)
+>>> all(isinstance(vertex.x, coordinates_type)
+...     and isinstance(vertex.y, coordinates_type)
+...     for vertex in polyline)
 True
->>> all(isinstance(coordinate, coordinates_type)
-...     for vertex in polyline
-...     for coordinate in vertex)
-True
->>> all(min_coordinate <= coordinate <= max_coordinate 
-...     for vertex in polyline
-...     for coordinate in vertex)
+>>> all(min_coordinate <= vertex.x <= max_coordinate 
+...     and min_coordinate <= vertex.y <= max_coordinate 
+...     for vertex in polyline)
 True
 
 ```
@@ -172,17 +167,15 @@ True
 True
 >>> min_size <= len(contour) <= max_size
 True
->>> all(isinstance(vertex, tuple) for vertex in contour)
+>>> all(isinstance(vertex, Point) for vertex in contour)
 True
->>> all(len(vertex) == 2 for vertex in contour)
+>>> all(isinstance(vertex.x, coordinates_type)
+...     and isinstance(vertex.y, coordinates_type)
+...     for vertex in contour)
 True
->>> all(isinstance(coordinate, coordinates_type)
-...     for vertex in contour
-...     for coordinate in vertex)
-True
->>> all(min_coordinate <= coordinate <= max_coordinate
-...     for vertex in contour
-...     for coordinate in vertex)
+>>> all(min_coordinate <= vertex.x <= max_coordinate
+...     and min_coordinate <= vertex.y <= max_coordinate
+...     for vertex in contour)
 True
 
 ```
@@ -207,23 +200,19 @@ True
 >>> all(min_contour_size <= len(contour) <= max_contour_size
 ...     for contour in multicontour)
 True
->>> all(isinstance(vertex, tuple)
+>>> all(isinstance(vertex, Point)
 ...     for contour in multicontour
 ...     for vertex in contour)
 True
->>> all(len(vertex) == 2
+>>> all(isinstance(vertex.x, coordinates_type)
+...     and isinstance(vertex.y, coordinates_type)
 ...     for contour in multicontour
 ...     for vertex in contour)
 True
->>> all(isinstance(coordinate, coordinates_type)
+>>> all(min_coordinate <= vertex.x <= max_coordinate
+...     and min_coordinate <= vertex.y <= max_coordinate
 ...     for contour in multicontour
-...     for vertex in contour
-...     for coordinate in vertex)
-True
->>> all(min_coordinate <= coordinate <= max_coordinate
-...     for contour in multicontour
-...     for vertex in contour
-...     for coordinate in vertex)
+...     for vertex in contour)
 True
 
 ```
@@ -257,23 +246,19 @@ True
 >>> all(min_hole_size <= len(hole) <= max_hole_size for hole in holes)
 True
 >>> contours = [border, *holes]
->>> all(isinstance(vertex, tuple)
+>>> all(isinstance(vertex, Point)
 ...     for contour in contours
 ...     for vertex in contour)
 True
->>> all(len(vertex) == 2
+>>> all(isinstance(vertex.x, coordinates_type)
+...     and isinstance(vertex.y, coordinates_type)
 ...     for contour in contours
 ...     for vertex in contour)
 True
->>> all(isinstance(coordinate, coordinates_type)
+>>> all(min_coordinate <= vertex.x <= max_coordinate
+...     and min_coordinate <= vertex.y <= max_coordinate
 ...     for contour in contours
-...     for vertex in contour
-...     for coordinate in vertex)
-True
->>> all(min_coordinate <= coordinate <= max_coordinate
-...     for contour in contours
-...     for vertex in contour
-...     for coordinate in vertex)
+...     for vertex in contour)
 True
 
 ```
@@ -313,32 +298,28 @@ True
 ...             for hole in holes)
 ...     for border, holes in multipolygon)
 True
->>> all(all(isinstance(vertex, tuple) for vertex in border)
-...     and all(isinstance(vertex, tuple)
+>>> all(all(isinstance(vertex, Point) for vertex in border)
+...     and all(isinstance(vertex, Point)
 ...             for hole in holes
 ...             for vertex in hole)
 ...     for border, holes in multipolygon)
 True
->>> all(all(len(vertex) == 2 for vertex in border)
-...     and all(len(vertex) == 2 for hole in holes for vertex in hole)
-...     for border, holes in multipolygon)
-True
->>> all(all(isinstance(coordinate, coordinates_type)
-...         for vertex in border
-...         for coordinate in vertex)
-...     and all(isinstance(coordinate, coordinates_type)
-...             for hole in holes
-...             for vertex in hole
-...             for coordinate in vertex)
-...     for border, holes in multipolygon)
-True
->>> all(all(all(min_coordinate <= coordinate <= max_coordinate
-...             for coordinate in vertex)
+>>> all(all(isinstance(vertex.x, coordinates_type)
+...         and isinstance(vertex.y, coordinates_type)
 ...         for vertex in border)
-...     and all(min_coordinate <= coordinate <= max_coordinate
+...     and all(isinstance(vertex.x, coordinates_type)
+...             and isinstance(vertex.y, coordinates_type)
 ...             for hole in holes
-...             for vertex in hole
-...             for coordinate in vertex)
+...             for vertex in hole)
+...     for border, holes in multipolygon)
+True
+>>> all(all(min_coordinate <= vertex.x <= max_coordinate
+...         and min_coordinate <= vertex.y <= max_coordinate
+...         for vertex in border)
+...     and all(min_coordinate <= vertex.x <= max_coordinate
+...             and min_coordinate <= vertex.y <= max_coordinate
+...             for hole in holes
+...             for vertex in hole)
 ...     for border, holes in multipolygon)
 True
 
@@ -376,17 +357,15 @@ True
 True
 >>> min_multipoint_size <= len(multipoint) <= max_multipoint_size
 True
->>> all(isinstance(point, tuple) for point in multipoint)
+>>> all(isinstance(point, Point) for point in multipoint)
 True
->>> all(len(point) == 2 for point in multipoint)
+>>> all(isinstance(point.x, coordinates_type)
+...     and isinstance(point.y, coordinates_type)
+...     for point in multipoint)
 True
->>> all(isinstance(coordinate, coordinates_type)
-...     for point in multipoint
-...     for coordinate in point)
-True
->>> all(min_coordinate <= coordinate <= max_coordinate
-...     for point in multipoint
-...     for coordinate in point)
+>>> all(min_coordinate <= point.x <= max_coordinate
+...     and min_coordinate <= point.y <= max_coordinate
+...     for point in multipoint)
 True
 >>> isinstance(multisegment, list)
 True
@@ -394,25 +373,21 @@ True
 True
 >>> all(isinstance(segment, tuple) for segment in multisegment)
 True
->>> all(isinstance(endpoint, tuple)
+>>> all(isinstance(endpoint, Point)
 ...     for segment in multisegment
 ...     for endpoint in segment)
 True
 >>> all(len(segment) == 2 for segment in multisegment)
 True
->>> all(len(endpoint) == 2
+>>> all(isinstance(endpoint.x, coordinates_type)
+...     and isinstance(endpoint.y, coordinates_type)
 ...     for segment in multisegment
 ...     for endpoint in segment)
 True
->>> all(isinstance(coordinate, coordinates_type)
+>>> all(min_coordinate <= endpoint.x <= max_coordinate
+...     and min_coordinate <= endpoint.y <= max_coordinate
 ...     for segment in multisegment
-...     for endpoint in segment
-...     for coordinate in endpoint)
-True
->>> all(min_coordinate <= coordinate <= max_coordinate
-...     for segment in multisegment
-...     for endpoint in segment
-...     for coordinate in endpoint)
+...     for endpoint in segment)
 True
 >>> isinstance(multipolygon, list)
 True
@@ -458,13 +433,13 @@ True
 ...             for coordinate in vertex)
 ...     for border, holes in multipolygon)
 True
->>> all(all(all(min_coordinate <= coordinate <= max_coordinate
-...             for coordinate in vertex)
+>>> all(all(min_coordinate <= vertex.x <= max_coordinate
+...         and min_coordinate <= vertex.y <= max_coordinate
 ...         for vertex in border)
-...     and all(min_coordinate <= coordinate <= max_coordinate
+...     and all(min_coordinate <= vertex.x <= max_coordinate
+...             and min_coordinate <= vertex.y <= max_coordinate
 ...             for hole in holes
-...             for vertex in hole
-...             for coordinate in vertex)
+...             for vertex in hole)
 ...     for border, holes in multipolygon)
 True
 
