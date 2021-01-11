@@ -4,8 +4,8 @@ from typing import (Any,
                     Callable,
                     Hashable,
                     Iterable,
-                    List,
                     Optional,
+                    Sequence,
                     Tuple,
                     Type,
                     TypeVar)
@@ -28,12 +28,11 @@ from hypothesis_geometry.hints import (Contour,
                                        Multipolygon,
                                        Multisegment,
                                        Polygon,
-                                       Segment,
                                        Strategy)
 from hypothesis_geometry.planar import (MIN_POLYLINE_SIZE,
                                         TRIANGULAR_CONTOUR_SIZE,
                                         _has_valid_size)
-from hypothesis_geometry.utils import contour_to_multisegment
+from hypothesis_geometry.utils import to_contour_edges_constructor
 
 has_valid_size = _has_valid_size
 Domain = TypeVar('Domain')
@@ -45,6 +44,7 @@ SizesPair = Tuple[int, Optional[int]]
 context = get_context()
 Box = context.box_cls
 Point = context.point_cls
+Segment = context.segment_cls
 
 
 def identity(argument: Domain) -> Domain:
@@ -294,13 +294,12 @@ def segment_has_coordinates_in_range(segment: Segment,
                                      min_y_value: Coordinate,
                                      max_y_value: Optional[Coordinate]
                                      ) -> bool:
-    start, end = segment
-    return (point_has_coordinates_in_range(start,
+    return (point_has_coordinates_in_range(segment.start,
                                            min_x_value=min_x_value,
                                            max_x_value=max_x_value,
                                            min_y_value=min_y_value,
                                            max_y_value=max_y_value)
-            and point_has_coordinates_in_range(end,
+            and point_has_coordinates_in_range(segment.end,
                                                min_x_value=min_x_value,
                                                max_x_value=max_x_value,
                                                min_y_value=min_y_value,
@@ -414,11 +413,10 @@ def segment_has_coordinates_types(segment: Segment,
                                   *,
                                   x_type: Type[Coordinate],
                                   y_type: Type[Coordinate]) -> bool:
-    start, end = segment
-    return (point_has_coordinates_types(start,
+    return (point_has_coordinates_types(segment.start,
                                         x_type=x_type,
                                         y_type=y_type)
-            and point_has_coordinates_types(end,
+            and point_has_coordinates_types(segment.end,
                                             x_type=x_type,
                                             y_type=y_type))
 
@@ -514,21 +512,20 @@ def is_polyline(object_: Any) -> bool:
             and all(map(is_point, object_)))
 
 
-def is_segment(object_: Any) -> bool:
-    return (isinstance(object_, tuple)
-            and len(object_) == 2
-            and all(map(is_point, object_))
-            and len(set(object_)) == 2)
+is_segment = Segment.__instancecheck__
 
 
 def is_non_self_intersecting_contour(contour: Contour) -> bool:
     return not edges_intersect(context.contour_cls(contour))
 
 
+contour_edges_constructor = to_contour_edges_constructor(context)
+
+
 def is_star_contour(contour: Contour) -> bool:
     return segments_do_not_cross_or_overlap(
             contour_to_star_multisegment(contour)
-            + contour_to_multisegment(contour))
+            + contour_edges_constructor(contour))
 
 
 def contour_to_star_multisegment(contour: Contour) -> Multisegment:
@@ -542,20 +539,19 @@ def mix_segments_do_not_cross_or_overlap(mix: Mix) -> bool:
     _, multisegment, multipolygon = mix
     return segments_do_not_cross_or_overlap(
             multisegment
-            + list(flatten(chain(contour_to_multisegment(border),
-                                 flatten(contour_to_multisegment(hole)
+            + list(flatten(chain(contour_edges_constructor(border),
+                                 flatten(contour_edges_constructor(hole)
                                          for hole in holes))
                            for border, holes in multipolygon)))
 
 
-def contours_do_not_cross_or_overlap(contours: List[Contour]) -> bool:
+def contours_do_not_cross_or_overlap(contours: Sequence[Contour]) -> bool:
     return segments_do_not_cross_or_overlap(list(flatten(
-            contour_to_multisegment(contour) for contour in contours)))
+            contour_edges_constructor(contour) for contour in contours)))
 
 
-def segments_do_not_cross_or_overlap(segments: List[Segment]) -> bool:
-    return not segments_cross_or_overlap([context.segment_cls(start, end)
-                                          for start, end in segments])
+def segments_do_not_cross_or_overlap(segments: Sequence[Segment]) -> bool:
+    return not segments_cross_or_overlap(segments)
 
 
 def is_multicontour_strict(multicontour: Multicontour) -> bool:
