@@ -414,23 +414,19 @@ True
 ...             for hole in holes)
 ...     for border, holes in multipolygon)
 True
->>> all(all(isinstance(vertex, tuple) for vertex in border)
-...     and all(isinstance(vertex, tuple)
+>>> all(all(isinstance(vertex, Point) for vertex in border)
+...     and all(isinstance(vertex, Point)
 ...             for hole in holes
 ...             for vertex in hole)
 ...     for border, holes in multipolygon)
 True
->>> all(all(len(vertex) == 2 for vertex in border)
-...     and all(len(vertex) == 2 for hole in holes for vertex in hole)
-...     for border, holes in multipolygon)
-True
->>> all(all(isinstance(coordinate, coordinates_type)
-...         for vertex in border
-...         for coordinate in vertex)
-...     and all(isinstance(coordinate, coordinates_type)
+>>> all(all(isinstance(vertex.x, coordinates_type)
+...         and isinstance(vertex.y, coordinates_type)
+...         for vertex in border)
+...     and all(isinstance(vertex.x, coordinates_type)
+...             and isinstance(vertex.y, coordinates_type)
 ...             for hole in holes
-...             for vertex in hole
-...             for coordinate in vertex)
+...             for vertex in hole)
 ...     for border, holes in multipolygon)
 True
 >>> all(all(min_coordinate <= vertex.x <= max_coordinate
