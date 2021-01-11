@@ -554,9 +554,8 @@ def contours_do_not_cross_or_overlap(contours: List[Contour]) -> bool:
 
 
 def segments_do_not_cross_or_overlap(segments: List[Segment]) -> bool:
-    return not segments_cross_or_overlap([context.segment_cls(
-            context.point_cls(*start), context.point_cls(*end))
-        for start, end in segments])
+    return not segments_cross_or_overlap([context.segment_cls(start, end)
+                                          for start, end in segments])
 
 
 def is_multicontour_strict(multicontour: Multicontour) -> bool:
