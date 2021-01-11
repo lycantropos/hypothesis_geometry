@@ -599,7 +599,7 @@ def contours(x_coordinates: Strategy[Coordinate],
     :param min_size: lower bound for contour size.
     :param max_size: upper bound for contour size, ``None`` for unbound.
 
-   >>> from ground.base import get_context
+    >>> from ground.base import get_context
     >>> from hypothesis import strategies
     >>> from hypothesis_geometry import planar
     >>> context = get_context()
@@ -694,7 +694,7 @@ def convex_contours(x_coordinates: Strategy[Coordinate],
     :param min_size: lower bound for contour size.
     :param max_size: upper bound for contour size, ``None`` for unbound.
 
-   >>> from ground.base import get_context
+    >>> from ground.base import get_context
     >>> from hypothesis import strategies
     >>> from hypothesis_geometry import planar
     >>> context = get_context()
