@@ -224,8 +224,11 @@ def segments(x_coordinates: Strategy[Coordinate],
         strategy for endpoints' y-coordinates,
         ``None`` for reusing x-coordinates strategy.
 
+    >>> from ground.base import get_context
     >>> from hypothesis import strategies
     >>> from hypothesis_geometry import planar
+    >>> context = get_context()
+    >>> Point = context.point_cls
 
     For same coordinates' domain:
 
@@ -240,16 +243,14 @@ def segments(x_coordinates: Strategy[Coordinate],
     True
     >>> len(segment) == 2
     True
-    >>> all(isinstance(endpoint, tuple) for endpoint in segment)
+    >>> all(isinstance(endpoint, Point) for endpoint in segment)
     True
-    >>> all(len(endpoint) == 2 for endpoint in segment)
-    True
-    >>> all(all(isinstance(coordinate, coordinates_type)
-    ...         for coordinate in endpoint)
+    >>> all(isinstance(endpoint.x, coordinates_type)
+    ...     and isinstance(endpoint.y, coordinates_type)
     ...     for endpoint in segment)
     True
-    >>> all(all(min_coordinate <= coordinate <= max_coordinate
-    ...         for coordinate in endpoint)
+    >>> all(min_coordinate <= endpoint.x <= max_coordinate
+    ...     and min_coordinate <= endpoint.y <= max_coordinate
     ...     for endpoint in segment)
     True
 
@@ -270,17 +271,15 @@ def segments(x_coordinates: Strategy[Coordinate],
     True
     >>> len(segment) == 2
     True
-    >>> all(isinstance(endpoint, tuple) for endpoint in segment)
+    >>> all(isinstance(endpoint, Point) for endpoint in segment)
     True
-    >>> all(len(endpoint) == 2 for endpoint in segment)
-    True
-    >>> all(all(isinstance(coordinate, coordinates_type)
-    ...         for coordinate in endpoint)
+    >>> all(isinstance(endpoint.x, coordinates_type)
+    ...     and isinstance(endpoint.y, coordinates_type)
     ...     for endpoint in segment)
     True
-    >>> all(min_x_coordinate <= endpoint_x <= max_x_coordinate
-    ...     and min_y_coordinate <= endpoint_y <= max_y_coordinate
-    ...     for endpoint_x, endpoint_y in segment)
+    >>> all(min_x_coordinate <= endpoint.x <= max_x_coordinate
+    ...     and min_y_coordinate <= endpoint.y <= max_y_coordinate
+    ...     for endpoint in segment)
     True
     """
 
