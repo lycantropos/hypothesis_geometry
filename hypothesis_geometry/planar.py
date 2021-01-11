@@ -555,9 +555,9 @@ def polylines(x_coordinates: Strategy[Coordinate],
                               min_size - 1
                               if min_size > MIN_POLYLINE_SIZE
                               else min_size,
-                              max_size - 1
-                              if max_size is not None
-                              else max_size)
+                              max_size
+                              if max_size is None
+                              else max_size - 1)
                    .map(close_polyline))
     return result
 
