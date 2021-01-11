@@ -3,13 +3,13 @@ from typing import (List,
                     Tuple,
                     TypeVar)
 
+from ground.hints import Point
 from hypothesis.strategies import SearchStrategy
 
 Domain = TypeVar('Domain')
 Range = TypeVar('Range')
 Strategy = SearchStrategy
 Coordinate = Real
-Point = Tuple[Coordinate, Coordinate]
 Multipoint = List[Point]
 Segment = Tuple[Point, Point]
 Multisegment = List[Segment]
