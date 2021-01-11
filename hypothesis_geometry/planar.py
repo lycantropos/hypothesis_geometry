@@ -16,6 +16,7 @@ from typing import (Callable,
 
 from ground.base import get_context
 from ground.hints import (Box,
+                          Multipoint,
                           Point,
                           Segment)
 from hypothesis import strategies
@@ -35,7 +36,6 @@ from .hints import (Contour,
                     Domain,
                     Mix,
                     Multicontour,
-                    Multipoint,
                     Multipolygon,
                     Multisegment,
                     Polygon,
@@ -129,8 +129,7 @@ def multipoints(x_coordinates: Strategy[Coordinate],
                 y_coordinates: Optional[Strategy[Coordinate]] = None,
                 *,
                 min_size: int = EMPTY_MULTIPOINT_SIZE,
-                max_size: Optional[int] = None
-                ) -> Strategy[Multipoint]:
+                max_size: Optional[int] = None) -> Strategy[Multipoint]:
     """
     Returns a strategy for multipoints.
     Multipoint is a possibly empty sequence of distinct points.
@@ -146,7 +145,7 @@ def multipoints(x_coordinates: Strategy[Coordinate],
     >>> from hypothesis import strategies
     >>> from hypothesis_geometry import planar
     >>> context = get_context()
-    >>> Point = context.point_cls
+    >>> Multipoint = context.multipoint_cls
 
     For same coordinates' domain:
 
@@ -160,19 +159,17 @@ def multipoints(x_coordinates: Strategy[Coordinate],
     ...                                  min_size=min_size,
     ...                                  max_size=max_size)
     >>> multipoint = multipoints.example()
-    >>> isinstance(multipoint, list)
+    >>> isinstance(multipoint, Multipoint)
     True
-    >>> min_size <= len(multipoint) <= max_size
-    True
-    >>> all(isinstance(point, Point) for point in multipoint)
+    >>> min_size <= len(multipoint.points) <= max_size
     True
     >>> all(isinstance(point.x, coordinates_type)
     ...     and isinstance(point.y, coordinates_type)
-    ...     for point in multipoint)
+    ...     for point in multipoint.points)
     True
     >>> all(min_coordinate <= point.x <= max_coordinate
     ...     and min_coordinate <= point.y <= max_coordinate
-    ...     for point in multipoint)
+    ...     for point in multipoint.points)
     True
 
     For different coordinates' domains:
@@ -191,23 +188,33 @@ def multipoints(x_coordinates: Strategy[Coordinate],
     ...                                      min_size=min_size,
     ...                                      max_size=max_size)
     >>> multipoint = multipoints.example()
-    >>> isinstance(multipoint, list)
+    >>> isinstance(multipoint, Multipoint)
     True
-    >>> min_size <= len(multipoint) <= max_size
-    True
-    >>> all(isinstance(point, Point) for point in multipoint)
+    >>> min_size <= len(multipoint.points) <= max_size
     True
     >>> all(isinstance(point.x, coordinates_type)
     ...     and isinstance(point.y, coordinates_type)
-    ...     for point in multipoint)
+    ...     for point in multipoint.points)
     True
     >>> all(min_x_coordinate <= point.x <= max_x_coordinate
     ...     and min_y_coordinate <= point.y <= max_y_coordinate
-    ...     for point in multipoint)
+    ...     for point in multipoint.points)
     True
     """
     _validate_sizes(min_size, max_size, EMPTY_MULTIPOINT_SIZE)
-    min_size = max(min_size, EMPTY_MULTIPOINT_SIZE)
+    return (_unique_points_sequences(x_coordinates, y_coordinates,
+                                     min_size=max(min_size,
+                                                  EMPTY_MULTIPOINT_SIZE),
+                                     max_size=max_size)
+            .map(get_context().multipoint_cls))
+
+
+def _unique_points_sequences(x_coordinates: Strategy[Coordinate],
+                             y_coordinates: Optional[Strategy[Coordinate]],
+                             *,
+                             min_size: int,
+                             max_size: Optional[int]) -> Strategy[
+    Sequence[Point]]:
     return strategies.lists(points(x_coordinates, y_coordinates),
                             unique=True,
                             min_size=min_size,
@@ -2009,7 +2016,9 @@ def mixes(x_coordinates: Strategy[Coordinate],
     >>> from hypothesis import strategies
     >>> from hypothesis_geometry import planar
     >>> context = get_context()
-    >>> Point, Segment = context.point_cls, context.segment_cls
+    >>> Multipoint, Point, Segment = (context.multipoint_cls,
+    ...                               context.point_cls,
+    ...                               context.segment_cls)
 
     For same coordinates' domain:
 
@@ -2044,19 +2053,17 @@ def mixes(x_coordinates: Strategy[Coordinate],
     >>> len(mix) == 3
     True
     >>> multipoint, multisegment, multipolygon = mix
-    >>> isinstance(multipoint, list)
+    >>> isinstance(multipoint, Multipoint)
     True
-    >>> min_multipoint_size <= len(multipoint) <= max_multipoint_size
-    True
-    >>> all(isinstance(point, Point) for point in multipoint)
+    >>> min_multipoint_size <= len(multipoint.points) <= max_multipoint_size
     True
     >>> all(isinstance(point.x, coordinates_type)
     ...     and isinstance(point.y, coordinates_type)
-    ...     for point in multipoint)
+    ...     for point in multipoint.points)
     True
     >>> all(min_coordinate <= point.x <= max_coordinate
     ...     and min_coordinate <= point.y <= max_coordinate
-    ...     for point in multipoint)
+    ...     for point in multipoint.points)
     True
     >>> isinstance(multisegment, list)
     True
@@ -2163,19 +2170,17 @@ def mixes(x_coordinates: Strategy[Coordinate],
     >>> len(mix) == 3
     True
     >>> multipoint, multisegment, multipolygon = mix
-    >>> isinstance(multipoint, list)
+    >>> isinstance(multipoint, Multipoint)
     True
-    >>> min_multipoint_size <= len(multipoint) <= max_multipoint_size
-    True
-    >>> all(isinstance(point, Point) for point in multipoint)
+    >>> min_multipoint_size <= len(multipoint.points) <= max_multipoint_size
     True
     >>> all(isinstance(point.x, coordinates_type)
     ...     and isinstance(point.y, coordinates_type)
-    ...     for point in multipoint)
+    ...     for point in multipoint.points)
     True
     >>> all(min_x_coordinate <= point.x <= max_x_coordinate
     ...     and min_y_coordinate <= point.y <= max_y_coordinate
-    ...     for point in multipoint)
+    ...     for point in multipoint.points)
     True
     >>> isinstance(multisegment, list)
     True
@@ -2282,6 +2287,7 @@ def mixes(x_coordinates: Strategy[Coordinate],
     min_points_count = (min_multipoint_size + min_multisegment_points_count
                         + min_multipolygon_points_count)
     context = get_context()
+    multipoint_cls = context.multipoint_cls
 
     @strategies.composite
     def xs_to_mix(draw: Callable[[Strategy[Domain]], Domain],
@@ -2291,10 +2297,10 @@ def mixes(x_coordinates: Strategy[Coordinate],
         (multipoint_points_counts, multisegment_points_counts,
          multipolygon_points_counts) = _to_points_counts(draw, len(xs))
         xs = sorted(xs)
-        multipoint, multisegment, multipolygon = [], [], []
+        points_sequence, multisegment, multipolygon = [], [], []
 
         def draw_multipoint(points_count: int) -> None:
-            multipoint.extend(draw(multipoints(
+            points_sequence.extend(draw(_unique_points_sequences(
                     strategies.sampled_from(xs[:points_count]), y_coordinates,
                     min_size=points_count,
                     max_size=points_count)))
@@ -2339,7 +2345,7 @@ def mixes(x_coordinates: Strategy[Coordinate],
                     not has_vertical_leftmost_segment(
                             edges_constructor(multipolygon[-1])))
             xs = xs[count - can_touch_next_geometry:]
-        return multipoint, multisegment, multipolygon
+        return multipoint_cls(points_sequence), multisegment, multipolygon
 
     @strategies.composite
     def ys_to_mix(draw: Callable[[Strategy[Domain]], Domain],
@@ -2349,10 +2355,10 @@ def mixes(x_coordinates: Strategy[Coordinate],
         (multipoint_points_counts, multisegment_points_counts,
          multipolygon_points_counts) = _to_points_counts(draw, len(ys))
         ys = sorted(ys)
-        multipoint, multisegment, multipolygon = [], [], []
+        points_sequence, multisegment, multipolygon = [], [], []
 
         def draw_multipoint(points_count: int) -> None:
-            multipoint.extend(draw(multipoints(
+            points_sequence.extend(draw(_unique_points_sequences(
                     x_coordinates, strategies.sampled_from(ys[:points_count]),
                     min_size=points_count,
                     max_size=points_count)))
@@ -2397,7 +2403,7 @@ def mixes(x_coordinates: Strategy[Coordinate],
                     not has_horizontal_lowermost_segment(
                             edges_constructor(multipolygon[-1])))
             ys = ys[count - can_touch_next_geometry:]
-        return multipoint, multisegment, multipolygon
+        return multipoint_cls(points_sequence), multisegment, multipolygon
 
     def _to_points_counts(draw: Callable[[Strategy[Domain]], Domain],
                           max_points_count: int
