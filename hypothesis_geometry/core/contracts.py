@@ -2,11 +2,11 @@ from typing import Sequence
 
 from bentley_ottmann.planar import segments_cross_or_overlap
 from ground.base import get_context
-from ground.hints import (Point,
+from ground.hints import (Coordinate,
+                          Point,
                           Segment)
 
-from hypothesis_geometry.hints import (Contour,
-                                       Coordinate)
+from hypothesis_geometry.hints import Contour
 from .utils import (Orientation,
                     to_orientations)
 

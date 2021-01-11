@@ -20,7 +20,8 @@ from dendroid.hints import Key
 from ground.base import (Context,
                          Relation,
                          get_context)
-from ground.hints import (Point,
+from ground.hints import (Coordinate,
+                          Point,
                           Segment)
 from locus import segmental
 
@@ -35,7 +36,6 @@ from .core.utils import (Orientation,
                          point_in_angle,
                          points_to_centroid)
 from .hints import (Contour,
-                    Coordinate,
                     Domain,
                     Multicontour,
                     Polygon,

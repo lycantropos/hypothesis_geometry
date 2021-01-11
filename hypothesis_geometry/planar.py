@@ -16,6 +16,7 @@ from typing import (Callable,
 
 from ground.base import get_context
 from ground.hints import (Box,
+                          Coordinate,
                           Multipoint,
                           Multisegment,
                           Point,
@@ -32,7 +33,6 @@ from .core.utils import (Orientation,
                          orientation,
                          pairwise)
 from .hints import (Contour,
-                    Coordinate,
                     Domain,
                     Mix,
                     Multicontour,
