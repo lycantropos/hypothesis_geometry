@@ -6,9 +6,9 @@ from typing import (Iterable,
                     Sequence)
 
 from decision.partition import coin_change
+from ground.hints import Point
 from reprit.base import generate_repr
 
-from hypothesis_geometry.hints import Point
 from .contracts import is_point_inside_circumcircle
 from .subdivisional import QuadEdge
 from .utils import (Orientation,

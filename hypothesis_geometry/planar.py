@@ -10,10 +10,12 @@ from typing import (Callable,
                     List,
                     Optional,
                     Sized,
-                    Tuple)
+                    Tuple,
+                    Type)
 
 from ground.base import get_context
-from ground.hints import Box
+from ground.hints import (Box,
+                          Point)
 from hypothesis import strategies
 from hypothesis.errors import HypothesisWarning
 
@@ -34,7 +36,6 @@ from .hints import (Contour,
                     Multipoint,
                     Multipolygon,
                     Multisegment,
-                    Point,
                     Polygon,
                     Polyline,
                     Segment,
@@ -66,8 +67,11 @@ def points(x_coordinates: Strategy[Coordinate],
         strategy for points' y-coordinates,
         ``None`` for reusing x-coordinates strategy.
 
+    >>> from ground.base import get_context
     >>> from hypothesis import strategies
     >>> from hypothesis_geometry import planar
+    >>> context = get_context()
+    >>> Point = context.point_cls
 
     For same coordinates' domain:
 
@@ -78,15 +82,12 @@ def points(x_coordinates: Strategy[Coordinate],
     ...                                 allow_nan=False)
     >>> points = planar.points(coordinates)
     >>> point = points.example()
-    >>> isinstance(point, tuple)
+    >>> isinstance(point, Point)
+    >>> (isinstance(point.x, coordinates_type)
+    ...  and isinstance(point.y, coordinates_type))
     True
-    >>> len(point) == 2
-    True
-    >>> all(isinstance(coordinate, coordinates_type)
-    ...     for coordinate in point)
-    True
-    >>> all(min_coordinate <= coordinate <= max_coordinate
-    ...     for coordinate in point)
+    >>> (min_coordinate <= point.x <= max_coordinate
+    ...  and min_coordinate <= point.y <= max_coordinate)
     True
 
     For different coordinates' domains:
@@ -102,22 +103,19 @@ def points(x_coordinates: Strategy[Coordinate],
     ...                                   allow_nan=False)
     >>> points = planar.points(x_coordinates, y_coordinates)
     >>> point = points.example()
-    >>> isinstance(point, tuple)
+    >>> isinstance(point, Point)
+    >>> (isinstance(point.x, coordinates_type)
+    ...  and isinstance(point.y, coordinates_type))
     True
-    >>> len(point) == 2
-    True
-    >>> all(isinstance(coordinate, coordinates_type)
-    ...     for coordinate in point)
-    True
-    >>> point_x, point_y = point
-    >>> min_x_coordinate <= point_x <= max_x_coordinate
-    True
-    >>> min_y_coordinate <= point_y <= max_y_coordinate
+    >>> (min_x_coordinate <= point.x <= max_x_coordinate
+    ...  and min_y_coordinate <= point.y <= max_y_coordinate)
     True
     """
-    if y_coordinates is None:
-        y_coordinates = x_coordinates
-    return strategies.tuples(x_coordinates, y_coordinates)
+    return strategies.builds(get_context().point_cls,
+                             x_coordinates,
+                             x_coordinates
+                             if y_coordinates is None
+                             else y_coordinates)
 
 
 EMPTY_MULTIPOINT_SIZE = 0
@@ -1058,9 +1056,13 @@ def rectangular_contours(x_coordinates: Strategy[Coordinate],
     True
     """
 
-    def box_to_contour(box: Box) -> Contour:
-        return [(box.min_x, box.min_y), (box.max_x, box.min_y),
-                (box.max_x, box.max_y), (box.min_x, box.max_y)]
+    def box_to_contour(box: Box,
+                       point_cls: Type[Point] = get_context().point_cls
+                       ) -> Contour:
+        return [point_cls(box.min_x, box.min_y),
+                point_cls(box.max_x, box.min_y),
+                point_cls(box.max_x, box.max_y),
+                point_cls(box.min_x, box.max_y)]
 
     return (boxes(x_coordinates, y_coordinates)
             .map(box_to_contour))

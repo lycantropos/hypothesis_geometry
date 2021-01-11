@@ -1,4 +1,3 @@
-from fractions import Fraction
 from itertools import chain
 from typing import (Iterable,
                     Iterator,
@@ -7,16 +6,10 @@ from typing import (Iterable,
 
 from ground.base import (Orientation,
                          get_context)
-from ground.core.hints import Expansion
-from ground.core.shewchuk import (scale_expansion,
-                                  sum_expansions,
-                                  two_mul,
-                                  two_two_sub)
+from ground.hints import Point
 
 from hypothesis_geometry.hints import (Contour,
-                                       Coordinate,
-                                       Domain,
-                                       Point)
+                                       Domain)
 
 flatten = chain.from_iterable
 
@@ -34,9 +27,7 @@ Orientation = Orientation
 
 def orientation(first, vertex, second):
     context = get_context()
-    point_cls = context.point_cls
-    return context.angle_orientation(point_cls(*vertex), point_cls(*first),
-                                     point_cls(*second))
+    return context.angle_orientation(vertex, first, second)
 
 
 def to_orientations(contour: Contour) -> Iterator[Orientation]:
@@ -46,48 +37,11 @@ def to_orientations(contour: Contour) -> Iterator[Orientation]:
 
 
 def points_to_centroid(points: Sequence[Point]) -> Point:
-    accumulated_x = accumulated_y = 0
-    for x, y in points:
-        accumulated_x += x
-        accumulated_y += y
-    divisor = len(points)
-    return (_divide_by_int(accumulated_x, divisor),
-            _divide_by_int(accumulated_y, divisor))
+    return get_context().multipoint_centroid(points)
 
 
 def contour_to_centroid(contour: Contour) -> Point:
-    double_area = x_numerator = y_numerator = (0,)
-    prev_x, prev_y = contour[-1]
-    for x, y in contour:
-        area_component = _to_endpoints_cross_product_z(prev_x, prev_y, x, y)
-        double_area = sum_expansions(double_area, area_component)
-        x_numerator = sum_expansions(x_numerator,
-                                     scale_expansion(area_component,
-                                                     prev_x + x))
-        y_numerator = sum_expansions(y_numerator,
-                                     scale_expansion(area_component,
-                                                     prev_y + y))
-        prev_x, prev_y = x, y
-    divisor = 3 * double_area[-1]
-    return (_divide_by_int(x_numerator[-1], divisor),
-            _divide_by_int(y_numerator[-1], divisor))
-
-
-def _to_endpoints_cross_product_z(start_x: Coordinate,
-                                  start_y: Coordinate,
-                                  end_x: Coordinate,
-                                  end_y: Coordinate) -> Expansion:
-    minuend, minuend_tail = two_mul(start_x, end_y)
-    subtrahend, subtrahend_tail = two_mul(start_y, end_x)
-    return (two_two_sub(minuend, minuend_tail, subtrahend, subtrahend_tail)
-            if minuend_tail or subtrahend_tail
-            else (minuend - subtrahend,))
-
-
-def _divide_by_int(dividend: Coordinate, divisor: int) -> Coordinate:
-    return (Fraction(dividend, divisor)
-            if isinstance(dividend, int)
-            else dividend / divisor)
+    return get_context().contour_centroid(contour)
 
 
 def point_in_angle(point: Point,

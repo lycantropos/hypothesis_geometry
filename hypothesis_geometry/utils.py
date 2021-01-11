@@ -17,6 +17,7 @@ from dendroid import red_black
 from dendroid.hints import Key
 from ground.base import (Relation,
                          get_context)
+from ground.hints import Point
 from locus import segmental
 
 from .core import triangular
@@ -34,7 +35,6 @@ from .hints import (Contour,
                     Domain,
                     Multicontour,
                     Multisegment,
-                    Point,
                     Polygon,
                     Range,
                     Segment)
@@ -89,11 +89,10 @@ def to_star_contour(points: Sequence[Point]) -> Contour:
     result, prev_size = points, len(points) + 1
     while 2 < len(result) < prev_size:
         prev_size = len(result)
-        centroid_x, centroid_y = centroid
         result = [deque(candidates,
                         maxlen=1)[0][1]
                   for _, candidates in groupby(sorted(
-                    (_to_segment_angle(centroid_x, centroid_y, point), point)
+                    (_to_segment_angle(centroid, point), point)
                     for point in result),
                     key=itemgetter(0))]
         if len(result) > 2:
@@ -110,10 +109,8 @@ def to_star_contour(points: Sequence[Point]) -> Contour:
     return result
 
 
-def _to_segment_angle(start_x: Coordinate, start_y: Coordinate,
-                      end: Point) -> Coordinate:
-    end_x, end_y = end
-    return math.atan2(end_y - start_y, end_x - start_x)
+def _to_segment_angle(start: Point, end: Point) -> Coordinate:
+    return math.atan2(end.y - start.y, end.x - start.x)
 
 
 def to_multicontour(vertices: List[Point],
@@ -185,10 +182,21 @@ def to_polygon(points: Sequence[Point],
                                              ) -> Callable[[Segment], bool]:
         context = get_context()
         return (
-            (lambda segment, to_nearest_segment=(segmental.Tree([context.segment_cls(context.point_cls(*start), context.point_cls(*end)) for start, end in multisegment])
+            (lambda segment, to_nearest_segment=(segmental.Tree([
+                context.segment_cls(
+                        context.point_cls(
+                                *start),
+                        context.point_cls(
+                                *end))
+                for
+                start, end
+                in
+                multisegment])
                                                  .nearest_segment)
-             : segments_cross_or_overlap(to_nearest_segment(context.segment_cls(context.point_cls(*segment[0]),
-                                                                                context.point_cls(*segment[1]))), segment))
+             : segments_cross_or_overlap(to_nearest_segment(
+                    context.segment_cls(context.point_cls(*segment[0]),
+                                        context.point_cls(*segment[1]))),
+                    segment))
             if multisegment
             else (lambda segment: False))
 
@@ -240,9 +248,7 @@ def _edge_key(edge: QuadEdge) -> Key:
 
 
 def _to_squared_edge_length(edge: QuadEdge) -> Coordinate:
-    (start_x, start_y), (end_x, end_y) = edge.start, edge.end
-    delta_x, delta_y = start_x - end_x, start_y - end_y
-    return delta_x * delta_x + delta_y * delta_y
+    return _to_squared_points_distance(edge.start, edge.end)
 
 
 def constrict_convex_hull_size(points: List[Point],
@@ -278,8 +284,7 @@ def constrict_convex_hull_size(points: List[Point],
 
 
 def _to_squared_points_distance(left: Point, right: Point) -> Coordinate:
-    (left_x, left_y), (right_x, right_y) = left, right
-    return (left_x - right_x) ** 2 + (left_y - right_y) ** 2
+    return (left.x - right.x) ** 2 + (left.y - right.y) ** 2
 
 
 def to_convex_contour(points: List[Point],
@@ -294,7 +299,7 @@ def to_convex_contour(points: List[Point],
     Reference:
         http://cglab.ca/~sander/misc/ConvexGeneration/convex.html
     """
-    xs, ys = zip(*points)
+    xs, ys = [point.x for point in points], [point.y for point in points]
     xs, ys = sorted(xs), sorted(ys)
     min_x, *xs, max_x = xs
     min_y, *ys, max_y = ys
@@ -326,17 +331,19 @@ def to_convex_contour(points: List[Point],
                      key=to_vector_angle)
     point_x = point_y = 0
     min_polygon_x = min_polygon_y = 0
-    points = []
+    coordinates_pairs = []
     for vector_x, vector_y in vectors:
-        points.append((point_x, point_y))
+        coordinates_pairs.append((point_x, point_y))
         point_x += vector_x
         point_y += vector_y
         min_polygon_x, min_polygon_y = (min(min_polygon_x, point_x),
                                         min(min_polygon_y, point_y))
     shift_x, shift_y = min_x - min_polygon_x, min_y - min_polygon_y
-    return to_strict_convex_hull([(min(max(point_x + shift_x, min_x), max_x),
-                                   min(max(point_y + shift_y, min_y), max_y))
-                                  for point_x, point_y in points])
+    point_cls = get_context().point_cls
+    return to_strict_convex_hull(
+            [point_cls(min(max(x + shift_x, min_x), max_x),
+                       min(max(y + shift_y, min_y), max_y))
+             for x, y in coordinates_pairs])
 
 
 def shrink_collinear_vertices(contour: Contour) -> None:
