@@ -1,11 +1,11 @@
 from typing import Tuple
 
 import pytest
+from ground.hints import Coordinate
 from hypothesis import given
 from hypothesis.strategies import DataObject
 
-from hypothesis_geometry.hints import (Coordinate,
-                                       Strategy)
+from hypothesis_geometry.hints import Strategy
 from hypothesis_geometry.planar import multipoints
 from tests import strategies
 from tests.utils import (CoordinatesLimitsType,

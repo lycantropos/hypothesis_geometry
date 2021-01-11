@@ -1,12 +1,12 @@
 from typing import Tuple
 
+from ground.hints import Coordinate
 from hypothesis import given
 from hypothesis.strategies import DataObject
 
 from hypothesis_geometry.core.contracts import (is_contour_non_convex,
                                                 is_contour_strict)
-from hypothesis_geometry.hints import (Coordinate,
-                                       Strategy)
+from hypothesis_geometry.hints import Strategy
 from hypothesis_geometry.planar import (TRIANGULAR_CONTOUR_SIZE,
                                         triangular_contours)
 from tests import strategies

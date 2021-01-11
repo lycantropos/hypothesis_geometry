@@ -1,10 +1,10 @@
 from typing import Tuple
 
+from ground.hints import Coordinate
 from hypothesis import given
 from hypothesis.strategies import DataObject
 
-from hypothesis_geometry.hints import (Coordinate,
-                                       Strategy)
+from hypothesis_geometry.hints import Strategy
 from hypothesis_geometry.planar import boxes
 from tests import strategies
 from tests.utils import (CoordinatesLimitsType,
