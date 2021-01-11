@@ -1992,8 +1992,7 @@ def mixes(x_coordinates: Strategy[Coordinate],
           min_multipolygon_holes_size: int = EMPTY_MULTICONTOUR_SIZE,
           max_multipolygon_holes_size: Optional[int] = None,
           min_multipolygon_hole_size: int = TRIANGULAR_CONTOUR_SIZE,
-          max_multipolygon_hole_size: Optional[int] = None
-          ) -> Strategy[Mix]:
+          max_multipolygon_hole_size: Optional[int] = None) -> Strategy[Mix]:
     """
     Returns a strategy for mixes.
     Mix is a triplet of disjoint multipoint, multisegment and multipolygon.
