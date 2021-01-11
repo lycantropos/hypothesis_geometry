@@ -25,7 +25,6 @@ from hypothesis_geometry.hints import (Contour,
                                        Mix,
                                        Multicontour,
                                        Multipolygon,
-                                       Multisegment,
                                        Polygon,
                                        Strategy)
 from hypothesis_geometry.planar import (MIN_POLYLINE_SIZE,
@@ -43,6 +42,7 @@ SizesPair = Tuple[int, Optional[int]]
 context = get_context()
 Box = context.box_cls
 Multipoint = context.multipoint_cls
+Multisegment = context.multisegment_cls
 Point = context.point_cls
 Segment = context.segment_cls
 
@@ -94,7 +94,7 @@ def mix_has_valid_sizes(mix: Mix,
     return (has_valid_size(multipoint.points,
                            min_size=min_multipoint_size,
                            max_size=max_multipoint_size)
-            and has_valid_size(multisegment,
+            and has_valid_size(multisegment.segments,
                                min_size=min_multisegment_size,
                                max_size=max_multisegment_size)
             and multipolygon_has_valid_sizes(
@@ -250,7 +250,7 @@ def multisegment_has_coordinates_in_range(multisegment: Multisegment,
                                                 max_x_value=max_x_value,
                                                 min_y_value=min_y_value,
                                                 max_y_value=max_y_value)
-               for segment in multisegment)
+               for segment in multisegment.segments)
 
 
 def point_has_coordinates_in_range(point: Point,
@@ -386,7 +386,7 @@ def multisegment_has_coordinates_types(multisegment: Multisegment,
     return all(segment_has_coordinates_types(segment,
                                              x_type=x_type,
                                              y_type=y_type)
-               for segment in multisegment)
+               for segment in multisegment.segments)
 
 
 def point_has_coordinates_types(point: Point,
@@ -487,8 +487,7 @@ def is_multipolygon(object_: Any) -> bool:
     return isinstance(object_, list) and all(map(is_polygon, object_))
 
 
-def is_multisegment(object_: Any) -> bool:
-    return isinstance(object_, list) and all(map(is_segment, object_))
+is_multisegment = Multisegment.__instancecheck__
 
 
 def is_multicontour(object_: Any) -> bool:
@@ -537,11 +536,11 @@ def contour_to_star_multisegment(contour: Contour) -> Sequence[Segment]:
 def mix_segments_do_not_cross_or_overlap(mix: Mix) -> bool:
     _, multisegment, multipolygon = mix
     return segments_do_not_cross_or_overlap(
-            multisegment
-            + list(flatten(chain(contour_edges_constructor(border),
-                                 flatten(contour_edges_constructor(hole)
-                                         for hole in holes))
-                           for border, holes in multipolygon)))
+            list(chain(multisegment.segments,
+                       flatten(chain(contour_edges_constructor(border),
+                                     flatten(contour_edges_constructor(hole)
+                                             for hole in holes))
+                               for border, holes in multipolygon))))
 
 
 def contours_do_not_cross_or_overlap(contours: Sequence[Contour]) -> bool:
