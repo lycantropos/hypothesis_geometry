@@ -5,13 +5,13 @@ from typing import (Iterable,
                     Sequence,
                     Tuple)
 
-from robust.angular import (Orientation,
-                            orientation)
-from robust.hints import Expansion
-from robust.utils import (scale_expansion,
-                          sum_expansions,
-                          two_product,
-                          two_two_diff)
+from ground.base import (Orientation,
+                         get_context)
+from ground.core.hints import Expansion
+from ground.core.shewchuk import (scale_expansion,
+                                  sum_expansions,
+                                  two_mul,
+                                  two_two_sub)
 
 from hypothesis_geometry.hints import (Contour,
                                        Coordinate,
@@ -30,7 +30,13 @@ def pairwise(iterable: Iterable[Domain]) -> Iterable[Tuple[Domain, Domain]]:
 
 
 Orientation = Orientation
-orientation = orientation
+
+
+def orientation(first, vertex, second):
+    context = get_context()
+    point_cls = context.point_cls
+    return context.angle_orientation(point_cls(*vertex), point_cls(*first),
+                                     point_cls(*second))
 
 
 def to_orientations(contour: Contour) -> Iterator[Orientation]:
@@ -71,9 +77,9 @@ def _to_endpoints_cross_product_z(start_x: Coordinate,
                                   start_y: Coordinate,
                                   end_x: Coordinate,
                                   end_y: Coordinate) -> Expansion:
-    minuend, minuend_tail = two_product(start_x, end_y)
-    subtrahend, subtrahend_tail = two_product(start_y, end_x)
-    return (two_two_diff(minuend, minuend_tail, subtrahend, subtrahend_tail)
+    minuend, minuend_tail = two_mul(start_x, end_y)
+    subtrahend, subtrahend_tail = two_mul(start_y, end_x)
+    return (two_two_sub(minuend, minuend_tail, subtrahend, subtrahend_tail)
             if minuend_tail or subtrahend_tail
             else (minuend - subtrahend,))
 
