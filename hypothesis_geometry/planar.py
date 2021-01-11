@@ -83,6 +83,7 @@ def points(x_coordinates: Strategy[Coordinate],
     >>> points = planar.points(coordinates)
     >>> point = points.example()
     >>> isinstance(point, Point)
+    True
     >>> (isinstance(point.x, coordinates_type)
     ...  and isinstance(point.y, coordinates_type))
     True
@@ -104,6 +105,7 @@ def points(x_coordinates: Strategy[Coordinate],
     >>> points = planar.points(x_coordinates, y_coordinates)
     >>> point = points.example()
     >>> isinstance(point, Point)
+    True
     >>> (isinstance(point.x, coordinates_type)
     ...  and isinstance(point.y, coordinates_type))
     True
