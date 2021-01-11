@@ -1,45 +1,43 @@
-from typing import List
+from typing import Sequence
 
 from bentley_ottmann.planar import segments_cross_or_overlap
 from ground.base import get_context
-from ground.hints import Point
+from ground.hints import (Point,
+                          Segment)
 
 from hypothesis_geometry.hints import (Contour,
                                        Coordinate,
-                                       Multisegment,
-                                       Segment)
+                                       Multisegment)
 from .utils import (Orientation,
                     to_orientations)
 
 
-def has_horizontal_lowermost_segment(multisegment: Multisegment) -> bool:
-    lowermost_segment = max(multisegment,
+def has_horizontal_lowermost_segment(segments: Sequence[Segment]) -> bool:
+    lowermost_segment = max(segments,
                             key=segment_to_min_y)
     min_y = segment_to_min_y(lowermost_segment)
     return (is_segment_horizontal(lowermost_segment)
             or any(segment_to_min_y(segment) == min_y
                    and is_segment_horizontal(segment)
-                   for segment in multisegment))
+                   for segment in segments))
 
 
-def has_vertical_leftmost_segment(multisegment: Multisegment) -> bool:
-    leftmost_segment = max(multisegment,
+def has_vertical_leftmost_segment(segments: Sequence[Segment]) -> bool:
+    leftmost_segment = max(segments,
                            key=segment_to_max_x)
     max_x = segment_to_max_x(leftmost_segment)
     return (is_segment_vertical(leftmost_segment)
             or any(segment_to_max_x(segment) == max_x
                    and is_segment_vertical(segment)
-                   for segment in multisegment))
+                   for segment in segments))
 
 
 def segment_to_max_x(segment: Segment) -> Coordinate:
-    start, end = segment
-    return min(start.x, end.x)
+    return min(segment.start.x, segment.end.x)
 
 
 def segment_to_min_y(segment: Segment) -> Coordinate:
-    start, end = segment
-    return min(start.y, end.y)
+    return min(segment.start.y, segment.end.y)
 
 
 def is_contour_non_convex(contour: Contour) -> bool:
@@ -57,10 +55,7 @@ def is_contour_strict(contour: Contour) -> bool:
 
 
 def is_multisegment_valid(multisegment: Multisegment) -> bool:
-    context = get_context()
-    segment_cls = context.segment_cls
-    return not segments_cross_or_overlap([segment_cls(start, end)
-                                          for start, end in multisegment])
+    return not segments_cross_or_overlap(multisegment)
 
 
 def is_point_inside_circumcircle(first_vertex: Point,
@@ -73,15 +68,13 @@ def is_point_inside_circumcircle(first_vertex: Point,
 
 
 def is_segment_horizontal(segment: Segment) -> bool:
-    start, end = segment
-    return start.y == end.y
+    return segment.start.y == segment.end.y
 
 
 def is_segment_vertical(segment: Segment) -> bool:
-    start, end = segment
-    return start.x == end.x
+    return segment.start.x == segment.end.x
 
 
-def points_do_not_lie_on_the_same_line(points: List[Point]) -> bool:
+def points_do_not_lie_on_the_same_line(points: Sequence[Point]) -> bool:
     return any(orientation is not Orientation.COLLINEAR
                for orientation in to_orientations(points))

@@ -3,7 +3,8 @@ from typing import (List,
                     Tuple,
                     TypeVar)
 
-from ground.hints import Point
+from ground.hints import (Point,
+                          Segment)
 from hypothesis.strategies import SearchStrategy
 
 Domain = TypeVar('Domain')
@@ -11,7 +12,6 @@ Range = TypeVar('Range')
 Strategy = SearchStrategy
 Coordinate = Real
 Multipoint = List[Point]
-Segment = Tuple[Point, Point]
 Multisegment = List[Segment]
 Contour = List[Point]
 Polyline = List[Point]
