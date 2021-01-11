@@ -475,8 +475,11 @@ def polylines(x_coordinates: Strategy[Coordinate],
     :param min_size: lower bound for polyline size.
     :param max_size: upper bound for polyline size, ``None`` for unbound.
 
+    >>> from ground.base import get_context
     >>> from hypothesis import strategies
     >>> from hypothesis_geometry import planar
+    >>> context = get_context()
+    >>> Point = context.point_cls
 
     For same coordinates' domain:
 
@@ -494,17 +497,15 @@ def polylines(x_coordinates: Strategy[Coordinate],
     True
     >>> min_size <= len(polyline) <= max_size
     True
-    >>> all(isinstance(vertex, tuple) for vertex in polyline)
+    >>> all(isinstance(vertex, Point) for vertex in polyline)
     True
-    >>> all(len(vertex) == 2 for vertex in polyline)
+    >>> all(isinstance(vertex.x, coordinates_type)
+    ...     and isinstance(vertex.y, coordinates_type)
+    ...     for vertex in polyline)
     True
-    >>> all(isinstance(coordinate, coordinates_type)
-    ...     for vertex in polyline
-    ...     for coordinate in vertex)
-    True
-    >>> all(min_coordinate <= coordinate <= max_coordinate
-    ...     for vertex in polyline
-    ...     for coordinate in vertex)
+    >>> all(min_coordinate <= vertex.x <= max_coordinate
+    ...     and min_coordinate <= vertex.y <= max_coordinate
+    ...     for vertex in polyline)
     True
 
     For different coordinates' domains:
@@ -527,17 +528,15 @@ def polylines(x_coordinates: Strategy[Coordinate],
     True
     >>> min_size <= len(polyline) <= max_size
     True
-    >>> all(isinstance(vertex, tuple) for vertex in polyline)
+    >>> all(isinstance(vertex, Point) for vertex in polyline)
     True
-    >>> all(len(vertex) == 2 for vertex in polyline)
+    >>> all(isinstance(vertex.x, coordinates_type)
+    ...     and isinstance(vertex.y, coordinates_type)
+    ...     for vertex in polyline)
     True
-    >>> all(isinstance(coordinate, coordinates_type)
-    ...     for vertex in polyline
-    ...     for coordinate in vertex)
-    True
-    >>> all(min_x_coordinate <= vertex_x <= max_x_coordinate
-    ...     and min_y_coordinate <= vertex_y <= max_y_coordinate
-    ...     for vertex_x, vertex_y in polyline)
+    >>> all(min_x_coordinate <= vertex.x <= max_x_coordinate
+    ...     and min_y_coordinate <= vertex.y <= max_y_coordinate
+    ...     for vertex in polyline)
     True
     """
     _validate_sizes(min_size, max_size, MIN_POLYLINE_SIZE)
