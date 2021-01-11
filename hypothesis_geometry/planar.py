@@ -213,8 +213,8 @@ def _unique_points_sequences(x_coordinates: Strategy[Coordinate],
                              y_coordinates: Optional[Strategy[Coordinate]],
                              *,
                              min_size: int,
-                             max_size: Optional[int]) -> Strategy[
-    Sequence[Point]]:
+                             max_size: Optional[int]
+                             ) -> Strategy[Sequence[Point]]:
     return strategies.lists(points(x_coordinates, y_coordinates),
                             unique=True,
                             min_size=min_size,
