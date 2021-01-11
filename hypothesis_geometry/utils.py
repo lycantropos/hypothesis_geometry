@@ -4,7 +4,8 @@ from functools import partial
 from itertools import (cycle,
                        groupby)
 from math import atan2
-from operator import itemgetter
+from operator import (attrgetter,
+                      itemgetter)
 from random import Random
 from typing import (Callable,
                     Iterable,
@@ -116,7 +117,8 @@ def _to_segment_angle(start: Point, end: Point) -> Coordinate:
 def to_multicontour(vertices: List[Point],
                     sizes: List[int],
                     chooser: Chooser) -> Multicontour:
-    sorting_key_chooser = partial(chooser, [None, itemgetter(1, 0)])
+    sorting_key_chooser = partial(chooser, [None, attrgetter('y', 'x'),
+                                            attrgetter('x', 'y')])
     current_sorting_key = sorting_key_chooser()
     vertices = sorted(vertices,
                       key=current_sorting_key)
@@ -149,7 +151,8 @@ def to_polygon(points: Sequence[Point],
     triangulation = triangular.delaunay(points)
     boundary_edges = triangular.to_boundary_edges(triangulation)
     boundary_vertices = {edge.start for edge in boundary_edges}
-    sorting_key_chooser = partial(chooser, [None, itemgetter(1, 0)])
+    sorting_key_chooser = partial(chooser, [None, attrgetter('y', 'x'),
+                                            attrgetter('x', 'y')])
     current_sorting_key = sorting_key_chooser()
     inner_points = sorted(set(points) - boundary_vertices,
                           key=current_sorting_key)
@@ -182,20 +185,12 @@ def to_polygon(points: Sequence[Point],
                                              ) -> Callable[[Segment], bool]:
         context = get_context()
         return (
-            (lambda segment, to_nearest_segment=(segmental.Tree([
-                context.segment_cls(
-                        context.point_cls(
-                                *start),
-                        context.point_cls(
-                                *end))
-                for
-                start, end
-                in
-                multisegment])
+            (lambda segment, to_nearest_segment=(segmental.Tree(
+                    [context.segment_cls(start, end)
+                     for start, end in multisegment])
                                                  .nearest_segment)
              : segments_cross_or_overlap(to_nearest_segment(
-                    context.segment_cls(context.point_cls(*segment[0]),
-                                        context.point_cls(*segment[1]))),
+                    context.segment_cls(segment[0], segment[1])),
                     segment))
             if multisegment
             else (lambda segment: False))
@@ -214,8 +209,7 @@ def to_polygon(points: Sequence[Point],
         context = get_context()
         point_cls = context.point_cls
         relation = context.segments_relation(left.start, left.end,
-                                             point_cls(*right_start),
-                                             point_cls(*right_end))
+                                             right_start, right_end)
         return (relation is not Relation.DISJOINT
                 or relation is not Relation.TOUCH)
 
