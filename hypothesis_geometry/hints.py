@@ -4,15 +4,14 @@ from typing import (List,
                     TypeVar)
 
 from ground.hints import (Multipoint,
-                          Point,
-                          Segment)
+                          Multisegment,
+                          Point)
 from hypothesis.strategies import SearchStrategy
 
 Domain = TypeVar('Domain')
 Range = TypeVar('Range')
 Strategy = SearchStrategy
 Coordinate = Real
-Multisegment = List[Segment]
 Contour = List[Point]
 Polyline = List[Point]
 Multicontour = List[Contour]
