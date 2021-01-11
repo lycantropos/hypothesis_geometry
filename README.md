@@ -51,7 +51,8 @@ With setup
 >>> from hypothesis import strategies
 >>> from hypothesis_geometry import planar
 >>> context = get_context()
->>> Point, Segment = context.point_cls, context.segment_cls
+>>> Multipoint, Point, Segment = (context.multipoint_cls, context.point_cls,
+...                               context.segment_cls)
 >>> min_coordinate, max_coordinate = -100, 100
 >>> coordinates_type = int
 >>> coordinates = strategies.integers(min_coordinate, max_coordinate)
@@ -74,6 +75,28 @@ True
 True
 >>> (min_coordinate <= point.x <= max_coordinate
 ...  and min_coordinate <= point.y <= max_coordinate)
+True
+
+```
+
+### Multipoints
+```python
+>>> min_size, max_size = 5, 10
+>>> multipoints = planar.multipoints(coordinates,
+...                                  min_size=min_size,
+...                                  max_size=max_size)
+>>> multipoint = multipoints.example()
+>>> isinstance(multipoint, Multipoint)
+True
+>>> min_size <= len(multipoint.points) <= max_size
+True
+>>> all(isinstance(point.x, coordinates_type)
+...     and isinstance(point.y, coordinates_type)
+...     for point in multipoint.points)
+True
+>>> all(min_coordinate <= point.x <= max_coordinate
+...     and min_coordinate <= point.y <= max_coordinate
+...     for point in multipoint.points)
 True
 
 ```
@@ -346,19 +369,19 @@ True
 >>> len(mix) == 3
 True
 >>> multipoint, multisegment, multipolygon = mix
->>> isinstance(multipoint, list)
+>>> isinstance(multipoint, Multipoint)
 True
->>> min_multipoint_size <= len(multipoint) <= max_multipoint_size
+>>> min_multipoint_size <= len(multipoint.points) <= max_multipoint_size
 True
->>> all(isinstance(point, Point) for point in multipoint)
+>>> all(isinstance(point, Point) for point in multipoint.points)
 True
 >>> all(isinstance(point.x, coordinates_type)
 ...     and isinstance(point.y, coordinates_type)
-...     for point in multipoint)
+...     for point in multipoint.points)
 True
 >>> all(min_coordinate <= point.x <= max_coordinate
 ...     and min_coordinate <= point.y <= max_coordinate
-...     for point in multipoint)
+...     for point in multipoint.points)
 True
 >>> isinstance(multisegment, list)
 True
