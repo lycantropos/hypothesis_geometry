@@ -33,13 +33,13 @@ def has_vertical_leftmost_segment(multisegment: Multisegment) -> bool:
 
 
 def segment_to_max_x(segment: Segment) -> Coordinate:
-    (start_x, _), (end_x, _) = segment
-    return min(start_x, end_x)
+    start, end = segment
+    return min(start.x, end.x)
 
 
 def segment_to_min_y(segment: Segment) -> Coordinate:
-    (_, start_y), (_, end_y) = segment
-    return min(start_y, end_y)
+    start, end = segment
+    return min(start.y, end.y)
 
 
 def is_contour_non_convex(contour: Contour) -> bool:
@@ -58,9 +58,8 @@ def is_contour_strict(contour: Contour) -> bool:
 
 def is_multisegment_valid(multisegment: Multisegment) -> bool:
     context = get_context()
-    point_cls, segment_cls = context.point_cls, context.segment_cls
-    return not segments_cross_or_overlap([segment_cls(point_cls(*start),
-                                                      point_cls(*end))
+    segment_cls = context.segment_cls
+    return not segments_cross_or_overlap([segment_cls(start, end)
                                           for start, end in multisegment])
 
 
@@ -74,13 +73,13 @@ def is_point_inside_circumcircle(first_vertex: Point,
 
 
 def is_segment_horizontal(segment: Segment) -> bool:
-    (_, start_y), (_, end_y) = segment
-    return start_y == end_y
+    start, end = segment
+    return start.y == end.y
 
 
 def is_segment_vertical(segment: Segment) -> bool:
-    (start_x, _), (end_x, _) = segment
-    return start_x == end_x
+    start, end = segment
+    return start.x == end.x
 
 
 def points_do_not_lie_on_the_same_line(points: List[Point]) -> bool:

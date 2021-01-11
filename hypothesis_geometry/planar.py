@@ -408,13 +408,17 @@ def multisegments(x_coordinates: Strategy[Coordinate],
                 if max_size
                 else strategies.builds(list))
 
+    point_cls = get_context().point_cls
+
     def to_vertical_multisegment(x: Coordinate,
                                  ys: List[Coordinate]) -> Multisegment:
-        return list(pairwise(zip(repeat(x), sorted(ys))))
+        return [(point_cls(x, y), point_cls(x, next_y))
+                for y, next_y in pairwise(sorted(ys))]
 
     def to_horizontal_multisegment(xs: List[Coordinate],
                                    y: Coordinate) -> Multisegment:
-        return list(pairwise(zip(sorted(xs), repeat(y))))
+        return [(point_cls(x, y), point_cls(next_x, y))
+                for x, next_x in pairwise(sorted(xs))]
 
     next_min_size, next_max_size = (min_size + 1, (max_size
                                                    if max_size is None
