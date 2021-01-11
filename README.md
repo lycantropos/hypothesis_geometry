@@ -51,7 +51,7 @@ With setup
 >>> from hypothesis import strategies
 >>> from hypothesis_geometry import planar
 >>> context = get_context()
->>> Point = context.point_cls
+>>> Point, Segment = context.point_cls, context.segment_cls
 >>> min_coordinate, max_coordinate = -100, 100
 >>> coordinates_type = int
 >>> coordinates = strategies.integers(min_coordinate, max_coordinate)
@@ -82,19 +82,17 @@ True
 ```python
 >>> segments = planar.segments(coordinates)
 >>> segment = segments.example()
->>> isinstance(segment, tuple)
+>>> isinstance(segment, Segment)
 True
->>> len(segment) == 2
+>>> (isinstance(segment.start.x, coordinates_type)
+...  and isinstance(segment.start.y, coordinates_type)
+...  and isinstance(segment.end.x, coordinates_type)
+...  and isinstance(segment.end.y, coordinates_type))
 True
->>> all(isinstance(endpoint, Point) for endpoint in segment)
-True
->>> all(isinstance(endpoint.x, coordinates_type) 
-...     and isinstance(endpoint.y, coordinates_type) 
-...     for endpoint in segment)
-True
->>> all(min_coordinate <= endpoint.x <= max_coordinate 
-...     and min_coordinate <= endpoint.y <= max_coordinate 
-...     for endpoint in segment)
+>>> (min_coordinate <= segment.start.x <= max_coordinate 
+...  and min_coordinate <= segment.start.y <= max_coordinate
+...  and min_coordinate <= segment.end.x <= max_coordinate 
+...  and min_coordinate <= segment.end.y <= max_coordinate)
 True
 
 ```
@@ -110,24 +108,19 @@ True
 True
 >>> min_size <= len(multisegment) <= max_size
 True
->>> all(isinstance(segment, tuple)
+>>> all(isinstance(segment, Segment) for segment in multisegment)
+True
+>>> all(isinstance(segment.start.x, coordinates_type)
+...     and isinstance(segment.start.y, coordinates_type)
+...     and isinstance(segment.end.x, coordinates_type)
+...     and isinstance(segment.end.y, coordinates_type)
 ...     for segment in multisegment)
 True
->>> all(isinstance(endpoint, Point)
-...     for segment in multisegment
-...     for endpoint in segment)
-True
->>> all(len(segment) == 2 for segment in multisegment)
-True
->>> all(isinstance(endpoint.x, coordinates_type)
-...     and isinstance(endpoint.y, coordinates_type)
-...     for segment in multisegment
-...     for endpoint in segment)
-True
->>> all(min_coordinate <= endpoint.x <= max_coordinate
-...     and min_coordinate <= endpoint.y <= max_coordinate
-...     for segment in multisegment
-...     for endpoint in segment)
+>>> all(min_coordinate <= segment.start.x <= max_coordinate
+...     and min_coordinate <= segment.start.y <= max_coordinate
+...     and min_coordinate <= segment.end.x <= max_coordinate
+...     and min_coordinate <= segment.end.y <= max_coordinate
+...     for segment in multisegment)
 True
 
 ```
@@ -371,23 +364,19 @@ True
 True
 >>> min_multisegment_size <= len(multisegment) <= max_multisegment_size
 True
->>> all(isinstance(segment, tuple) for segment in multisegment)
+>>> all(isinstance(segment, Segment) for segment in multisegment)
 True
->>> all(isinstance(endpoint, Point)
-...     for segment in multisegment
-...     for endpoint in segment)
+>>> all(isinstance(segment.start.x, coordinates_type)
+...     and isinstance(segment.start.y, coordinates_type)
+...     and isinstance(segment.end.x, coordinates_type)
+...     and isinstance(segment.end.y, coordinates_type)
+...     for segment in multisegment)
 True
->>> all(len(segment) == 2 for segment in multisegment)
-True
->>> all(isinstance(endpoint.x, coordinates_type)
-...     and isinstance(endpoint.y, coordinates_type)
-...     for segment in multisegment
-...     for endpoint in segment)
-True
->>> all(min_coordinate <= endpoint.x <= max_coordinate
-...     and min_coordinate <= endpoint.y <= max_coordinate
-...     for segment in multisegment
-...     for endpoint in segment)
+>>> all(min_coordinate <= segment.start.x <= max_coordinate
+...     and min_coordinate <= segment.start.y <= max_coordinate
+...     and min_coordinate <= segment.end.x <= max_coordinate
+...     and min_coordinate <= segment.end.y <= max_coordinate
+...     for segment in multisegment)
 True
 >>> isinstance(multipolygon, list)
 True
