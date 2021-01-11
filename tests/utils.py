@@ -527,9 +527,9 @@ def is_star_contour(contour: Contour) -> bool:
             + contour_edges_constructor(contour))
 
 
-def contour_to_star_multisegment(contour: Contour) -> Multisegment:
+def contour_to_star_multisegment(contour: Contour) -> Sequence[Segment]:
     centroid = contour_to_centroid(contour)
-    return [(centroid, vertex)
+    return [Segment(centroid, vertex)
             for vertex in contour
             if vertex != centroid]
 
