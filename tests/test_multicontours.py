@@ -18,7 +18,8 @@ from tests.utils import (CoordinatesLimitsType,
                          is_multicontour,
                          is_multicontour_strict,
                          multicontour_has_coordinates_in_range,
-                         multicontour_has_coordinates_types)
+                         multicontour_has_coordinates_types,
+                         multicontour_has_valid_sizes)
 
 
 @given(strategies.coordinates_strategies,
@@ -69,10 +70,9 @@ def test_properties(data: DataObject,
     assert has_valid_size(result,
                           min_size=min_size,
                           max_size=max_size)
-    assert all(has_valid_size(contour.vertices,
-                              min_size=min_contour_size,
-                              max_size=max_contour_size)
-               for contour in result)
+    assert multicontour_has_valid_sizes(result,
+                                        min_size=min_contour_size,
+                                        max_size=max_contour_size)
     assert multicontour_has_coordinates_types(result,
                                               x_type=x_type,
                                               y_type=y_type)
@@ -113,10 +113,9 @@ def test_same_coordinates(data: DataObject,
     assert has_valid_size(result,
                           min_size=min_size,
                           max_size=max_size)
-    assert all(has_valid_size(contour.vertices,
-                              min_size=min_contour_size,
-                              max_size=max_contour_size)
-               for contour in result)
+    assert multicontour_has_valid_sizes(result,
+                                        min_size=min_contour_size,
+                                        max_size=max_contour_size)
     assert multicontour_has_coordinates_types(result,
                                               x_type=type_,
                                               y_type=type_)
