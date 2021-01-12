@@ -10,13 +10,7 @@ from hypothesis import strategies
 
 from hypothesis_geometry.core.utils import sort_pair
 from hypothesis_geometry.hints import Strategy
-from hypothesis_geometry.planar import (EMPTY_MULTICONTOUR_SIZE,
-                                        EMPTY_MULTIPOINT_SIZE,
-                                        EMPTY_MULTIPOLYGON_SIZE,
-                                        EMPTY_MULTISEGMENT_SIZE,
-                                        MIN_CONCAVE_CONTOUR_SIZE,
-                                        MIN_POLYLINE_SIZE,
-                                        TRIANGULAR_CONTOUR_SIZE)
+from hypothesis_geometry.planar import Size
 from tests.utils import (Limits,
                          identity,
                          to_pairs)
@@ -67,31 +61,31 @@ def to_invalid_sizes_pairs(min_valid_size: int
                .map(tuple)))
 
 
-concave_contours_sizes_pairs = to_sizes_pairs(MIN_CONCAVE_CONTOUR_SIZE)
-convex_contours_sizes_pairs = to_sizes_pairs(TRIANGULAR_CONTOUR_SIZE)
-multicontours_sizes_pairs = to_sizes_pairs(EMPTY_MULTICONTOUR_SIZE, 5)
-multipoints_sizes_pairs = to_sizes_pairs(EMPTY_MULTIPOINT_SIZE)
-multipolygons_sizes_pairs = to_sizes_pairs(EMPTY_MULTIPOLYGON_SIZE, 5)
-multisegments_sizes_pairs = to_sizes_pairs(EMPTY_MULTISEGMENT_SIZE)
-polylines_sizes_pairs = to_sizes_pairs(MIN_POLYLINE_SIZE)
+concave_contours_sizes_pairs = to_sizes_pairs(Size.MIN_CONCAVE_CONTOUR)
+convex_contours_sizes_pairs = to_sizes_pairs(Size.TRIANGULAR_CONTOUR)
+multicontours_sizes_pairs = to_sizes_pairs(Size.EMPTY_SEQUENCE, 5)
+multipoints_sizes_pairs = to_sizes_pairs(Size.EMPTY_SEQUENCE)
+multipolygons_sizes_pairs = to_sizes_pairs(Size.EMPTY_SEQUENCE, 5)
+multisegments_sizes_pairs = to_sizes_pairs(Size.EMPTY_SEQUENCE)
+polylines_sizes_pairs = to_sizes_pairs(Size.MIN_POLYLINE)
 non_valid_concave_contours_sizes_pairs = to_non_valid_sizes_pairs(
-        MIN_CONCAVE_CONTOUR_SIZE)
+        Size.MIN_CONCAVE_CONTOUR)
 non_valid_convex_contours_sizes_pairs = to_non_valid_sizes_pairs(
-        TRIANGULAR_CONTOUR_SIZE)
-non_valid_polylines_sizes_pairs = to_non_valid_sizes_pairs(MIN_POLYLINE_SIZE)
+        Size.TRIANGULAR_CONTOUR)
+non_valid_polylines_sizes_pairs = to_non_valid_sizes_pairs(Size.MIN_POLYLINE)
 invalid_concave_contours_sizes_pairs = to_invalid_sizes_pairs(
-        MIN_CONCAVE_CONTOUR_SIZE)
+        Size.MIN_CONCAVE_CONTOUR)
 invalid_convex_contours_sizes_pairs = to_invalid_sizes_pairs(
-        TRIANGULAR_CONTOUR_SIZE)
+        Size.TRIANGULAR_CONTOUR)
 invalid_multicontours_sizes_pairs = to_invalid_sizes_pairs(
-        EMPTY_MULTICONTOUR_SIZE)
+        Size.EMPTY_SEQUENCE)
 invalid_multipoints_sizes_pairs = to_invalid_sizes_pairs(
-        EMPTY_MULTIPOINT_SIZE)
+        Size.EMPTY_SEQUENCE)
 invalid_multipolygons_sizes_pairs = to_invalid_sizes_pairs(
-        EMPTY_MULTIPOLYGON_SIZE)
+        Size.EMPTY_SEQUENCE)
 invalid_multisegments_sizes_pairs = to_invalid_sizes_pairs(
-        EMPTY_MULTISEGMENT_SIZE)
-invalid_polylines_sizes_pairs = to_invalid_sizes_pairs(MIN_POLYLINE_SIZE)
+        Size.EMPTY_SEQUENCE)
+invalid_polylines_sizes_pairs = to_invalid_sizes_pairs(Size.MIN_POLYLINE)
 
 
 def to_coordinates_strategies_with_limits_and_types(

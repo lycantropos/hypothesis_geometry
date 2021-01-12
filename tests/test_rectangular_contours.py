@@ -5,7 +5,7 @@ from hypothesis import given
 from hypothesis.strategies import DataObject
 
 from hypothesis_geometry.hints import Strategy
-from hypothesis_geometry.planar import (RECTANGULAR_CONTOUR_SIZE,
+from hypothesis_geometry.planar import (Size,
                                         rectangular_contours)
 from tests import strategies
 from tests.utils import (CoordinatesLimitsType,
@@ -45,8 +45,8 @@ def test_properties(data: DataObject,
 
     assert is_contour(result)
     assert has_valid_size(result.vertices,
-                          min_size=RECTANGULAR_CONTOUR_SIZE,
-                          max_size=RECTANGULAR_CONTOUR_SIZE)
+                          min_size=Size.RECTANGULAR_CONTOUR_SIZE,
+                          max_size=Size.RECTANGULAR_CONTOUR_SIZE)
     assert contour_has_coordinates_types(result,
                                          x_type=x_type,
                                          y_type=y_type)
@@ -75,8 +75,8 @@ def test_same_coordinates(data: DataObject,
 
     assert is_contour(result)
     assert has_valid_size(result.vertices,
-                          min_size=RECTANGULAR_CONTOUR_SIZE,
-                          max_size=RECTANGULAR_CONTOUR_SIZE)
+                          min_size=Size.RECTANGULAR_CONTOUR_SIZE,
+                          max_size=Size.RECTANGULAR_CONTOUR_SIZE)
     assert contour_has_coordinates_types(result,
                                          x_type=type_,
                                          y_type=type_)
