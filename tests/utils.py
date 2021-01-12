@@ -1,5 +1,4 @@
-from itertools import (chain,
-                       groupby)
+from itertools import chain
 from typing import (Any,
                     Callable,
                     Hashable,
@@ -28,7 +27,6 @@ from hypothesis_geometry.hints import (Mix,
                                        Multicontour,
                                        Multipolygon,
                                        Strategy)
-from hypothesis_geometry.planar import Size
 
 has_valid_size = has_valid_size
 Domain = TypeVar('Domain')
@@ -427,11 +425,6 @@ def segment_has_coordinates_types(segment: Segment,
                                             y_type=y_type))
 
 
-def has_no_consecutive_repetitions(iterable: Iterable[Domain]) -> bool:
-    return any(capacity(group) == 1
-               for _, group in groupby(iterable))
-
-
 def is_contour_counterclockwise(contour: Contour) -> bool:
     vertices = contour.vertices
     index_min = min(range(len(vertices)),
@@ -441,10 +434,6 @@ def is_contour_counterclockwise(contour: Contour) -> bool:
                                       vertices[(index_min + 1)
                                                % len(vertices)])
             is Orientation.COUNTERCLOCKWISE)
-
-
-def capacity(iterable: Iterable[Domain]) -> int:
-    return sum(1 for _ in iterable)
 
 
 def all_unique(iterable: Iterable[Hashable]) -> bool:
@@ -482,14 +471,6 @@ def is_multipolygon(object_: Any) -> bool:
 is_multisegment = Multisegment.__instancecheck__
 is_point = Point.__instancecheck__
 is_polygon = Polygon.__instancecheck__
-
-
-def is_polyline(object_: Any) -> bool:
-    return (isinstance(object_, list)
-            and len(object_) >= Size.MIN_POLYLINE
-            and all(map(is_point, object_)))
-
-
 is_segment = Segment.__instancecheck__
 
 

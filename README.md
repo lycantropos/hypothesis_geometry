@@ -150,30 +150,6 @@ True
 
 ```
 
-### Polylines
-```python
->>> min_size, max_size = 5, 10
->>> polylines = planar.polylines(coordinates, 
-...                              min_size=min_size,
-...                              max_size=max_size)
->>> polyline = polylines.example()
->>> isinstance(polyline, list)
-True
->>> min_size <= len(polyline) <= max_size
-True
->>> all(isinstance(vertex, Point) for vertex in polyline)
-True
->>> all(isinstance(vertex.x, coordinates_type)
-...     and isinstance(vertex.y, coordinates_type)
-...     for vertex in polyline)
-True
->>> all(min_coordinate <= vertex.x <= max_coordinate 
-...     and min_coordinate <= vertex.y <= max_coordinate 
-...     for vertex in polyline)
-True
-
-```
-
 ### Contours
 ```python
 >>> min_size, max_size = 5, 10
