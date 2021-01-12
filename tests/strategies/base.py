@@ -8,6 +8,7 @@ from typing import (Optional,
 from ground.hints import Coordinate
 from hypothesis import strategies
 
+from hypothesis_geometry.core.utils import sort_pair
 from hypothesis_geometry.hints import Strategy
 from hypothesis_geometry.planar import (EMPTY_MULTICONTOUR_SIZE,
                                         EMPTY_MULTIPOINT_SIZE,
@@ -16,7 +17,6 @@ from hypothesis_geometry.planar import (EMPTY_MULTICONTOUR_SIZE,
                                         MIN_CONCAVE_CONTOUR_SIZE,
                                         MIN_POLYLINE_SIZE,
                                         TRIANGULAR_CONTOUR_SIZE)
-from hypothesis_geometry.utils import sort_pair
 from tests.utils import (Limits,
                          identity,
                          to_pairs)

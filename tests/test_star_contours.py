@@ -6,19 +6,19 @@ from hypothesis import given
 from hypothesis.errors import HypothesisWarning
 from hypothesis.strategies import DataObject
 
-from hypothesis_geometry.core.contracts import is_contour_strict
 from hypothesis_geometry.hints import Strategy
 from hypothesis_geometry.planar import star_contours
 from tests import strategies
 from tests.utils import (CoordinatesLimitsType,
                          SizesPair,
+                         are_vertices_strict,
+                         contour_has_coordinates_in_range,
+                         contour_has_coordinates_types,
                          has_valid_size,
                          is_contour,
-                         is_counterclockwise_contour,
-                         is_non_self_intersecting_contour,
-                         is_star_contour,
-                         point_has_coordinates_in_range,
-                         point_has_coordinates_types)
+                         is_contour_counterclockwise,
+                         is_contour_non_self_intersecting,
+                         is_star_contour)
 
 
 @given(strategies.coordinates_strategies,
@@ -56,22 +56,20 @@ def test_properties(data: DataObject,
     result = data.draw(strategy)
 
     assert is_contour(result)
-    assert has_valid_size(result,
+    assert has_valid_size(result.vertices,
                           min_size=min_size,
                           max_size=max_size)
-    assert all(point_has_coordinates_types(vertex,
-                                           x_type=x_type,
-                                           y_type=y_type)
-               for vertex in result)
-    assert all(point_has_coordinates_in_range(vertex,
-                                              min_x_value=min_x_value,
-                                              max_x_value=max_x_value,
-                                              min_y_value=min_y_value,
-                                              max_y_value=max_y_value)
-               for vertex in result)
-    assert is_contour_strict(result)
-    assert is_non_self_intersecting_contour(result)
-    assert is_counterclockwise_contour(result)
+    assert contour_has_coordinates_types(result,
+                                         x_type=x_type,
+                                         y_type=y_type)
+    assert contour_has_coordinates_in_range(result,
+                                            min_x_value=min_x_value,
+                                            max_x_value=max_x_value,
+                                            min_y_value=min_y_value,
+                                            max_y_value=max_y_value)
+    assert are_vertices_strict(result.vertices)
+    assert is_contour_non_self_intersecting(result)
+    assert is_contour_counterclockwise(result)
     assert is_star_contour(result)
 
 
@@ -91,22 +89,20 @@ def test_same_coordinates(data: DataObject,
     result = data.draw(strategy)
 
     assert is_contour(result)
-    assert has_valid_size(result,
+    assert has_valid_size(result.vertices,
                           min_size=min_size,
                           max_size=max_size)
-    assert all(point_has_coordinates_types(vertex,
-                                           x_type=type_,
-                                           y_type=type_)
-               for vertex in result)
-    assert all(point_has_coordinates_in_range(vertex,
-                                              min_x_value=min_value,
-                                              max_x_value=max_value,
-                                              min_y_value=min_value,
-                                              max_y_value=max_value)
-               for vertex in result)
-    assert is_contour_strict(result)
-    assert is_non_self_intersecting_contour(result)
-    assert is_counterclockwise_contour(result)
+    assert contour_has_coordinates_types(result,
+                                         x_type=type_,
+                                         y_type=type_)
+    assert contour_has_coordinates_in_range(result,
+                                            min_x_value=min_value,
+                                            max_x_value=max_value,
+                                            min_y_value=min_value,
+                                            max_y_value=max_value)
+    assert are_vertices_strict(result.vertices)
+    assert is_contour_non_self_intersecting(result)
+    assert is_contour_counterclockwise(result)
     assert is_star_contour(result)
 
 

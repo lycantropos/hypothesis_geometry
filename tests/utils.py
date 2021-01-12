@@ -12,25 +12,23 @@ from typing import (Any,
 
 from bentley_ottmann.planar import (edges_intersect,
                                     segments_cross_or_overlap)
-from ground.base import get_context
+from ground.base import (Orientation,
+                         get_context)
 from ground.hints import Coordinate
 from hypothesis import strategies
 
-from hypothesis_geometry.core.contracts import is_contour_strict
-from hypothesis_geometry.core.utils import (Orientation,
-                                            contour_to_centroid,
-                                            flatten,
-                                            orientation)
-from hypothesis_geometry.hints import (Contour,
-                                       Mix,
+from hypothesis_geometry.core.contracts import (
+    to_non_convex_vertices_detector,
+    to_strict_vertices_detector)
+from hypothesis_geometry.core.factories import to_contour_edges_constructor
+from hypothesis_geometry.core.utils import flatten
+from hypothesis_geometry.hints import (Mix,
                                        Multicontour,
                                        Multipolygon,
                                        Polygon,
                                        Strategy)
 from hypothesis_geometry.planar import (MIN_POLYLINE_SIZE,
-                                        TRIANGULAR_CONTOUR_SIZE,
                                         _has_valid_size)
-from hypothesis_geometry.utils import to_contour_edges_constructor
 
 has_valid_size = _has_valid_size
 Domain = TypeVar('Domain')
@@ -41,6 +39,7 @@ CoordinatesLimitsType = Tuple[Tuple[Strategy[Coordinate], Limits],
 SizesPair = Tuple[int, Optional[int]]
 context = get_context()
 Box = context.box_cls
+Contour = context.contour_cls
 Multipoint = context.multipoint_cls
 Multisegment = context.multisegment_cls
 Point = context.point_cls
@@ -141,13 +140,13 @@ def polygon_has_valid_sizes(polygon: Polygon,
                             min_hole_size: int,
                             max_hole_size: Optional[int]) -> bool:
     border, holes = polygon
-    return (has_valid_size(border,
+    return (has_valid_size(border.vertices,
                            min_size=min_size,
                            max_size=max_size)
             and has_valid_size(holes,
                                min_size=min_holes_size,
                                max_size=max_holes_size)
-            and all(has_valid_size(hole,
+            and all(has_valid_size(hole.vertices,
                                    min_size=min_hole_size,
                                    max_size=max_hole_size)
                     for hole in holes))
@@ -165,7 +164,7 @@ def contour_has_coordinates_in_range(contour: Contour,
                                               max_x_value=max_x_value,
                                               min_y_value=min_y_value,
                                               max_y_value=max_y_value)
-               for vertex in contour)
+               for vertex in contour.vertices)
 
 
 def mix_has_coordinates_in_range(mix: Mix,
@@ -330,7 +329,7 @@ def contour_has_coordinates_types(contour: Contour,
     return all(point_has_coordinates_types(vertex,
                                            x_type=x_type,
                                            y_type=y_type)
-               for vertex in contour)
+               for vertex in contour.vertices)
 
 
 def mix_has_coordinates_types(mix: Mix,
@@ -426,28 +425,15 @@ def has_no_consecutive_repetitions(iterable: Iterable[Domain]) -> bool:
                for _, group in groupby(iterable))
 
 
-def is_counterclockwise_contour(contour: Contour) -> bool:
-    index_min = to_index_min(contour)
-    return (orientation(contour[index_min - 1], contour[index_min],
-                        contour[(index_min + 1) % len(contour)])
-            is Orientation.CLOCKWISE)
-
-
-_sentinel = object()
-
-
-def to_index_min(values: Iterable[Domain],
-                 *,
-                 key: Optional[Key] = None,
-                 default: Any = _sentinel) -> int:
-    kwargs = {}
-    if key is not None:
-        kwargs['key'] = lambda value_with_index: key(value_with_index[0])
-    if default is not _sentinel:
-        kwargs['default'] = default
-    return min(((value, index)
-                for index, value in enumerate(values)),
-               **kwargs)[1]
+def is_contour_counterclockwise(contour: Contour) -> bool:
+    vertices = contour.vertices
+    index_min = min(range(len(vertices)),
+                    key=vertices.__getitem__)
+    return (context.angle_orientation(vertices[index_min - 1],
+                                      vertices[index_min],
+                                      vertices[(index_min + 1)
+                                               % len(vertices)])
+            is Orientation.COUNTERCLOCKWISE)
 
 
 def capacity(iterable: Iterable[Domain]) -> int:
@@ -465,15 +451,7 @@ def all_unique(iterable: Iterable[Hashable]) -> bool:
 
 
 is_box = Box.__instancecheck__
-
-
-def is_contour(object_: Any) -> bool:
-    return (isinstance(object_, list)
-            and len(object_) >= TRIANGULAR_CONTOUR_SIZE
-            and all(map(is_point, object_)))
-
-
-is_multipoint = Multipoint.__instancecheck__
+is_contour = Contour.__instancecheck__
 
 
 def is_mix(object_: Any) -> bool:
@@ -481,6 +459,9 @@ def is_mix(object_: Any) -> bool:
             and is_multipoint(object_[0])
             and is_multisegment(object_[1])
             and is_multipolygon(object_[2]))
+
+
+is_multipoint = Multipoint.__instancecheck__
 
 
 def is_multipolygon(object_: Any) -> bool:
@@ -513,8 +494,8 @@ def is_polyline(object_: Any) -> bool:
 is_segment = Segment.__instancecheck__
 
 
-def is_non_self_intersecting_contour(contour: Contour) -> bool:
-    return not edges_intersect(context.contour_cls(contour))
+def is_contour_non_self_intersecting(contour: Contour) -> bool:
+    return not edges_intersect(contour)
 
 
 contour_edges_constructor = to_contour_edges_constructor(context)
@@ -523,13 +504,13 @@ contour_edges_constructor = to_contour_edges_constructor(context)
 def is_star_contour(contour: Contour) -> bool:
     return segments_do_not_cross_or_overlap(
             contour_to_star_multisegment(contour)
-            + contour_edges_constructor(contour))
+            + contour_edges_constructor(contour.vertices))
 
 
 def contour_to_star_multisegment(contour: Contour) -> Sequence[Segment]:
-    centroid = contour_to_centroid(contour)
+    centroid = context.contour_centroid(contour.vertices)
     return [Segment(centroid, vertex)
-            for vertex in contour
+            for vertex in contour.vertices
             if vertex != centroid]
 
 
@@ -537,20 +518,27 @@ def mix_segments_do_not_cross_or_overlap(mix: Mix) -> bool:
     _, multisegment, multipolygon = mix
     return segments_do_not_cross_or_overlap(
             list(chain(multisegment.segments,
-                       flatten(chain(contour_edges_constructor(border),
-                                     flatten(contour_edges_constructor(hole)
-                                             for hole in holes))
+                       flatten(chain(
+                               contour_edges_constructor(border.vertices),
+                               flatten(contour_edges_constructor(hole.vertices)
+                                       for hole in holes))
                                for border, holes in multipolygon))))
 
 
 def contours_do_not_cross_or_overlap(contours: Sequence[Contour]) -> bool:
     return segments_do_not_cross_or_overlap(list(flatten(
-            contour_edges_constructor(contour) for contour in contours)))
+            contour_edges_constructor(contour.vertices)
+            for contour in contours)))
 
 
 def segments_do_not_cross_or_overlap(segments: Sequence[Segment]) -> bool:
     return not segments_cross_or_overlap(segments)
 
 
+are_vertices_strict = to_strict_vertices_detector(context)
+are_vertices_non_convex = to_non_convex_vertices_detector(context)
+
+
 def is_multicontour_strict(multicontour: Multicontour) -> bool:
-    return all(is_contour_strict(contour) for contour in multicontour)
+    return all(are_vertices_strict(contour.vertices)
+               for contour in multicontour)

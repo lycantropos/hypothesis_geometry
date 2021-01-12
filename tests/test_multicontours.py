@@ -13,10 +13,10 @@ from tests.utils import (CoordinatesLimitsType,
                          SizesPair,
                          contours_do_not_cross_or_overlap,
                          has_valid_size,
-                         is_counterclockwise_contour,
+                         is_contour_counterclockwise,
+                         is_contour_non_self_intersecting,
                          is_multicontour,
                          is_multicontour_strict,
-                         is_non_self_intersecting_contour,
                          multicontour_has_coordinates_in_range,
                          multicontour_has_coordinates_types)
 
@@ -69,7 +69,7 @@ def test_properties(data: DataObject,
     assert has_valid_size(result,
                           min_size=min_size,
                           max_size=max_size)
-    assert all(has_valid_size(contour,
+    assert all(has_valid_size(contour.vertices,
                               min_size=min_contour_size,
                               max_size=max_contour_size)
                for contour in result)
@@ -82,10 +82,10 @@ def test_properties(data: DataObject,
                                                  min_y_value=min_y_value,
                                                  max_y_value=max_y_value)
     assert is_multicontour_strict(result)
-    assert all(is_non_self_intersecting_contour(contour)
+    assert all(is_contour_non_self_intersecting(contour)
                for contour in result)
     assert contours_do_not_cross_or_overlap(result)
-    assert all(is_counterclockwise_contour(contour)
+    assert all(is_contour_counterclockwise(contour)
                for contour in result)
 
 
@@ -113,7 +113,7 @@ def test_same_coordinates(data: DataObject,
     assert has_valid_size(result,
                           min_size=min_size,
                           max_size=max_size)
-    assert all(has_valid_size(contour,
+    assert all(has_valid_size(contour.vertices,
                               min_size=min_contour_size,
                               max_size=max_contour_size)
                for contour in result)
@@ -126,10 +126,10 @@ def test_same_coordinates(data: DataObject,
                                                  min_y_value=min_value,
                                                  max_y_value=max_value)
     assert is_multicontour_strict(result)
-    assert all(is_non_self_intersecting_contour(contour)
+    assert all(is_contour_non_self_intersecting(contour)
                for contour in result)
     assert contours_do_not_cross_or_overlap(result)
-    assert all(is_counterclockwise_contour(contour)
+    assert all(is_contour_counterclockwise(contour)
                for contour in result)
 
 
