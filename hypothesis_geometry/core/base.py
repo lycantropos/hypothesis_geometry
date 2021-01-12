@@ -76,7 +76,7 @@ def boxes(x_coordinates: Strategy[Coordinate],
             .map(pack(context.box_cls)))
 
 
-def _choosers() -> Strategy[Chooser]:
+def choosers() -> Strategy[Chooser]:
     return (strategies.randoms(use_true_random=True)
             .map(lambda random: random.choice))
 
@@ -377,7 +377,7 @@ def multicontours(x_coordinates: Strategy[Coordinate],
         return strategies.builds(to_multicontour_factory(context),
                                  strategies.just(vertices),
                                  to_sizes(len(vertices)),
-                                 _choosers())
+                                 choosers())
 
     def to_sizes(limit: int) -> Strategy[List[int]]:
         return (strategies.integers(min_size, limit // min_contour_size)
@@ -678,7 +678,7 @@ def polygons(x_coordinates: Strategy[Coordinate],
                                     max_border_size),
                 to_holes_sizes(to_max_convex_hull_constructor(context),
                                points_sequence),
-                _choosers())
+                choosers())
 
     def to_holes_sizes(max_convex_hull_constructor: PointsSequenceOperator,
                        points_sequence: Sequence[Point]
