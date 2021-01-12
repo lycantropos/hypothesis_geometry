@@ -74,6 +74,15 @@ def box_has_coordinates_in_range(box: Box,
                                        max_value=max_y_value))
 
 
+def contour_has_valid_sizes(contour: Contour,
+                            *,
+                            min_size: int,
+                            max_size: Optional[int]) -> bool:
+    return has_valid_size(contour.vertices,
+                          min_size=min_size,
+                          max_size=max_size)
+
+
 def mix_has_valid_sizes(mix: Mix,
                         *,
                         min_multipoint_size: int,
@@ -140,15 +149,15 @@ def polygon_has_valid_sizes(polygon: Polygon,
                             min_hole_size: int,
                             max_hole_size: Optional[int]) -> bool:
     border, holes = polygon
-    return (has_valid_size(border.vertices,
-                           min_size=min_size,
-                           max_size=max_size)
+    return (contour_has_valid_sizes(border,
+                                    min_size=min_size,
+                                    max_size=max_size)
             and has_valid_size(holes,
                                min_size=min_holes_size,
                                max_size=max_holes_size)
-            and all(has_valid_size(hole.vertices,
-                                   min_size=min_hole_size,
-                                   max_size=max_hole_size)
+            and all(contour_has_valid_sizes(hole,
+                                            min_size=min_hole_size,
+                                            max_size=max_hole_size)
                     for hole in holes))
 
 
