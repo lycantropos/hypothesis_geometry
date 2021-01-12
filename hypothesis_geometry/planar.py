@@ -479,7 +479,7 @@ def contours(x_coordinates: Strategy[Coordinate],
     >>> from hypothesis import strategies
     >>> from hypothesis_geometry import planar
     >>> context = get_context()
-    >>> Point = context.point_cls
+    >>> Contour = context.contour_cls
 
     For same coordinates' domain:
 
@@ -493,19 +493,17 @@ def contours(x_coordinates: Strategy[Coordinate],
     ...                            min_size=min_size,
     ...                            max_size=max_size)
     >>> contour = contours.example()
-    >>> isinstance(contour, list)
+    >>> isinstance(contour, Contour)
     True
-    >>> min_size <= len(contour) <= max_size
-    True
-    >>> all(isinstance(vertex, Point) for vertex in contour)
+    >>> min_size <= len(contour.vertices) <= max_size
     True
     >>> all(isinstance(vertex.x, coordinates_type)
     ...     and isinstance(vertex.y, coordinates_type)
-    ...     for vertex in contour)
+    ...     for vertex in contour.vertices)
     True
     >>> all(min_coordinate <= vertex.x <= max_coordinate
     ...     and min_coordinate <= vertex.y <= max_coordinate
-    ...     for vertex in contour)
+    ...     for vertex in contour.vertices)
     True
 
     For different coordinates' domains:
@@ -524,19 +522,17 @@ def contours(x_coordinates: Strategy[Coordinate],
     ...                            min_size=min_size,
     ...                            max_size=max_size)
     >>> contour = contours.example()
-    >>> isinstance(contour, list)
+    >>> isinstance(contour, Contour)
     True
-    >>> min_size <= len(contour) <= max_size
-    True
-    >>> all(isinstance(vertex, Point) for vertex in contour)
+    >>> min_size <= len(contour.vertices) <= max_size
     True
     >>> all(isinstance(vertex.x, coordinates_type)
     ...     and isinstance(vertex.y, coordinates_type)
-    ...     for vertex in contour)
+    ...     for vertex in contour.vertices)
     True
     >>> all(min_x_coordinate <= vertex.x <= max_x_coordinate
     ...     and min_y_coordinate <= vertex.y <= max_y_coordinate
-    ...     for vertex in contour)
+    ...     for vertex in contour.vertices)
     True
     """
     _validate_sizes(min_size, max_size, Size.TRIANGULAR_CONTOUR)
@@ -570,7 +566,7 @@ def convex_contours(x_coordinates: Strategy[Coordinate],
     >>> from hypothesis import strategies
     >>> from hypothesis_geometry import planar
     >>> context = get_context()
-    >>> Point = context.point_cls
+    >>> Contour = context.contour_cls
 
     For same coordinates' domain:
 
@@ -584,19 +580,17 @@ def convex_contours(x_coordinates: Strategy[Coordinate],
     ...                                   min_size=min_size,
     ...                                   max_size=max_size)
     >>> contour = contours.example()
-    >>> isinstance(contour, list)
+    >>> isinstance(contour, Contour)
     True
-    >>> min_size <= len(contour) <= max_size
-    True
-    >>> all(isinstance(vertex, Point) for vertex in contour)
+    >>> min_size <= len(contour.vertices) <= max_size
     True
     >>> all(isinstance(vertex.x, coordinates_type)
     ...     and isinstance(vertex.y, coordinates_type)
-    ...     for vertex in contour)
+    ...     for vertex in contour.vertices)
     True
     >>> all(min_coordinate <= vertex.x <= max_coordinate
     ...     and min_coordinate <= vertex.y <= max_coordinate
-    ...     for vertex in contour)
+    ...     for vertex in contour.vertices)
     True
 
     For different coordinates' domains:
@@ -615,19 +609,17 @@ def convex_contours(x_coordinates: Strategy[Coordinate],
     ...                                   min_size=min_size,
     ...                                   max_size=max_size)
     >>> contour = contours.example()
-    >>> isinstance(contour, list)
+    >>> isinstance(contour, Contour)
     True
-    >>> min_size <= len(contour) <= max_size
-    True
-    >>> all(isinstance(vertex, Point) for vertex in contour)
+    >>> min_size <= len(contour.vertices) <= max_size
     True
     >>> all(isinstance(vertex.x, coordinates_type)
     ...     and isinstance(vertex.y, coordinates_type)
-    ...     for vertex in contour)
+    ...     for vertex in contour.vertices)
     True
     >>> all(min_x_coordinate <= vertex.x <= max_x_coordinate
     ...     and min_y_coordinate <= vertex.y <= max_y_coordinate
-    ...     for vertex in contour)
+    ...     for vertex in contour.vertices)
     True
     """
     _validate_sizes(min_size, max_size, Size.TRIANGULAR_CONTOUR)
@@ -704,9 +696,7 @@ def concave_contours(x_coordinates: Strategy[Coordinate],
     >>> contour = contours.example()
     >>> isinstance(contour, Contour)
     True
-    >>> min_size <= len(contour) <= max_size
-    True
-    >>> all(isinstance(vertex, Point) for vertex in contour)
+    >>> min_size <= len(contour.vertices) <= max_size
     True
     >>> all(isinstance(vertex.x, coordinates_type)
     ...     and isinstance(vertex.y, coordinates_type)
@@ -782,7 +772,7 @@ def triangular_contours(x_coordinates: Strategy[Coordinate],
     >>> contour = contours.example()
     >>> isinstance(contour, Contour)
     True
-    >>> len(contour) == 3
+    >>> len(contour.vertices) == 3
     True
     >>> all(isinstance(vertex.x, coordinates_type)
     ...     and isinstance(vertex.y, coordinates_type)
@@ -815,7 +805,7 @@ def rectangular_contours(x_coordinates: Strategy[Coordinate],
     >>> from hypothesis import strategies
     >>> from hypothesis_geometry import planar
     >>> context = get_context()
-    >>> Point = context.point_cls
+    >>> Contour = context.contour_cls
 
     For same coordinates' domain:
 
@@ -826,19 +816,17 @@ def rectangular_contours(x_coordinates: Strategy[Coordinate],
     ...                                 allow_nan=False)
     >>> contours = planar.rectangular_contours(coordinates)
     >>> contour = contours.example()
-    >>> isinstance(contour, list)
+    >>> isinstance(contour, Contour)
     True
-    >>> len(contour) == 4
-    True
-    >>> all(isinstance(vertex, Point) for vertex in contour)
+    >>> len(contour.vertices) == 4
     True
     >>> all(isinstance(vertex.x, coordinates_type)
     ...     and isinstance(vertex.y, coordinates_type)
-    ...     for vertex in contour)
+    ...     for vertex in contour.vertices)
     True
     >>> all(min_coordinate <= vertex.x <= max_coordinate
     ...     and min_coordinate <= vertex.y <= max_coordinate
-    ...     for vertex in contour)
+    ...     for vertex in contour.vertices)
     True
 
     For different coordinates' domains:
@@ -854,19 +842,17 @@ def rectangular_contours(x_coordinates: Strategy[Coordinate],
     ...                                   allow_nan=False)
     >>> contours = planar.rectangular_contours(x_coordinates, y_coordinates)
     >>> contour = contours.example()
-    >>> isinstance(contour, list)
+    >>> isinstance(contour, Contour)
     True
-    >>> len(contour) == 4
-    True
-    >>> all(isinstance(vertex, Point) for vertex in contour)
+    >>> len(contour.vertices) == 4
     True
     >>> all(isinstance(vertex.x, coordinates_type)
     ...     and isinstance(vertex.y, coordinates_type)
-    ...     for vertex in contour)
+    ...     for vertex in contour.vertices)
     True
     >>> all(min_x_coordinate <= vertex.x <= max_x_coordinate
     ...     and min_y_coordinate <= vertex.y <= max_y_coordinate
-    ...     for vertex in contour)
+    ...     for vertex in contour.vertices)
     True
     """
     context = _get_context()
@@ -966,7 +952,7 @@ def star_contours(x_coordinates: Strategy[Coordinate],
     >>> from hypothesis import strategies
     >>> from hypothesis_geometry import planar
     >>> context = get_context()
-    >>> Point = context.point_cls
+    >>> Contour = context.contour_cls
 
     For same coordinates' domain:
 
@@ -980,19 +966,17 @@ def star_contours(x_coordinates: Strategy[Coordinate],
     ...                                 min_size=min_size,
     ...                                 max_size=max_size)
     >>> contour = contours.example()
-    >>> isinstance(contour, list)
+    >>> isinstance(contour, Contour)
     True
-    >>> min_size <= len(contour) <= max_size
-    True
-    >>> all(isinstance(vertex, Point) for vertex in contour)
+    >>> min_size <= len(contour.vertices) <= max_size
     True
     >>> all(isinstance(vertex.x, coordinates_type)
     ...     and isinstance(vertex.y, coordinates_type)
-    ...     for vertex in contour)
+    ...     for vertex in contour.vertices)
     True
     >>> all(min_coordinate <= vertex.x <= max_coordinate
     ...     and min_coordinate <= vertex.y <= max_coordinate
-    ...     for vertex in contour)
+    ...     for vertex in contour.vertices)
     True
 
     For different coordinates' domains:
@@ -1011,19 +995,17 @@ def star_contours(x_coordinates: Strategy[Coordinate],
     ...                                 min_size=min_size,
     ...                                 max_size=max_size)
     >>> contour = contours.example()
-    >>> isinstance(contour, list)
+    >>> isinstance(contour, Contour)
     True
-    >>> min_size <= len(contour) <= max_size
-    True
-    >>> all(isinstance(vertex, Point) for vertex in contour)
+    >>> min_size <= len(contour.vertices) <= max_size
     True
     >>> all(isinstance(vertex.x, coordinates_type)
     ...     and isinstance(vertex.y, coordinates_type)
-    ...     for vertex in contour)
+    ...     for vertex in contour.vertices)
     True
     >>> all(min_x_coordinate <= vertex.x <= max_x_coordinate
     ...     and min_y_coordinate <= vertex.y <= max_y_coordinate
-    ...     for vertex in contour)
+    ...     for vertex in contour.vertices)
     True
     """
     _validate_sizes(min_size, max_size, Size.TRIANGULAR_CONTOUR)
@@ -1062,7 +1044,7 @@ def multicontours(x_coordinates: Strategy[Coordinate],
     >>> from hypothesis import strategies
     >>> from hypothesis_geometry import planar
     >>> context = get_context()
-    >>> Point = context.point_cls
+    >>> Contour = context.contour_cls
 
     For same coordinates' domain:
 
@@ -1081,26 +1063,22 @@ def multicontours(x_coordinates: Strategy[Coordinate],
     >>> multicontour = multicontours.example()
     >>> isinstance(multicontour, list)
     True
-    >>> all(isinstance(contour, list) for contour in multicontour)
+    >>> all(isinstance(contour, Contour) for contour in multicontour)
     True
     >>> min_size <= len(multicontour) <= max_size
     True
-    >>> all(min_contour_size <= len(contour) <= max_contour_size
+    >>> all(min_contour_size <= len(contour.vertices) <= max_contour_size
     ...     for contour in multicontour)
-    True
-    >>> all(isinstance(vertex, Point)
-    ...     for contour in multicontour
-    ...     for vertex in contour)
     True
     >>> all(isinstance(vertex.x, coordinates_type)
     ...     and isinstance(vertex.y, coordinates_type)
     ...     for contour in multicontour
-    ...     for vertex in contour)
+    ...     for vertex in contour.vertices)
     True
     >>> all(min_coordinate <= vertex.x <= max_coordinate
     ...     and min_coordinate <= vertex.y <= max_coordinate
     ...     for contour in multicontour
-    ...     for vertex in contour)
+    ...     for vertex in contour.vertices)
     True
 
     For different coordinates' domains:
@@ -1124,26 +1102,22 @@ def multicontours(x_coordinates: Strategy[Coordinate],
     >>> multicontour = multicontours.example()
     >>> isinstance(multicontour, list)
     True
-    >>> all(isinstance(contour, list) for contour in multicontour)
+    >>> all(isinstance(contour, Contour) for contour in multicontour)
     True
     >>> min_size <= len(multicontour) <= max_size
     True
-    >>> all(min_contour_size <= len(contour) <= max_contour_size
+    >>> all(min_contour_size <= len(contour.vertices) <= max_contour_size
     ...     for contour in multicontour)
-    True
-    >>> all(isinstance(vertex, Point)
-    ...     for contour in multicontour
-    ...     for vertex in contour)
     True
     >>> all(isinstance(vertex.x, coordinates_type)
     ...     and isinstance(vertex.y, coordinates_type)
     ...     for contour in multicontour
-    ...     for vertex in contour)
+    ...     for vertex in contour.vertices)
     True
     >>> all(min_x_coordinate <= vertex.x <= max_x_coordinate
     ...     and min_y_coordinate <= vertex.y <= max_y_coordinate
     ...     for contour in multicontour
-    ...     for vertex in contour)
+    ...     for vertex in contour.vertices)
     True
     """
     _validate_sizes(min_size, max_size, Size.EMPTY_SEQUENCE)
@@ -1188,7 +1162,7 @@ def polygons(x_coordinates: Strategy[Coordinate],
     >>> from hypothesis import strategies
     >>> from hypothesis_geometry import planar
     >>> context = get_context()
-    >>> Point = context.point_cls
+    >>> Contour = context.contour_cls
 
     For same coordinates' domain:
 
@@ -1213,39 +1187,35 @@ def polygons(x_coordinates: Strategy[Coordinate],
     >>> len(polygon) == 2
     True
     >>> border, holes = polygon
-    >>> isinstance(border, list)
+    >>> isinstance(border, Contour)
     True
     >>> isinstance(holes, list)
     True
-    >>> all(isinstance(hole, list) for hole in holes)
+    >>> all(isinstance(hole, Contour) for hole in holes)
     True
-    >>> min_size <= len(border) <= max_size
+    >>> min_size <= len(border.vertices) <= max_size
     True
     >>> min_holes_size <= len(holes) <= max_holes_size
     True
-    >>> all(min_hole_size <= len(hole) <= max_hole_size for hole in holes)
-    True
-    >>> all(isinstance(vertex, Point) for vertex in border)
-    True
-    >>> all(isinstance(vertex, Point) for hole in holes for vertex in hole)
+    >>> all(min_hole_size <= len(hole.vertices) <= max_hole_size for hole in holes)
     True
     >>> all(isinstance(vertex.x, coordinates_type)
     ...     and isinstance(vertex.y, coordinates_type)
-    ...     for vertex in border)
+    ...     for vertex in border.vertices)
     True
     >>> all(isinstance(vertex.x, coordinates_type)
     ...     and isinstance(vertex.y, coordinates_type)
     ...     for hole in holes
-    ...     for vertex in hole)
+    ...     for vertex in hole.vertices)
     True
     >>> all(min_coordinate <= vertex.x <= max_coordinate
     ...     and min_coordinate <= vertex.y <= max_coordinate
-    ...     for vertex in border)
+    ...     for vertex in border.vertices)
     True
     >>> all(min_coordinate <= vertex.x <= max_coordinate
     ...     and min_coordinate <= vertex.y <= max_coordinate
     ...     for hole in holes
-    ...     for vertex in hole)
+    ...     for vertex in hole.vertices)
     True
 
     For different coordinates' domains:
@@ -1275,39 +1245,35 @@ def polygons(x_coordinates: Strategy[Coordinate],
     >>> len(polygon) == 2
     True
     >>> border, holes = polygon
-    >>> isinstance(border, list)
+    >>> isinstance(border, Contour)
     True
     >>> isinstance(holes, list)
     True
-    >>> all(isinstance(hole, list) for hole in holes)
+    >>> all(isinstance(hole, Contour) for hole in holes)
     True
-    >>> min_size <= len(border) <= max_size
+    >>> min_size <= len(border.vertices) <= max_size
     True
     >>> min_holes_size <= len(holes) <= max_holes_size
     True
-    >>> all(min_hole_size <= len(hole) <= max_hole_size for hole in holes)
-    True
-    >>> all(isinstance(vertex, Point) for vertex in border)
-    True
-    >>> all(isinstance(vertex, Point) for hole in holes for vertex in hole)
+    >>> all(min_hole_size <= len(hole.vertices) <= max_hole_size for hole in holes)
     True
     >>> all(isinstance(vertex.x, coordinates_type)
     ...     and isinstance(vertex.y, coordinates_type)
-    ...     for vertex in border)
+    ...     for vertex in border.vertices)
     True
     >>> all(isinstance(vertex.x, coordinates_type)
     ...     and isinstance(vertex.y, coordinates_type)
     ...     for hole in holes
-    ...     for vertex in hole)
+    ...     for vertex in hole.vertices)
     True
     >>> all(min_x_coordinate <= vertex.x <= max_x_coordinate
     ...     and min_y_coordinate <= vertex.y <= max_y_coordinate
-    ...     for vertex in border)
+    ...     for vertex in border.vertices)
     True
     >>> all(min_x_coordinate <= vertex.x <= max_x_coordinate
     ...     and min_y_coordinate <= vertex.y <= max_y_coordinate
     ...     for hole in holes
-    ...     for vertex in hole)
+    ...     for vertex in hole.vertices)
     True
     """
     _validate_sizes(min_size, max_size, Size.TRIANGULAR_CONTOUR)
@@ -1396,37 +1362,37 @@ def multipolygons(x_coordinates: Strategy[Coordinate],
     ...     and all(isinstance(hole, list) for hole in holes)
     ...     for border, holes in multipolygon)
     True
-    >>> all(min_border_size <= len(border) <= max_border_size
+    >>> all(min_border_size <= len(border.vertices) <= max_border_size
     ...     and min_holes_size <= len(holes) <= max_holes_size
-    ...     and all(min_hole_size <= len(hole) <= max_hole_size
+    ...     and all(min_hole_size <= len(hole.vertices) <= max_hole_size
     ...             for hole in holes)
     ...     for border, holes in multipolygon)
     True
-    >>> all(all(isinstance(vertex, tuple) for vertex in border)
+    >>> all(all(isinstance(vertex, tuple) for vertex in border.vertices)
     ...     and all(isinstance(vertex, tuple)
     ...             for hole in holes
-    ...             for vertex in hole)
+    ...             for vertex in hole.vertices)
     ...     for border, holes in multipolygon)
     True
-    >>> all(all(len(vertex) == 2 for vertex in border)
-    ...     and all(len(vertex) == 2 for hole in holes for vertex in hole)
+    >>> all(all(len(vertex) == 2 for vertex in border.vertices)
+    ...     and all(len(vertex) == 2 for hole in holes for vertex in hole.vertices)
     ...     for border, holes in multipolygon)
     True
     >>> all(all(isinstance(coordinate, coordinates_type)
-    ...         for vertex in border
+    ...         for vertex in border.vertices
     ...         for coordinate in vertex)
     ...     and all(isinstance(coordinate, coordinates_type)
     ...             for hole in holes
-    ...             for vertex in hole
+    ...             for vertex in hole.vertices
     ...             for coordinate in vertex)
     ...     for border, holes in multipolygon)
     True
     >>> all(all(all(min_coordinate <= coordinate <= max_coordinate
     ...             for coordinate in vertex)
-    ...         for vertex in border)
+    ...         for vertex in border.vertices)
     ...     and all(min_coordinate <= coordinate <= max_coordinate
     ...             for hole in holes
-    ...             for vertex in hole
+    ...             for vertex in hole.vertices
     ...             for coordinate in vertex)
     ...     for border, holes in multipolygon)
     True
@@ -1469,28 +1435,28 @@ def multipolygons(x_coordinates: Strategy[Coordinate],
     ...     and all(isinstance(hole, list) for hole in holes)
     ...     for border, holes in multipolygon)
     True
-    >>> all(min_border_size <= len(border) <= max_border_size
+    >>> all(min_border_size <= len(border.vertices) <= max_border_size
     ...     and min_holes_size <= len(holes) <= max_holes_size
-    ...     and all(min_hole_size <= len(hole) <= max_hole_size
+    ...     and all(min_hole_size <= len(hole.vertices) <= max_hole_size
     ...             for hole in holes)
     ...     for border, holes in multipolygon)
     True
-    >>> all(all(isinstance(vertex, tuple) for vertex in border)
+    >>> all(all(isinstance(vertex, tuple) for vertex in border.vertices)
     ...     and all(isinstance(vertex, tuple)
     ...             for hole in holes
-    ...             for vertex in hole)
+    ...             for vertex in hole.vertices)
     ...     for border, holes in multipolygon)
     True
-    >>> all(all(len(vertex) == 2 for vertex in border)
-    ...     and all(len(vertex) == 2 for hole in holes for vertex in hole)
+    >>> all(all(len(vertex) == 2 for vertex in border.vertices)
+    ...     and all(len(vertex) == 2 for hole in holes for vertex in hole.vertices)
     ...     for border, holes in multipolygon)
     True
     >>> all(all(isinstance(coordinate, coordinates_type)
-    ...         for vertex in border
+    ...         for vertex in border.vertices
     ...         for coordinate in vertex)
     ...     and all(isinstance(coordinate, coordinates_type)
     ...             for hole in holes
-    ...             for vertex in hole
+    ...             for vertex in hole.vertices
     ...             for coordinate in vertex)
     ...     for border, holes in multipolygon)
     True
@@ -1574,8 +1540,9 @@ def mixes(x_coordinates: Strategy[Coordinate],
     >>> from hypothesis import strategies
     >>> from hypothesis_geometry import planar
     >>> context = get_context()
-    >>> Multipoint, Multisegment = (context.multipoint_cls,
-    ...                             context.multisegment_cls)
+    >>> Contour, Multipoint, Multisegment = (context.contour_cls,
+    ...                                      context.multipoint_cls,
+    ...                                      context.multisegment_cls)
 
     For same coordinates' domain:
 
@@ -1647,45 +1614,39 @@ def mixes(x_coordinates: Strategy[Coordinate],
     True
     >>> all(len(polygon) == 2 for polygon in multipolygon)
     True
-    >>> all(isinstance(border, list)
+    >>> all(isinstance(border, Contour)
     ...     and isinstance(holes, list)
-    ...     and all(isinstance(hole, list) for hole in holes)
+    ...     and all(isinstance(hole, Contour) for hole in holes)
     ...     for border, holes in multipolygon)
     True
     >>> all(min_multipolygon_border_size
-    ...     <= len(border)
+    ...     <= len(border.vertices)
     ...     <= max_multipolygon_border_size
     ...     and (min_multipolygon_holes_size
     ...          <= len(holes)
     ...          <= max_multipolygon_holes_size)
     ...     and all(min_multipolygon_hole_size
-    ...             <= len(hole)
+    ...             <= len(hole.vertices)
     ...             <= max_multipolygon_hole_size
     ...             for hole in holes)
     ...     for border, holes in multipolygon)
     True
-    >>> all(all(isinstance(vertex, Point) for vertex in border)
-    ...     and all(isinstance(vertex, Point)
-    ...             for hole in holes
-    ...             for vertex in hole)
-    ...     for border, holes in multipolygon)
-    True
     >>> all(all(isinstance(vertex.x, coordinates_type)
     ...         and isinstance(vertex.y, coordinates_type)
-    ...         for vertex in border)
+    ...         for vertex in border.vertices)
     ...     and all(isinstance(vertex.x, coordinates_type)
     ...             and isinstance(vertex.y, coordinates_type)
     ...             for hole in holes
-    ...             for vertex in hole)
+    ...             for vertex in hole.vertices)
     ...     for border, holes in multipolygon)
     True
     >>> all(all(min_coordinate <= vertex.x <= max_coordinate
     ...         and min_coordinate <= vertex.y <= max_coordinate
-    ...         for vertex in border)
+    ...         for vertex in border.vertices)
     ...     and all(min_coordinate <= vertex.x <= max_coordinate
     ...             and min_coordinate <= vertex.y <= max_coordinate
     ...             for hole in holes
-    ...             for vertex in hole)
+    ...             for vertex in hole.vertices)
     ...     for border, holes in multipolygon)
     True
 
@@ -1769,39 +1730,33 @@ def mixes(x_coordinates: Strategy[Coordinate],
     ...     for border, holes in multipolygon)
     True
     >>> all(min_multipolygon_border_size
-    ...     <= len(border)
+    ...     <= len(border.vertices)
     ...     <= max_multipolygon_border_size
     ...     and (min_multipolygon_holes_size
     ...          <= len(holes)
     ...          <= max_multipolygon_holes_size)
     ...     and all(min_multipolygon_hole_size
-    ...             <= len(hole)
+    ...             <= len(hole.vertices)
     ...             <= max_multipolygon_hole_size
     ...             for hole in holes)
     ...     for border, holes in multipolygon)
     True
-    >>> all(all(isinstance(vertex, Point) for vertex in border)
-    ...     and all(isinstance(vertex, Point)
-    ...             for hole in holes
-    ...             for vertex in hole)
-    ...     for border, holes in multipolygon)
-    True
     >>> all(all(isinstance(vertex.x, coordinates_type)
     ...         and isinstance(vertex.y, coordinates_type)
-    ...         for vertex in border)
+    ...         for vertex in border.vertices)
     ...     and all(isinstance(vertex.x, coordinates_type)
     ...             and isinstance(vertex.y, coordinates_type)
     ...             for hole in holes
-    ...             for vertex in hole)
+    ...             for vertex in hole.vertices)
     ...     for border, holes in multipolygon)
     True
     >>> all(all(min_x_coordinate <= vertex.x <= max_x_coordinate
     ...         and min_y_coordinate <= vertex.y <= max_y_coordinate
-    ...         for vertex in border)
+    ...         for vertex in border.vertices)
     ...     and all(min_x_coordinate <= vertex.x <= max_x_coordinate
     ...             and min_y_coordinate <= vertex.y <= max_y_coordinate
     ...             for hole in holes
-    ...             for vertex in hole)
+    ...             for vertex in hole.vertices)
     ...     for border, holes in multipolygon)
     True
     """
