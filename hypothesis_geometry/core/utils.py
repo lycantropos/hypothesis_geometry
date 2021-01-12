@@ -36,5 +36,3 @@ def pack(function: Callable[..., Range]
 def sort_pair(pair: Sequence[Domain]) -> Tuple[Domain, Domain]:
     first, second = pair
     return (first, second) if first < second else (second, first)
-
-
