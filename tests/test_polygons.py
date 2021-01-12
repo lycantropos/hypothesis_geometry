@@ -6,16 +6,16 @@ from hypothesis import given
 from hypothesis.errors import HypothesisWarning
 from hypothesis.strategies import DataObject
 
-from hypothesis_geometry.core.contracts import is_contour_strict
 from hypothesis_geometry.hints import Strategy
 from hypothesis_geometry.planar import polygons
 from tests import strategies
 from tests.utils import (CoordinatesLimitsType,
                          SizesPair,
+                         are_vertices_strict,
                          contours_do_not_cross_or_overlap,
-                         is_counterclockwise_contour,
+                         is_contour_counterclockwise,
+                         is_contour_non_self_intersecting,
                          is_multicontour_strict,
-                         is_non_self_intersecting_contour,
                          is_polygon,
                          polygon_has_coordinates_in_range,
                          polygon_has_coordinates_types,
@@ -94,15 +94,13 @@ def test_properties(data: DataObject,
                                             max_x_value=max_x_value,
                                             min_y_value=min_y_value,
                                             max_y_value=max_y_value)
-    assert is_contour_strict(border)
+    assert are_vertices_strict(border.vertices)
     assert is_multicontour_strict(holes)
-    assert is_non_self_intersecting_contour(border)
-    assert all(is_non_self_intersecting_contour(hole)
-               for hole in holes)
+    assert is_contour_non_self_intersecting(border)
+    assert all(is_contour_non_self_intersecting(hole) for hole in holes)
     assert contours_do_not_cross_or_overlap(holes)
-    assert is_counterclockwise_contour(border)
-    assert all(not is_counterclockwise_contour(hole)
-               for hole in holes)
+    assert is_contour_counterclockwise(border)
+    assert all(not is_contour_counterclockwise(hole) for hole in holes)
 
 
 @given(strategies.data,
@@ -148,15 +146,13 @@ def test_same_coordinates(data: DataObject,
                                             max_x_value=max_value,
                                             min_y_value=min_value,
                                             max_y_value=max_value)
-    assert is_contour_strict(border)
+    assert are_vertices_strict(border.vertices)
     assert is_multicontour_strict(holes)
-    assert is_non_self_intersecting_contour(border)
-    assert all(is_non_self_intersecting_contour(hole)
-               for hole in holes)
+    assert is_contour_non_self_intersecting(border)
+    assert all(is_contour_non_self_intersecting(hole) for hole in holes)
     assert contours_do_not_cross_or_overlap(holes)
-    assert is_counterclockwise_contour(border)
-    assert all(not is_counterclockwise_contour(hole)
-               for hole in holes)
+    assert is_contour_counterclockwise(border)
+    assert all(not is_contour_counterclockwise(hole) for hole in holes)
 
 
 @given(strategies.coordinates_strategies,
