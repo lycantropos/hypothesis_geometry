@@ -5,7 +5,6 @@ from itertools import (chain,
                        groupby,
                        repeat)
 from operator import add
-from random import Random
 from typing import (Callable,
                     List,
                     Optional,
@@ -14,8 +13,10 @@ from typing import (Callable,
                     Tuple,
                     Type)
 
-from ground.base import get_context
+from ground.base import (Orientation,
+                         get_context)
 from ground.hints import (Box,
+                          Contour,
                           Coordinate,
                           Multipoint,
                           Multisegment,
@@ -27,34 +28,32 @@ from hypothesis.errors import HypothesisWarning
 from .core.contracts import (are_segments_non_crossing_non_overlapping,
                              has_horizontal_lowermost_segment,
                              has_vertical_leftmost_segment,
-                             is_contour_non_convex,
-                             is_contour_strict,
-                             points_do_not_lie_on_the_same_line)
-from .core.utils import (Orientation,
-                         orientation,
-                         pairwise)
-from .hints import (Contour,
-                    Domain,
-                    Mix,
+                             to_non_collinear_points_detector,
+                             to_non_convex_vertices_detector,
+                             to_strict_vertices_detector)
+from .core.factories import (to_contour_edges_constructor,
+                             to_convex_hull_size_constrictor,
+                             to_convex_vertices_sequence_factory,
+                             to_max_convex_hull_constructor,
+                             to_multicontour_factory,
+                             to_polygon_border_edges_constructor,
+                             to_polygon_factory,
+                             to_star_contour_vertices_factory,
+                             to_vertices_sequence_factory)
+from .core.hints import (Chooser,
+                         Domain,
+                         Orienteer,
+                         PointsSequenceOperator,
+                         PolygonEdgesConstructor)
+from .core.utils import (pack,
+                         pairwise,
+                         sort_pair)
+from .hints import (Mix,
                     Multicontour,
                     Multipolygon,
                     Polygon,
                     Polyline,
                     Strategy)
-from .utils import (Chooser,
-                    PolygonEdgesConstructor,
-                    constrict_convex_hull_size,
-                    pack,
-                    sort_pair,
-                    to_contour,
-                    to_contour_edges_constructor,
-                    to_convex_contour,
-                    to_convex_hull,
-                    to_multicontour_factory,
-                    to_polygon_border_edges_constructor,
-                    to_polygon_factory,
-                    to_star_contour,
-                    to_strict_convex_hull)
 
 
 def points(x_coordinates: Strategy[Coordinate],
@@ -207,18 +206,6 @@ def multipoints(x_coordinates: Strategy[Coordinate],
                                                   EMPTY_MULTIPOINT_SIZE),
                                      max_size=max_size)
             .map(get_context().multipoint_cls))
-
-
-def _unique_points_sequences(x_coordinates: Strategy[Coordinate],
-                             y_coordinates: Optional[Strategy[Coordinate]],
-                             *,
-                             min_size: int,
-                             max_size: Optional[int]
-                             ) -> Strategy[Sequence[Point]]:
-    return strategies.lists(points(x_coordinates, y_coordinates),
-                            unique=True,
-                            min_size=min_size,
-                            max_size=max_size)
 
 
 def segments(x_coordinates: Strategy[Coordinate],
@@ -437,9 +424,9 @@ def _to_non_crossing_non_overlapping_segments_sequences(
                                                    unique=True),
                                   y_coordinates))
     if min_size >= TRIANGULAR_CONTOUR_SIZE:
-        result |= (contours(x_coordinates, y_coordinates,
-                            min_size=min_size,
-                            max_size=max_size)
+        result |= (_vertices_sequences(x_coordinates, y_coordinates,
+                                       min_size=min_size,
+                                       max_size=max_size)
                    .map(to_contour_edges_constructor(context))
                    .flatmap(partial(_to_sub_lists,
                                     min_size=min_size)))
@@ -670,17 +657,10 @@ def contours(x_coordinates: Strategy[Coordinate],
     ...     for vertex in contour)
     True
     """
-    _validate_sizes(min_size, max_size, TRIANGULAR_CONTOUR_SIZE)
-    if max_size is not None and max_size == TRIANGULAR_CONTOUR_SIZE:
-        return triangular_contours(x_coordinates, y_coordinates)
-    min_size = max(min_size, TRIANGULAR_CONTOUR_SIZE)
-    return (convex_contours(x_coordinates, y_coordinates,
-                            min_size=min_size,
-                            max_size=max_size)
-            | concave_contours(x_coordinates, y_coordinates,
-                               min_size=max(min_size,
-                                            MIN_CONCAVE_CONTOUR_SIZE),
-                               max_size=max_size))
+    return (_vertices_sequences(x_coordinates, y_coordinates,
+                                min_size=min_size,
+                                max_size=max_size)
+            .map(get_context().contour_cls))
 
 
 def convex_contours(x_coordinates: Strategy[Coordinate],
@@ -765,31 +745,10 @@ def convex_contours(x_coordinates: Strategy[Coordinate],
     ...     for vertex in contour)
     True
     """
-    _validate_sizes(min_size, max_size, TRIANGULAR_CONTOUR_SIZE)
-    if max_size is not None and max_size == TRIANGULAR_CONTOUR_SIZE:
-        return triangular_contours(x_coordinates, y_coordinates)
-    min_size = max(min_size, TRIANGULAR_CONTOUR_SIZE)
-
-    def to_points_with_random(points: List[Point]
-                              ) -> Strategy[Tuple[List[Point], Random]]:
-        return strategies.tuples(strategies.just(points),
-                                 strategies.randoms(use_true_random=True))
-
-    result = (strategies.lists(points(x_coordinates, y_coordinates),
-                               min_size=min_size,
-                               max_size=max_size,
-                               unique=True)
-              .flatmap(to_points_with_random)
-              .map(pack(to_convex_contour))
-              .filter(partial(_has_valid_size,
-                              min_size=min_size,
-                              max_size=max_size)))
-    result = (rectangular_contours(x_coordinates, y_coordinates) | result
-              if min_size <= RECTANGULAR_CONTOUR_SIZE
-              else result)
-    return (triangular_contours(x_coordinates, y_coordinates) | result
-            if min_size == TRIANGULAR_CONTOUR_SIZE
-            else result)
+    return (_convex_vertices_sequences(x_coordinates, y_coordinates,
+                                       min_size=min_size,
+                                       max_size=max_size)
+            .map(get_context().contour_cls))
 
 
 def concave_contours(x_coordinates: Strategy[Coordinate],
@@ -812,7 +771,7 @@ def concave_contours(x_coordinates: Strategy[Coordinate],
     >>> from hypothesis import strategies
     >>> from hypothesis_geometry import planar
     >>> context = get_context()
-    >>> Point = context.point_cls
+    >>> Contour = context.contour_cls
 
     For same coordinates' domain:
 
@@ -826,19 +785,17 @@ def concave_contours(x_coordinates: Strategy[Coordinate],
     ...                                    min_size=min_size,
     ...                                    max_size=max_size)
     >>> contour = contours.example()
-    >>> isinstance(contour, list)
+    >>> isinstance(contour, Contour)
     True
-    >>> min_size <= len(contour) <= max_size
-    True
-    >>> all(isinstance(vertex, Point) for vertex in contour)
+    >>> min_size <= len(contour.vertices) <= max_size
     True
     >>> all(isinstance(vertex.x, coordinates_type)
     ...     and isinstance(vertex.y, coordinates_type)
-    ...     for vertex in contour)
+    ...     for vertex in contour.vertices)
     True
     >>> all(min_coordinate <= vertex.x <= max_coordinate
     ...     and min_coordinate <= vertex.y <= max_coordinate
-    ...     for vertex in contour)
+    ...     for vertex in contour.vertices)
     True
 
     For different coordinates' domains:
@@ -857,7 +814,7 @@ def concave_contours(x_coordinates: Strategy[Coordinate],
     ...                                    min_size=min_size,
     ...                                    max_size=max_size)
     >>> contour = contours.example()
-    >>> isinstance(contour, list)
+    >>> isinstance(contour, Contour)
     True
     >>> min_size <= len(contour) <= max_size
     True
@@ -865,38 +822,17 @@ def concave_contours(x_coordinates: Strategy[Coordinate],
     True
     >>> all(isinstance(vertex.x, coordinates_type)
     ...     and isinstance(vertex.y, coordinates_type)
-    ...     for vertex in contour)
+    ...     for vertex in contour.vertices)
     True
     >>> all(min_x_coordinate <= vertex.x <= max_x_coordinate
     ...     and min_y_coordinate <= vertex.y <= max_y_coordinate
-    ...     for vertex in contour)
+    ...     for vertex in contour.vertices)
     True
     """
-    _validate_sizes(min_size, max_size, MIN_CONCAVE_CONTOUR_SIZE)
-    min_size = max(min_size, MIN_CONCAVE_CONTOUR_SIZE)
-
-    def to_points_with_sizes(points: List[Point]
-                             ) -> Strategy[Tuple[List[Point], int]]:
-        sizes = strategies.integers(min_size,
-                                    len(points)
-                                    if max_size is None
-                                    else min(len(points), max_size))
-        return strategies.tuples(strategies.just(points), sizes)
-
-    return ((star_contours(x_coordinates, y_coordinates,
-                           min_size=min_size,
-                           max_size=max_size)
-             | (strategies.lists(points(x_coordinates, y_coordinates),
-                                 min_size=min_size,
-                                 max_size=max_size,
-                                 unique=True)
-                .filter(points_do_not_lie_on_the_same_line)
-                .flatmap(to_points_with_sizes)
-                .map(pack(to_contour))
-                .filter(partial(_has_valid_size,
-                                min_size=min_size,
-                                max_size=max_size))))
-            .filter(is_contour_non_convex))
+    return (_concave_vertices_sequences(x_coordinates, y_coordinates,
+                                        min_size=min_size,
+                                        max_size=max_size)
+            .map(get_context().contour_cls))
 
 
 def triangular_contours(x_coordinates: Strategy[Coordinate],
@@ -915,7 +851,7 @@ def triangular_contours(x_coordinates: Strategy[Coordinate],
     >>> from hypothesis import strategies
     >>> from hypothesis_geometry import planar
     >>> context = get_context()
-    >>> Point = context.point_cls
+    >>> Contour = context.contour_cls
 
     For same coordinates' domain:
 
@@ -926,19 +862,17 @@ def triangular_contours(x_coordinates: Strategy[Coordinate],
     ...                                 allow_nan=False)
     >>> contours = planar.triangular_contours(coordinates)
     >>> contour = contours.example()
-    >>> isinstance(contour, list)
+    >>> isinstance(contour, Contour)
     True
-    >>> len(contour) == 3
-    True
-    >>> all(isinstance(vertex, Point) for vertex in contour)
+    >>> len(contour.vertices) == 3
     True
     >>> all(isinstance(vertex.x, coordinates_type)
     ...     and isinstance(vertex.y, coordinates_type)
-    ...     for vertex in contour)
+    ...     for vertex in contour.vertices)
     True
     >>> all(min_coordinate <= vertex.x <= max_coordinate
     ...     and min_coordinate <= vertex.y <= max_coordinate
-    ...     for vertex in contour)
+    ...     for vertex in contour.vertices)
     True
 
     For different coordinates' domains:
@@ -954,32 +888,21 @@ def triangular_contours(x_coordinates: Strategy[Coordinate],
     ...                                   allow_nan=False)
     >>> contours = planar.triangular_contours(x_coordinates, y_coordinates)
     >>> contour = contours.example()
-    >>> isinstance(contour, list)
+    >>> isinstance(contour, Contour)
     True
     >>> len(contour) == 3
     True
-    >>> all(isinstance(vertex, Point) for vertex in contour)
-    True
     >>> all(isinstance(vertex.x, coordinates_type)
     ...     and isinstance(vertex.y, coordinates_type)
-    ...     for vertex in contour)
+    ...     for vertex in contour.vertices)
     True
     >>> all(min_x_coordinate <= vertex.x <= max_x_coordinate
     ...     and min_y_coordinate <= vertex.y <= max_y_coordinate
-    ...     for vertex in contour)
+    ...     for vertex in contour.vertices)
     True
     """
-    vertices = points(x_coordinates, y_coordinates)
-
-    def to_counterclockwise_contour(contour: Contour) -> Contour:
-        return (contour
-                if orientation(*contour) is Orientation.CLOCKWISE
-                else contour[::-1])
-
-    return (strategies.tuples(vertices, vertices, vertices)
-            .filter(is_contour_strict)
-            .map(list)
-            .map(to_counterclockwise_contour))
+    return (_triangular_vertices_sequences(x_coordinates, y_coordinates)
+            .map(get_context().contour_cls))
 
 
 RECTANGULAR_CONTOUR_SIZE = 4
@@ -1055,17 +978,8 @@ def rectangular_contours(x_coordinates: Strategy[Coordinate],
     ...     for vertex in contour)
     True
     """
-
-    def box_to_contour(box: Box,
-                       point_cls: Type[Point] = get_context().point_cls
-                       ) -> Contour:
-        return [point_cls(box.min_x, box.min_y),
-                point_cls(box.max_x, box.min_y),
-                point_cls(box.max_x, box.max_y),
-                point_cls(box.min_x, box.max_y)]
-
-    return (boxes(x_coordinates, y_coordinates)
-            .map(box_to_contour))
+    return (_rectangular_vertices_sequences(x_coordinates, y_coordinates)
+            .map(get_context().contour_cls))
 
 
 def boxes(x_coordinates: Strategy[Coordinate],
@@ -1231,17 +1145,10 @@ def star_contours(x_coordinates: Strategy[Coordinate],
     ...     for vertex in contour)
     True
     """
-    _validate_sizes(min_size, max_size, TRIANGULAR_CONTOUR_SIZE)
-    min_size = max(min_size, TRIANGULAR_CONTOUR_SIZE)
-    return (strategies.lists(points(x_coordinates, y_coordinates),
-                             min_size=min_size,
-                             max_size=max_size,
-                             unique=True)
-            .filter(points_do_not_lie_on_the_same_line)
-            .map(to_star_contour)
-            .filter(partial(_has_valid_size,
-                            min_size=min_size,
-                            max_size=max_size)))
+    return (_star_vertices_sequences(x_coordinates, y_coordinates,
+                                     min_size=min_size,
+                                     max_size=max_size)
+            .map(get_context().contour_cls))
 
 
 EMPTY_MULTICONTOUR_SIZE = 0
@@ -1398,7 +1305,7 @@ def multicontours(x_coordinates: Strategy[Coordinate],
         return (_has_valid_size(multicontour,
                                 min_size=min_size,
                                 max_size=max_size)
-                and all(_has_valid_size(contour,
+                and all(_has_valid_size(contour.vertices,
                                         min_size=min_contour_size,
                                         max_size=max_contour_size)
                         for contour in multicontour))
@@ -1578,19 +1485,24 @@ def polygons(x_coordinates: Strategy[Coordinate],
 
     def to_polygons(points: List[Point]) -> Strategy[Polygon]:
         max_border_points_count = len(points) - min_inner_points_count
-        min_border_size = max(min_size, len(to_strict_convex_hull(points)))
+        min_border_size = max(min_size,
+                              len(context.points_convex_hull(points)))
         max_border_size = (max_border_points_count
                            if max_size is None
                            else min(max_size, max_border_points_count))
-        return strategies.builds(to_polygon_factory(context),
-                                 strategies.just(points),
-                                 strategies.integers(min_border_size,
-                                                     max_border_size),
-                                 to_holes_sizes(points),
-                                 _choosers())
+        return strategies.builds(
+                to_polygon_factory(context),
+                strategies.just(points),
+                strategies.integers(min_border_size,
+                                    max_border_size),
+                to_holes_sizes(to_max_convex_hull_constructor(context),
+                               points),
+                _choosers())
 
-    def to_holes_sizes(points: List[Point]) -> Strategy[List[int]]:
-        max_inner_points_count = len(points) - len(to_convex_hull(points))
+    def to_holes_sizes(max_convex_hull_constructor: PointsSequenceOperator,
+                       points: List[Point]) -> Strategy[List[int]]:
+        max_inner_points_count = (len(points)
+                                  - len(max_convex_hull_constructor(points)))
         holes_size_scale = max_inner_points_count // min_hole_size
         points_max_hole_size = (holes_size_scale
                                 if max_holes_size is None
@@ -1620,23 +1532,28 @@ def polygons(x_coordinates: Strategy[Coordinate],
 
     def has_valid_sizes(polygon: Polygon) -> bool:
         border, holes = polygon
-        return (_has_valid_size(border,
+        return (_has_valid_size(border.vertices,
                                 min_size=min_size,
                                 max_size=max_size)
                 and _has_valid_size(holes,
                                     min_size=min_holes_size,
                                     max_size=max_holes_size)
-                and all(_has_valid_size(hole,
+                and all(_has_valid_size(hole.vertices,
                                         min_size=min_hole_size,
                                         max_size=max_hole_size)
                         for hole in holes))
 
     min_inner_points_count = min_hole_size * min_holes_size
 
-    def has_valid_inner_points_count(points: List[Point]) -> bool:
+    def has_valid_inner_points_count(convex_hull_constructor
+                                     : PointsSequenceOperator,
+                                     max_convex_hull_constructor
+                                     : PointsSequenceOperator,
+                                     points_sequence: Sequence[Point]) -> bool:
         return ((max_size is None
-                 or len(to_strict_convex_hull(points)) <= max_size)
-                and (len(points) - len(to_convex_hull(points))
+                 or len(convex_hull_constructor(points_sequence)) <= max_size)
+                and (len(points_sequence)
+                     - len(max_convex_hull_constructor(points_sequence))
                      >= min_inner_points_count))
 
     return (strategies.lists(
@@ -1648,11 +1565,13 @@ def polygons(x_coordinates: Strategy[Coordinate],
                           or max_hole_size is None)
                       else max_size + max_hole_size * max_holes_size),
             unique=True)
-            .filter(points_do_not_lie_on_the_same_line)
+            .filter(to_non_collinear_points_detector(context))
             .map(sorted)
-            .map(partial(constrict_convex_hull_size,
-                         max_size=max_size))
-            .filter(has_valid_inner_points_count)
+            .map(to_convex_hull_size_constrictor(context,
+                                                 max_size=max_size))
+            .filter(partial(has_valid_inner_points_count,
+                            context.points_convex_hull,
+                            to_max_convex_hull_constructor(context)))
             .flatmap(to_polygons)
             .filter(has_valid_sizes))
 
@@ -2489,12 +2408,143 @@ def _choosers() -> Strategy[Chooser]:
             .map(lambda random: random.choice))
 
 
+def _concave_vertices_sequences(x_coordinates: Strategy[Coordinate],
+                                y_coordinates: Optional[Strategy[Coordinate]],
+                                *,
+                                min_size: int,
+                                max_size: Optional[int]
+                                ) -> Strategy[Sequence[Point]]:
+    _validate_sizes(min_size, max_size, MIN_CONCAVE_CONTOUR_SIZE)
+    min_size = max(min_size, MIN_CONCAVE_CONTOUR_SIZE)
+
+    def to_points_with_sizes(points_sequence: Sequence[Point]
+                             ) -> Strategy[Tuple[Sequence[Point], int]]:
+        sizes = strategies.integers(min_size,
+                                    len(points_sequence)
+                                    if max_size is None
+                                    else min(len(points_sequence), max_size))
+        return strategies.tuples(strategies.just(points_sequence), sizes)
+
+    context = get_context()
+    return ((_star_vertices_sequences(x_coordinates, y_coordinates,
+                                      min_size=min_size,
+                                      max_size=max_size)
+             | (_unique_points_sequences(x_coordinates, y_coordinates,
+                                         min_size=min_size,
+                                         max_size=max_size)
+                .filter(to_non_collinear_points_detector(context))
+                .flatmap(to_points_with_sizes)
+                .map(pack(to_vertices_sequence_factory(context)))
+                .filter(partial(_has_valid_size,
+                                min_size=min_size,
+                                max_size=max_size))))
+            .filter(to_non_convex_vertices_detector(context)))
+
+
+def _convex_vertices_sequences(x_coordinates: Strategy[Coordinate],
+                               y_coordinates: Optional[Strategy[Coordinate]],
+                               *,
+                               min_size: int,
+                               max_size: Optional[int]
+                               ) -> Strategy[Sequence[Point]]:
+    _validate_sizes(min_size, max_size, TRIANGULAR_CONTOUR_SIZE)
+    if max_size is not None and max_size == TRIANGULAR_CONTOUR_SIZE:
+        return _triangular_vertices_sequences(x_coordinates, y_coordinates)
+    min_size = max(min_size, TRIANGULAR_CONTOUR_SIZE)
+    context = get_context()
+    result = (strategies.builds(to_convex_vertices_sequence_factory(context),
+                                _unique_points_sequences(x_coordinates,
+                                                         y_coordinates,
+                                                         min_size=min_size,
+                                                         max_size=max_size),
+                                strategies.randoms(use_true_random=True))
+              .filter(partial(_has_valid_size,
+                              min_size=min_size,
+                              max_size=max_size)))
+    result = (_rectangular_vertices_sequences(x_coordinates, y_coordinates)
+              | result
+              if min_size <= RECTANGULAR_CONTOUR_SIZE
+              else result)
+    return (_triangular_vertices_sequences(x_coordinates, y_coordinates)
+            | result
+            if min_size == TRIANGULAR_CONTOUR_SIZE
+            else result)
+
+
 def _has_valid_size(sized: Sized,
                     *,
                     min_size: int,
                     max_size: Optional[int]) -> bool:
     size = len(sized)
     return min_size <= size and (max_size is None or size <= max_size)
+
+
+def _rectangular_vertices_sequences(x_coordinates: Strategy[Coordinate],
+                                    y_coordinates: Strategy[Coordinate]
+                                    ) -> Strategy[Sequence[Point]]:
+    context = get_context()
+
+    def to_vertices(box: Box,
+                    point_cls: Type[Point] = context.point_cls
+                    ) -> Sequence[Point]:
+        return [
+            point_cls(box.min_x, box.min_y), point_cls(box.max_x, box.min_y),
+            point_cls(box.max_x, box.max_y), point_cls(box.min_x, box.max_y)]
+
+    return boxes(x_coordinates, y_coordinates).map(to_vertices)
+
+
+def _star_vertices_sequences(x_coordinates: Strategy[Coordinate],
+                             y_coordinates: Optional[Strategy[Coordinate]],
+                             *,
+                             min_size: int,
+                             max_size: Optional[int]
+                             ) -> Strategy[Sequence[Point]]:
+    _validate_sizes(min_size, max_size, TRIANGULAR_CONTOUR_SIZE)
+    min_size = max(min_size, TRIANGULAR_CONTOUR_SIZE)
+    context = get_context()
+    return (_unique_points_sequences(x_coordinates, y_coordinates,
+                                     min_size=min_size,
+                                     max_size=max_size)
+            .filter(to_non_collinear_points_detector(context))
+            .map(to_star_contour_vertices_factory(context))
+            .filter(partial(_has_valid_size,
+                            min_size=min_size,
+                            max_size=max_size)))
+
+
+def _triangular_vertices_sequences(x_coordinates: Strategy[Coordinate],
+                                   y_coordinates
+                                   : Optional[Strategy[Coordinate]]
+                                   ) -> Strategy[Sequence[Point]]:
+    context = get_context()
+
+    def to_counterclockwise_vertices(vertices_triplet
+                                     : Tuple[Point, Point, Point],
+                                     orienteer: Orienteer
+                                     = context.angle_orientation
+                                     ) -> Tuple[Point, Point, Point]:
+        return (vertices_triplet
+                if orienteer(*vertices_triplet) is Orientation.COUNTERCLOCKWISE
+                else vertices_triplet[::-1])
+
+    vertices = points(x_coordinates, y_coordinates)
+    return (strategies.tuples(vertices, vertices, vertices)
+            .filter(to_strict_vertices_detector(context))
+            .map(to_counterclockwise_vertices)
+            .map(list))
+
+
+def _unique_points_sequences(x_coordinates: Strategy[Coordinate],
+                             y_coordinates: Optional[Strategy[Coordinate]],
+                             *,
+                             min_size: int,
+                             max_size: Optional[int]
+                             ) -> Strategy[Sequence[Point]]:
+    return strategies.lists(points(x_coordinates, y_coordinates),
+                            unique=True,
+                            min_size=min_size,
+                            max_size=max_size)
 
 
 def _validate_sizes(min_size: int, max_size: Optional[int],
@@ -2532,3 +2582,22 @@ def _validate_sizes(min_size: int, max_size: Optional[int],
                               min_expected_size=min_expected_size,
                               min_size=min_size),
                       HypothesisWarning)
+
+
+def _vertices_sequences(x_coordinates: Strategy[Coordinate],
+                        y_coordinates: Optional[Strategy[Coordinate]],
+                        *,
+                        min_size: int,
+                        max_size: Optional[int]) -> Strategy[Sequence[Point]]:
+    _validate_sizes(min_size, max_size, TRIANGULAR_CONTOUR_SIZE)
+    if max_size is not None and max_size == TRIANGULAR_CONTOUR_SIZE:
+        return _triangular_vertices_sequences(x_coordinates, y_coordinates)
+    return (_convex_vertices_sequences(x_coordinates, y_coordinates,
+                                       min_size=max(min_size,
+                                                    TRIANGULAR_CONTOUR_SIZE),
+                                       max_size=max_size)
+            | _concave_vertices_sequences(x_coordinates, y_coordinates,
+                                          min_size=
+                                          max(min_size,
+                                              MIN_CONCAVE_CONTOUR_SIZE),
+                                          max_size=max_size))

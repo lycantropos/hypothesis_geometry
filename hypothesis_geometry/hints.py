@@ -1,18 +1,15 @@
-from typing import (List,
-                    Tuple,
-                    TypeVar)
+from typing import (Sequence,
+                    Tuple)
 
-from ground.hints import (Multipoint,
+from ground.hints import (Contour,
+                          Multipoint,
                           Multisegment,
                           Point)
 from hypothesis.strategies import SearchStrategy
 
-Domain = TypeVar('Domain')
-Range = TypeVar('Range')
 Strategy = SearchStrategy
-Contour = List[Point]
-Polyline = List[Point]
-Multicontour = List[Contour]
+Polyline = Sequence[Point]
+Multicontour = Sequence[Contour]
 Polygon = Tuple[Contour, Multicontour]
-Multipolygon = List[Polygon]
+Multipolygon = Sequence[Polygon]
 Mix = Tuple[Multipoint, Multisegment, Multipolygon]

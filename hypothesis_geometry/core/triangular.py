@@ -6,13 +6,13 @@ from typing import (Iterable,
                     Sequence)
 
 from decision.partition import coin_change
+from ground.base import Orientation
 from ground.hints import Point
 from reprit.base import generate_repr
 
 from .contracts import is_point_inside_circumcircle
 from .subdivisional import QuadEdge
-from .utils import (Orientation,
-                    pairwise)
+from .utils import pairwise
 
 
 class Triangulation:
