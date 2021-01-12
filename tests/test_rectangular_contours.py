@@ -45,8 +45,8 @@ def test_properties(data: DataObject,
 
     assert is_contour(result)
     assert has_valid_size(result.vertices,
-                          min_size=Size.RECTANGULAR_CONTOUR_SIZE,
-                          max_size=Size.RECTANGULAR_CONTOUR_SIZE)
+                          min_size=Size.RECTANGULAR_CONTOUR,
+                          max_size=Size.RECTANGULAR_CONTOUR)
     assert contour_has_coordinates_types(result,
                                          x_type=x_type,
                                          y_type=y_type)
@@ -75,8 +75,8 @@ def test_same_coordinates(data: DataObject,
 
     assert is_contour(result)
     assert has_valid_size(result.vertices,
-                          min_size=Size.RECTANGULAR_CONTOUR_SIZE,
-                          max_size=Size.RECTANGULAR_CONTOUR_SIZE)
+                          min_size=Size.RECTANGULAR_CONTOUR,
+                          max_size=Size.RECTANGULAR_CONTOUR)
     assert contour_has_coordinates_types(result,
                                          x_type=type_,
                                          y_type=type_)
