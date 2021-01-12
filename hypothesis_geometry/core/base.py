@@ -99,10 +99,10 @@ def concave_vertices_sequences(x_coordinates: Strategy[Coordinate],
                                      min_size=min_size,
                                      max_size=max_size,
                                      context=context)
-             | (_unique_points_sequences(x_coordinates, y_coordinates,
-                                         min_size=min_size,
-                                         max_size=max_size,
-                                         context=context)
+             | (unique_points_sequences(x_coordinates, y_coordinates,
+                                        min_size=min_size,
+                                        max_size=max_size,
+                                        context=context)
                 .filter(to_non_collinear_points_detector(context))
                 .flatmap(to_points_with_sizes)
                 .map(pack(to_vertices_sequence_factory(context)))
@@ -123,11 +123,11 @@ def convex_vertices_sequences(x_coordinates: Strategy[Coordinate],
                                              context=context)
     min_size = max(min_size, Size.TRIANGULAR_CONTOUR)
     result = (strategies.builds(to_convex_vertices_sequence_factory(context),
-                                _unique_points_sequences(x_coordinates,
-                                                         y_coordinates,
-                                                         min_size=min_size,
-                                                         max_size=max_size,
-                                                         context=context),
+                                unique_points_sequences(x_coordinates,
+                                                        y_coordinates,
+                                                        min_size=min_size,
+                                                        max_size=max_size,
+                                                        context=context),
                                 strategies.randoms(use_true_random=True))
               .filter(partial(has_valid_size,
                               min_size=min_size,
@@ -184,7 +184,7 @@ def mixes(x_coordinates: Strategy[Coordinate],
         points_sequence, segments_sequence, multipolygon = [], [], []
 
         def draw_multipoint(points_count: int) -> None:
-            points_sequence.extend(draw(_unique_points_sequences(
+            points_sequence.extend(draw(unique_points_sequences(
                     strategies.sampled_from(xs[:points_count]), y_coordinates,
                     min_size=points_count,
                     max_size=points_count,
@@ -248,7 +248,7 @@ def mixes(x_coordinates: Strategy[Coordinate],
         points_sequence, segments_sequence, multipolygon = [], [], []
 
         def draw_multipoint(points_count: int) -> None:
-            points_sequence.extend(draw(_unique_points_sequences(
+            points_sequence.extend(draw(unique_points_sequences(
                     x_coordinates, strategies.sampled_from(ys[:points_count]),
                     min_size=points_count,
                     max_size=points_count,
@@ -260,7 +260,9 @@ def mixes(x_coordinates: Strategy[Coordinate],
                     non_crossing_non_overlapping_segments_sequences(
                             x_coordinates,
                             strategies.sampled_from(ys[:points_count]),
-                            min_size=size, max_size=size, context=context)))
+                            min_size=size,
+                            max_size=size,
+                            context=context)))
 
         def draw_polygon(points_count: int) -> None:
             multipolygon.append(draw(polygons(
@@ -401,7 +403,7 @@ def multicontours(x_coordinates: Strategy[Coordinate],
                 .flatmap(pack(strategies.tuples))
                 .map(list))
 
-    return (_unique_points_sequences(
+    return (unique_points_sequences(
             x_coordinates, y_coordinates,
             min_size=min_size * min_contour_size,
             max_size=(None
@@ -422,10 +424,10 @@ def multipoints(x_coordinates: Strategy[Coordinate],
                 min_size: int,
                 max_size: Optional[int],
                 context: Context) -> Strategy[Multipoint]:
-    return (_unique_points_sequences(x_coordinates, y_coordinates,
-                                     min_size=min_size,
-                                     max_size=max_size,
-                                     context=context)
+    return (unique_points_sequences(x_coordinates, y_coordinates,
+                                    min_size=min_size,
+                                    max_size=max_size,
+                                    context=context)
             .map(context.multipoint_cls))
 
 
@@ -737,7 +739,7 @@ def polygons(x_coordinates: Strategy[Coordinate],
                      - len(max_convex_hull_constructor(points_sequence))
                      >= min_inner_points_count))
 
-    return (_unique_points_sequences(
+    return (unique_points_sequences(
             x_coordinates, y_coordinates,
             min_size=min_size + min_inner_points_count,
             max_size=(None
@@ -815,10 +817,10 @@ def star_vertices_sequences(x_coordinates: Strategy[Coordinate],
                             max_size: Optional[int],
                             context: Context) -> Strategy[Sequence[Point]]:
     min_size = max(min_size, Size.TRIANGULAR_CONTOUR)
-    return (_unique_points_sequences(x_coordinates, y_coordinates,
-                                     min_size=min_size,
-                                     max_size=max_size,
-                                     context=context)
+    return (unique_points_sequences(x_coordinates, y_coordinates,
+                                    min_size=min_size,
+                                    max_size=max_size,
+                                    context=context)
             .filter(to_non_collinear_points_detector(context))
             .map(to_star_contour_vertices_factory(context))
             .filter(partial(has_valid_size,
@@ -857,12 +859,12 @@ def triangular_vertices_sequences(x_coordinates: Strategy[Coordinate],
             .map(list))
 
 
-def _unique_points_sequences(x_coordinates: Strategy[Coordinate],
-                             y_coordinates: Optional[Strategy[Coordinate]],
-                             *,
-                             min_size: int,
-                             max_size: Optional[int],
-                             context: Context) -> Strategy[Sequence[Point]]:
+def unique_points_sequences(x_coordinates: Strategy[Coordinate],
+                            y_coordinates: Optional[Strategy[Coordinate]],
+                            *,
+                            min_size: int,
+                            max_size: Optional[int],
+                            context: Context) -> Strategy[Sequence[Point]]:
     return strategies.lists(points(x_coordinates, y_coordinates,
                                    context=context),
                             unique=True,
