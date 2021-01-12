@@ -11,13 +11,12 @@ from hypothesis_geometry.planar import multipolygons
 from tests import strategies
 from tests.utils import (CoordinatesLimitsType,
                          SizesPair,
-                         are_vertices_strict,
                          contours_do_not_cross_or_overlap,
                          has_valid_size,
                          is_contour_counterclockwise,
                          is_contour_non_self_intersecting,
-                         is_multicontour_strict,
                          is_multipolygon,
+                         is_multipolygon_strict,
                          multipolygon_has_coordinates_in_range,
                          multipolygon_has_coordinates_types,
                          multipolygon_has_valid_sizes)
@@ -105,9 +104,7 @@ def test_properties(data: DataObject,
                                                  max_x_value=max_x_value,
                                                  min_y_value=min_y_value,
                                                  max_y_value=max_y_value)
-    assert all(are_vertices_strict(polygon.border.vertices)
-               and is_multicontour_strict(polygon.holes)
-               for polygon in result)
+    assert is_multipolygon_strict(result)
     assert all(is_contour_non_self_intersecting(polygon.border)
                and all(is_contour_non_self_intersecting(hole)
                        for hole in polygon.holes)
@@ -173,9 +170,7 @@ def test_same_coordinates(data: DataObject,
                                                  max_x_value=max_value,
                                                  min_y_value=min_value,
                                                  max_y_value=max_value)
-    assert all(are_vertices_strict(polygon.border.vertices)
-               and is_multicontour_strict(polygon.holes)
-               for polygon in result)
+    assert is_multipolygon_strict(result)
     assert all(is_contour_non_self_intersecting(polygon.border)
                and all(is_contour_non_self_intersecting(hole)
                        for hole in polygon.holes)

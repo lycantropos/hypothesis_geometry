@@ -10,13 +10,13 @@ from hypothesis_geometry.planar import (Size,
 from tests import strategies
 from tests.utils import (CoordinatesLimitsType,
                          are_vertices_non_convex,
-                         are_vertices_strict,
                          contour_has_coordinates_in_range,
                          contour_has_coordinates_types,
-                         has_valid_size,
+                         contour_has_valid_sizes,
                          is_contour,
                          is_contour_counterclockwise,
-                         is_contour_non_self_intersecting)
+                         is_contour_non_self_intersecting,
+                         is_contour_strict)
 
 
 @given(strategies.coordinates_strategies)
@@ -44,9 +44,9 @@ def test_properties(data: DataObject,
     result = data.draw(strategy)
 
     assert is_contour(result)
-    assert has_valid_size(result.vertices,
-                          min_size=Size.TRIANGULAR_CONTOUR,
-                          max_size=Size.TRIANGULAR_CONTOUR)
+    assert contour_has_valid_sizes(result,
+                                   min_size=Size.TRIANGULAR_CONTOUR,
+                                   max_size=Size.TRIANGULAR_CONTOUR)
     assert contour_has_coordinates_types(result,
                                          x_type=x_type,
                                          y_type=y_type)
@@ -55,7 +55,7 @@ def test_properties(data: DataObject,
                                             max_x_value=max_x_value,
                                             min_y_value=min_y_value,
                                             max_y_value=max_y_value)
-    assert are_vertices_strict(result.vertices)
+    assert is_contour_strict(result.vertices)
     assert not are_vertices_non_convex(result.vertices)
     assert is_contour_non_self_intersecting(result)
     assert is_contour_counterclockwise(result)
@@ -73,9 +73,9 @@ def test_same_coordinates(data: DataObject,
     result = data.draw(strategy)
 
     assert is_contour(result)
-    assert has_valid_size(result.vertices,
-                          min_size=Size.TRIANGULAR_CONTOUR,
-                          max_size=Size.TRIANGULAR_CONTOUR)
+    assert contour_has_valid_sizes(result,
+                                   min_size=Size.TRIANGULAR_CONTOUR,
+                                   max_size=Size.TRIANGULAR_CONTOUR)
     assert contour_has_coordinates_types(result,
                                          x_type=type_,
                                          y_type=type_)
@@ -84,7 +84,7 @@ def test_same_coordinates(data: DataObject,
                                             max_x_value=max_value,
                                             min_y_value=min_value,
                                             max_y_value=max_value)
-    assert are_vertices_strict(result.vertices)
+    assert is_contour_strict(result)
     assert not are_vertices_non_convex(result.vertices)
     assert is_contour_non_self_intersecting(result)
     assert is_contour_counterclockwise(result)
