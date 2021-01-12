@@ -326,7 +326,7 @@ def _to_squared_points_distance(left: Point, right: Point) -> Coordinate:
 
 
 def _to_convex_vertices_sequence(convex_hull_constructor
-                                : PointsSequenceOperator,
+                                 : PointsSequenceOperator,
                                  points: Sequence[Point],
                                  random: Random) -> Sequence[Point]:
     """
