@@ -116,6 +116,16 @@ def mix_has_valid_sizes(mix: Mix,
                     max_hole_size=max_multipolygon_hole_size))
 
 
+def multicontour_has_valid_sizes(multicontour: Multicontour,
+                                 *,
+                                 min_size: int,
+                                 max_size: Optional[int]) -> bool:
+    return all(contour_has_valid_sizes(contour,
+                                       min_size=min_size,
+                                       max_size=max_size)
+               for contour in multicontour)
+
+
 def multipolygon_has_valid_sizes(multipolygon: Multipolygon,
                                  *,
                                  min_size: int,
@@ -154,10 +164,9 @@ def polygon_has_valid_sizes(polygon: Polygon,
             and has_valid_size(holes,
                                min_size=min_holes_size,
                                max_size=max_holes_size)
-            and all(contour_has_valid_sizes(hole,
-                                            min_size=min_hole_size,
-                                            max_size=max_hole_size)
-                    for hole in holes))
+            and multicontour_has_valid_sizes(holes,
+                                             min_size=min_hole_size,
+                                             max_size=max_hole_size))
 
 
 def contour_has_coordinates_in_range(contour: Contour,
