@@ -14,7 +14,7 @@ from tests.utils import (CoordinatesLimitsType,
                          are_vertices_strict,
                          contour_has_coordinates_in_range,
                          contour_has_coordinates_types,
-                         has_valid_size,
+                         contour_has_valid_sizes,
                          is_contour,
                          is_contour_counterclockwise,
                          is_contour_non_self_intersecting,
@@ -56,9 +56,9 @@ def test_properties(data: DataObject,
     result = data.draw(strategy)
 
     assert is_contour(result)
-    assert has_valid_size(result.vertices,
-                          min_size=min_size,
-                          max_size=max_size)
+    assert contour_has_valid_sizes(result,
+                                   min_size=min_size,
+                                   max_size=max_size)
     assert contour_has_coordinates_types(result,
                                          x_type=x_type,
                                          y_type=y_type)
@@ -89,9 +89,9 @@ def test_same_coordinates(data: DataObject,
     result = data.draw(strategy)
 
     assert is_contour(result)
-    assert has_valid_size(result.vertices,
-                          min_size=min_size,
-                          max_size=max_size)
+    assert contour_has_valid_sizes(result,
+                                   min_size=min_size,
+                                   max_size=max_size)
     assert contour_has_coordinates_types(result,
                                          x_type=type_,
                                          y_type=type_)
