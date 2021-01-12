@@ -19,6 +19,7 @@ from hypothesis import strategies
 
 from hypothesis_geometry.core.contracts import (
     has_valid_size,
+    multicontour_has_valid_sizes,
     to_non_convex_vertices_detector,
     to_strict_vertices_detector)
 from hypothesis_geometry.core.factories import to_contour_edges_constructor
@@ -116,14 +117,7 @@ def mix_has_valid_sizes(mix: Mix,
                     max_hole_size=max_multipolygon_hole_size))
 
 
-def multicontour_has_valid_sizes(multicontour: Multicontour,
-                                 *,
-                                 min_size: int,
-                                 max_size: Optional[int]) -> bool:
-    return all(contour_has_valid_sizes(contour,
-                                       min_size=min_size,
-                                       max_size=max_size)
-               for contour in multicontour)
+multicontour_has_valid_sizes = multicontour_has_valid_sizes
 
 
 def multipolygon_has_valid_sizes(multipolygon: Multipolygon,
@@ -161,12 +155,11 @@ def polygon_has_valid_sizes(polygon: Polygon,
     return (contour_has_valid_sizes(border,
                                     min_size=min_size,
                                     max_size=max_size)
-            and has_valid_size(holes,
-                               min_size=min_holes_size,
-                               max_size=max_holes_size)
             and multicontour_has_valid_sizes(holes,
-                                             min_size=min_hole_size,
-                                             max_size=max_hole_size))
+                                             min_size=min_holes_size,
+                                             max_size=max_holes_size,
+                                             min_contour_size=min_hole_size,
+                                             max_contour_size=max_hole_size))
 
 
 def contour_has_coordinates_in_range(contour: Contour,
