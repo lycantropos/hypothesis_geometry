@@ -502,11 +502,11 @@ contour_edges_constructor = to_contour_edges_constructor(context)
 
 def is_star_contour(contour: Contour) -> bool:
     return segments_do_not_cross_or_overlap(
-            contour_to_star_multisegment(contour)
-            + contour_edges_constructor(contour.vertices))
+            list(chain(contour_to_star_segments(contour),
+                       contour_edges_constructor(contour.vertices))))
 
 
-def contour_to_star_multisegment(contour: Contour) -> Sequence[Segment]:
+def contour_to_star_segments(contour: Contour) -> Sequence[Segment]:
     centroid = context.contour_centroid(contour.vertices)
     return [Segment(centroid, vertex)
             for vertex in contour.vertices
