@@ -1,15 +1,17 @@
+from functools import partial
 from itertools import chain
-from typing import (Iterable,
-                    Iterator,
+from typing import (Callable,
+                    Iterable,
                     Sequence,
                     Tuple)
 
-from ground.base import (Orientation,
-                         get_context)
+from ground.base import (Context,
+                         Orientation)
 from ground.hints import Point
 
-from hypothesis_geometry.hints import (Contour,
-                                       Domain)
+from .hints import (Domain,
+                    Orienteer,
+                    Range)
 
 flatten = chain.from_iterable
 
@@ -22,40 +24,29 @@ def pairwise(iterable: Iterable[Domain]) -> Iterable[Tuple[Domain, Domain]]:
         element = next_element
 
 
-Orientation = Orientation
+def to_contour_orienteer(context: Context) -> Callable[[Sequence[Point]],
+                                                       Iterable[Orientation]]:
+    return partial(_to_contour_orientations, context.angle_orientation)
 
 
-def orientation(first, vertex, second):
-    context = get_context()
-    return context.angle_orientation(vertex, first, second)
-
-
-def to_orientations(vertices: Sequence[Point]) -> Iterator[Orientation]:
-    return (orientation(vertices[index - 1], vertices[index],
-                        vertices[(index + 1) % len(vertices)])
+def _to_contour_orientations(orienteer: Orienteer,
+                             vertices: Sequence[Point]
+                             ) -> Iterable[Orientation]:
+    return (orienteer(vertices[index], vertices[index - 1],
+                      vertices[(index + 1) % len(vertices)])
             for index in range(len(vertices)))
 
 
-def points_to_centroid(points: Sequence[Point]) -> Point:
-    return get_context().multipoint_centroid(points)
+def apply(function: Callable[..., Range],
+          args: Iterable[Domain]) -> Range:
+    return function(*args)
 
 
-def contour_to_centroid(contour: Contour) -> Point:
-    return get_context().contour_centroid(contour)
+def pack(function: Callable[..., Range]
+         ) -> Callable[[Iterable[Domain]], Range]:
+    return partial(apply, function)
 
 
-def point_in_angle(point: Point,
-                   first_ray_point: Point,
-                   vertex: Point,
-                   second_ray_point: Point) -> bool:
-    angle_orientation = orientation(first_ray_point, vertex, second_ray_point)
-    first_half_orientation = orientation(first_ray_point, vertex, point)
-    second_half_orientation = orientation(vertex, second_ray_point, point)
-    return (second_half_orientation is angle_orientation
-            if first_half_orientation is Orientation.COLLINEAR
-            else (first_half_orientation is angle_orientation
-                  if second_half_orientation is Orientation.COLLINEAR
-                  else (first_half_orientation is second_half_orientation
-                        is (angle_orientation
-                            # if angle is degenerate
-                            or Orientation.COUNTERCLOCKWISE))))
+def sort_pair(pair: Sequence[Domain]) -> Tuple[Domain, Domain]:
+    first, second = pair
+    return (first, second) if first < second else (second, first)

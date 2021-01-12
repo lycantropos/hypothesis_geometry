@@ -1,11 +1,10 @@
 from typing import (Optional,
                     Sequence)
 
+from ground.base import (Orientation,
+                         get_context)
 from ground.hints import Point
 from reprit.base import generate_repr
-
-from .utils import (Orientation,
-                    orientation)
 
 
 class QuadEdge:
@@ -118,7 +117,7 @@ class QuadEdge:
         self.opposite.splice(self.opposite.right_from_start)
 
     def orientation_with(self, point: Point) -> Orientation:
-        return orientation(self.end, self.start, point)
+        return get_context().angle_orientation(self.start, self.end, point)
 
 
 def to_edge_neighbours(edge: QuadEdge) -> Sequence[QuadEdge]:
