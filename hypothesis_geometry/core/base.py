@@ -885,7 +885,7 @@ def vertices_sequences(x_coordinates: Strategy[Coordinate],
                                              context=context)
     return (concave_vertices_sequences(x_coordinates, y_coordinates,
                                        min_size=max(min_size,
-                                                    Size.MIN_CONCAVE_CONTOUR),
+                                                    Size.RECTANGULAR_CONTOUR),
                                        max_size=max_size,
                                        context=context)
             | convex_vertices_sequences(x_coordinates, y_coordinates,

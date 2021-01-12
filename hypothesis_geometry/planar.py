@@ -634,7 +634,7 @@ def convex_contours(x_coordinates: Strategy[Coordinate],
 def concave_contours(x_coordinates: Strategy[Coordinate],
                      y_coordinates: Optional[Strategy[Coordinate]] = None,
                      *,
-                     min_size: int = Size.MIN_CONCAVE_CONTOUR,
+                     min_size: int = Size.RECTANGULAR_CONTOUR,
                      max_size: Optional[int] = None) -> Strategy[Contour]:
     """
     Returns a strategy for concave contours.
@@ -707,11 +707,11 @@ def concave_contours(x_coordinates: Strategy[Coordinate],
     ...     for vertex in contour.vertices)
     True
     """
-    _validate_sizes(min_size, max_size, Size.MIN_CONCAVE_CONTOUR)
+    _validate_sizes(min_size, max_size, Size.RECTANGULAR_CONTOUR)
     context = _get_context()
     return (_concave_vertices_sequences(x_coordinates, y_coordinates,
                                         min_size=max(min_size,
-                                                     Size.MIN_CONCAVE_CONTOUR),
+                                                     Size.RECTANGULAR_CONTOUR),
                                         max_size=max_size,
                                         context=context)
             .map(context.contour_cls))
