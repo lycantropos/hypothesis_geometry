@@ -557,7 +557,7 @@ def multipolygons(x_coordinates: Strategy[Coordinate],
                                   max_size=max_points_count,
                                   unique=True)
                  .flatmap(ys_to_multipolygons)))
-    if min_holes_size == Size.EMPTY_SEQUENCE:
+    if not min_holes_size:
         def multicontour_to_multipolygon(multicontour: Multicontour
                                          ) -> Multipolygon:
             return [(contour, []) for contour in multicontour]
