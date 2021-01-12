@@ -96,8 +96,7 @@ def mix_has_valid_sizes(mix: Mix,
                         min_multipolygon_holes_size: int,
                         max_multipolygon_holes_size: Optional[int],
                         min_multipolygon_hole_size: int,
-                        max_multipolygon_hole_size: Optional[int]
-                        ) -> bool:
+                        max_multipolygon_hole_size: Optional[int]) -> bool:
     multipoint, multisegment, multipolygon = mix
     return (has_valid_size(multipoint.points,
                            min_size=min_multipoint_size,
