@@ -1,7 +1,6 @@
 from functools import partial
 from itertools import (chain,
                        cycle,
-                       groupby,
                        repeat)
 from operator import add
 from typing import (Callable,
@@ -25,7 +24,6 @@ from hypothesis import strategies
 from hypothesis_geometry.hints import (Mix,
                                        Multicontour,
                                        Multipolygon,
-                                       Polyline,
                                        Strategy)
 from .contracts import (are_segments_non_crossing_non_overlapping,
                         has_horizontal_lowermost_segment,
@@ -755,25 +753,6 @@ def polygons(x_coordinates: Strategy[Coordinate],
                             to_max_convex_hull_constructor(context)))
             .flatmap(to_polygons)
             .filter(has_valid_sizes))
-
-
-def polylines(x_coordinates: Strategy[Coordinate],
-              y_coordinates: Optional[Strategy[Coordinate]],
-              *,
-              min_size: int,
-              max_size: Optional[int],
-              context: Context) -> Strategy[Polyline]:
-    def to_unique_consecutive_vertices(polyline: Polyline) -> Polyline:
-        return [point for point, _ in groupby(polyline)]
-
-    return (strategies.lists(points(x_coordinates, y_coordinates,
-                                    context=context),
-                             min_size=min_size,
-                             max_size=max_size)
-            .map(to_unique_consecutive_vertices)
-            .filter(partial(has_valid_size,
-                            min_size=min_size,
-                            max_size=max_size)))
 
 
 def rectangular_vertices_sequences(x_coordinates: Strategy[Coordinate],

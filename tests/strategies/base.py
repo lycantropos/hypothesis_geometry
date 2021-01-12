@@ -67,12 +67,10 @@ multicontours_sizes_pairs = to_sizes_pairs(0, 5)
 multipoints_sizes_pairs = to_sizes_pairs(0)
 multipolygons_sizes_pairs = to_sizes_pairs(0, 5)
 multisegments_sizes_pairs = to_sizes_pairs(0)
-polylines_sizes_pairs = to_sizes_pairs(Size.MIN_POLYLINE)
 non_valid_concave_contours_sizes_pairs = to_non_valid_sizes_pairs(
         Size.RECTANGULAR_CONTOUR)
 non_valid_convex_contours_sizes_pairs = to_non_valid_sizes_pairs(
         Size.TRIANGULAR_CONTOUR)
-non_valid_polylines_sizes_pairs = to_non_valid_sizes_pairs(Size.MIN_POLYLINE)
 invalid_concave_contours_sizes_pairs = to_invalid_sizes_pairs(
         Size.RECTANGULAR_CONTOUR)
 invalid_convex_contours_sizes_pairs = to_invalid_sizes_pairs(
@@ -81,7 +79,6 @@ invalid_multicontours_sizes_pairs = to_invalid_sizes_pairs(0)
 invalid_multipoints_sizes_pairs = to_invalid_sizes_pairs(0)
 invalid_multipolygons_sizes_pairs = to_invalid_sizes_pairs(0)
 invalid_multisegments_sizes_pairs = to_invalid_sizes_pairs(0)
-invalid_polylines_sizes_pairs = to_invalid_sizes_pairs(Size.MIN_POLYLINE)
 
 
 def to_coordinates_strategies_with_limits_and_types(

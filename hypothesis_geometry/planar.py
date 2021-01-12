@@ -24,7 +24,6 @@ from .core.base import (boxes as _boxes,
                         multisegments as _multisegments,
                         points as _points,
                         polygons as _polygons,
-                        polylines as _polylines,
                         rectangular_vertices_sequences
                         as _rectangular_vertices_sequences,
                         segments as _segments,
@@ -36,7 +35,6 @@ from .core.enums import Size
 from .hints import (Mix,
                     Multicontour,
                     Multipolygon,
-                    Polyline,
                     Strategy)
 
 Size = Size
@@ -347,114 +345,6 @@ def multisegments(x_coordinates: Strategy[Coordinate],
                           min_size=max(min_size, 0),
                           max_size=max_size,
                           context=_get_context())
-
-
-def polylines(x_coordinates: Strategy[Coordinate],
-              y_coordinates: Optional[Strategy[Coordinate]] = None,
-              *,
-              min_size: int = Size.MIN_POLYLINE,
-              max_size: Optional[int] = None) -> Strategy[Polyline]:
-    """
-    Returns a strategy for polylines.
-    Polyline is a sequence of points (called polyline's vertices)
-    such that there is no consecutive equal points.
-
-    :param x_coordinates: strategy for vertices' x-coordinates.
-    :param y_coordinates:
-        strategy for vertices' y-coordinates,
-        ``None`` for reusing x-coordinates strategy.
-    :param min_size: lower bound for polyline size.
-    :param max_size: upper bound for polyline size, ``None`` for unbound.
-
-    >>> from ground.base import get_context
-    >>> from hypothesis import strategies
-    >>> from hypothesis_geometry import planar
-    >>> context = get_context()
-    >>> Point = context.point_cls
-
-    For same coordinates' domain:
-
-    >>> min_coordinate, max_coordinate = -1., 1.
-    >>> coordinates_type = float
-    >>> coordinates = strategies.floats(min_coordinate, max_coordinate,
-    ...                                 allow_infinity=False,
-    ...                                 allow_nan=False)
-    >>> min_size, max_size = 5, 10
-    >>> polylines = planar.polylines(coordinates,
-    ...                              min_size=min_size,
-    ...                              max_size=max_size)
-    >>> polyline = polylines.example()
-    >>> isinstance(polyline, list)
-    True
-    >>> min_size <= len(polyline) <= max_size
-    True
-    >>> all(isinstance(vertex, Point) for vertex in polyline)
-    True
-    >>> all(isinstance(vertex.x, coordinates_type)
-    ...     and isinstance(vertex.y, coordinates_type)
-    ...     for vertex in polyline)
-    True
-    >>> all(min_coordinate <= vertex.x <= max_coordinate
-    ...     and min_coordinate <= vertex.y <= max_coordinate
-    ...     for vertex in polyline)
-    True
-
-    For different coordinates' domains:
-
-    >>> min_x_coordinate, max_x_coordinate = -1., 1.
-    >>> min_y_coordinate, max_y_coordinate = 10., 100.
-    >>> coordinates_type = float
-    >>> x_coordinates = strategies.floats(min_x_coordinate, max_x_coordinate,
-    ...                                   allow_infinity=False,
-    ...                                   allow_nan=False)
-    >>> y_coordinates = strategies.floats(min_y_coordinate, max_y_coordinate,
-    ...                                   allow_infinity=False,
-    ...                                   allow_nan=False)
-    >>> min_size, max_size = 5, 10
-    >>> polylines = planar.polylines(x_coordinates, y_coordinates,
-    ...                              min_size=min_size,
-    ...                              max_size=max_size)
-    >>> polyline = polylines.example()
-    >>> isinstance(polyline, list)
-    True
-    >>> min_size <= len(polyline) <= max_size
-    True
-    >>> all(isinstance(vertex, Point) for vertex in polyline)
-    True
-    >>> all(isinstance(vertex.x, coordinates_type)
-    ...     and isinstance(vertex.y, coordinates_type)
-    ...     for vertex in polyline)
-    True
-    >>> all(min_x_coordinate <= vertex.x <= max_x_coordinate
-    ...     and min_y_coordinate <= vertex.y <= max_y_coordinate
-    ...     for vertex in polyline)
-    True
-    """
-    _validate_sizes(min_size, max_size, Size.MIN_POLYLINE)
-    min_size = max(min_size, Size.MIN_POLYLINE)
-    context = _get_context()
-    result = _polylines(x_coordinates, y_coordinates,
-                        min_size=min_size,
-                        max_size=max_size,
-                        context=context)
-
-    if max_size is None or max_size > Size.MIN_POLYLINE:
-        def close_polyline(polyline: Polyline) -> Polyline:
-            return polyline + [polyline[0]]
-
-        result |= (_polylines(x_coordinates, y_coordinates,
-                              # closing will add a vertex,
-                              # so to stay in bounds
-                              # we should decrement them
-                              min_size=(min_size - 1
-                                        if min_size > Size.MIN_POLYLINE
-                                        else min_size),
-                              max_size=(max_size
-                                        if max_size is None
-                                        else max_size - 1),
-                              context=context)
-                   .map(close_polyline))
-    return result
 
 
 def contours(x_coordinates: Strategy[Coordinate],
