@@ -18,13 +18,13 @@ from ground.hints import (Box,
                           Multipoint,
                           Multisegment,
                           Point,
+                          Polygon,
                           Segment)
 from hypothesis import strategies
 
 from hypothesis_geometry.hints import (Mix,
                                        Multicontour,
                                        Multipolygon,
-                                       Polygon,
                                        Polyline,
                                        Strategy)
 from .contracts import (are_segments_non_crossing_non_overlapping,
@@ -183,14 +183,14 @@ def mixes(x_coordinates: Strategy[Coordinate],
         xs = sorted(xs)
         points_sequence, segments_sequence, multipolygon = [], [], []
 
-        def draw_multipoint(points_count: int) -> None:
+        def draw_points(points_count: int) -> None:
             points_sequence.extend(draw(unique_points_sequences(
                     strategies.sampled_from(xs[:points_count]), y_coordinates,
                     min_size=points_count,
                     max_size=points_count,
                     context=context)))
 
-        def draw_multisegment(points_count: int) -> None:
+        def draw_segments(points_count: int) -> None:
             size = points_count // 2
             segments_sequence.extend(draw(
                     non_crossing_non_overlapping_segments_sequences(
@@ -212,24 +212,23 @@ def mixes(x_coordinates: Strategy[Coordinate],
                     context=context)))
 
         drawers_with_points_counts = draw(strategies.permutations(
-                tuple(chain(zip(repeat(draw_multipoint),
-                                multipoint_points_counts),
-                            zip(repeat(draw_multisegment),
+                tuple(chain(zip(repeat(draw_points), multipoint_points_counts),
+                            zip(repeat(draw_segments),
                                 multisegment_points_counts),
                             zip(repeat(draw_polygon),
                                 multipolygon_points_counts)))))
         for index, (drawer, count) in enumerate(drawers_with_points_counts):
             drawer(count)
             can_touch_next_geometry = (
-                    drawer is draw_multisegment
+                    drawer is draw_segments
                     and index < len(drawers_with_points_counts) - 1
                     and (drawers_with_points_counts[index + 1]
-                         is not draw_multipoint)
+                         is not draw_points)
                     and not has_vertical_leftmost_segment(segments_sequence)
                     or drawer is draw_polygon
                     and index < len(drawers_with_points_counts) - 1
                     and (drawers_with_points_counts[index + 1]
-                         is not draw_multipoint)
+                         is not draw_points)
                     and
                     not has_vertical_leftmost_segment(
                             edges_constructor(multipolygon[-1])))
@@ -247,14 +246,14 @@ def mixes(x_coordinates: Strategy[Coordinate],
         ys = sorted(ys)
         points_sequence, segments_sequence, multipolygon = [], [], []
 
-        def draw_multipoint(points_count: int) -> None:
+        def draw_points(points_count: int) -> None:
             points_sequence.extend(draw(unique_points_sequences(
                     x_coordinates, strategies.sampled_from(ys[:points_count]),
                     min_size=points_count,
                     max_size=points_count,
                     context=context)))
 
-        def draw_multisegment(points_count: int) -> None:
+        def draw_segments(points_count: int) -> None:
             size = points_count // 2
             segments_sequence.extend(draw(
                     non_crossing_non_overlapping_segments_sequences(
@@ -276,24 +275,23 @@ def mixes(x_coordinates: Strategy[Coordinate],
                     context=context)))
 
         drawers_with_points_counts = draw(strategies.permutations(
-                tuple(chain(zip(repeat(draw_multipoint),
-                                multipoint_points_counts),
-                            zip(repeat(draw_multisegment),
+                tuple(chain(zip(repeat(draw_points), multipoint_points_counts),
+                            zip(repeat(draw_segments),
                                 multisegment_points_counts),
                             zip(repeat(draw_polygon),
                                 multipolygon_points_counts)))))
         for index, (drawer, count) in enumerate(drawers_with_points_counts):
             drawer(count)
             can_touch_next_geometry = (
-                    drawer is draw_multisegment
+                    drawer is draw_segments
                     and index < len(drawers_with_points_counts) - 1
                     and (drawers_with_points_counts[index + 1]
-                         is not draw_multipoint)
+                         is not draw_points)
                     and not has_horizontal_lowermost_segment(segments_sequence)
                     or drawer is draw_polygon
                     and index < len(drawers_with_points_counts) - 1
                     and (drawers_with_points_counts[index + 1]
-                         is not draw_multipoint)
+                         is not draw_points)
                     and
                     not has_horizontal_lowermost_segment(
                             edges_constructor(multipolygon[-1])))
@@ -556,9 +554,11 @@ def multipolygons(x_coordinates: Strategy[Coordinate],
                                   unique=True)
                  .flatmap(ys_to_multipolygons)))
     if not min_holes_size:
-        def multicontour_to_multipolygon(multicontour: Multicontour
+        def multicontour_to_multipolygon(multicontour: Multicontour,
+                                         polygon_cls: Type[Polygon]
+                                         = context.polygon_cls
                                          ) -> Multipolygon:
-            return [(contour, []) for contour in multicontour]
+            return [polygon_cls(contour, []) for contour in multicontour]
 
         result = ((multicontours(x_coordinates, y_coordinates,
                                  min_size=min_size,
@@ -714,17 +714,15 @@ def polygons(x_coordinates: Strategy[Coordinate],
                 .map(list))
 
     def has_valid_sizes(polygon: Polygon) -> bool:
-        border, holes = polygon
-        return (has_valid_size(border.vertices,
+        return (has_valid_size(polygon.border.vertices,
                                min_size=min_size,
                                max_size=max_size)
-                and has_valid_size(holes,
-                                   min_size=min_holes_size,
-                                   max_size=max_holes_size)
-                and all(has_valid_size(hole.vertices,
-                                       min_size=min_hole_size,
-                                       max_size=max_hole_size)
-                        for hole in holes))
+                and multicontour_has_valid_sizes(
+                        polygon.holes,
+                        min_size=min_holes_size,
+                        max_size=max_holes_size,
+                        min_contour_size=min_hole_size,
+                        max_contour_size=max_hole_size))
 
     min_inner_points_count = min_hole_size * min_holes_size
 

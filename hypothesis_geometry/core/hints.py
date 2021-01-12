@@ -5,9 +5,8 @@ from typing import (Callable,
 
 from ground.base import Orientation
 from ground.hints import (Point,
+                          Polygon,
                           Segment)
-
-from hypothesis_geometry.hints import Polygon
 
 Orienteer = Callable[[Point, Point, Point], Orientation]
 Domain = TypeVar('Domain')
