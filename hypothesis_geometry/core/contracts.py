@@ -1,7 +1,9 @@
 from functools import partial
 from typing import (Callable,
                     Iterable,
-                    Sequence)
+                    Optional,
+                    Sequence,
+                    Sized)
 
 from bentley_ottmann.planar import segments_cross_or_overlap
 from ground.base import (Context,
@@ -13,7 +15,6 @@ from ground.hints import (Coordinate,
 
 from .hints import (Orienteer,
                     QuaternaryPointFunction)
-from .utils import to_contour_orienteer
 
 
 def has_horizontal_lowermost_segment(segments: Sequence[Segment]) -> bool:
@@ -129,3 +130,24 @@ def _angle_contains_point(orienteer: Orienteer,
                         is (angle_orientation
                             # if angle is degenerate
                             or Orientation.COUNTERCLOCKWISE))))
+
+
+def has_valid_size(sized: Sized,
+                   *,
+                   min_size: int,
+                   max_size: Optional[int]) -> bool:
+    size = len(sized)
+    return min_size <= size and (max_size is None or size <= max_size)
+
+
+def to_contour_orienteer(context: Context) -> Callable[[Sequence[Point]],
+                                                       Iterable[Orientation]]:
+    return partial(_to_contour_orientations, context.angle_orientation)
+
+
+def _to_contour_orientations(orienteer: Orienteer,
+                             vertices: Sequence[Point]
+                             ) -> Iterable[Orientation]:
+    return (orienteer(vertices[index], vertices[index - 1],
+                      vertices[(index + 1) % len(vertices)])
+            for index in range(len(vertices)))

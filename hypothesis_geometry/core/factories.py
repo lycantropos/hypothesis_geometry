@@ -46,95 +46,33 @@ from .subdivisional import (QuadEdge,
                             to_edge_neighbours)
 
 
-def to_vertices_sequence_factory(context: Context
-                                 ) -> Callable[[Sequence[Point], int],
-                                               Sequence[Point]]:
-    return partial(_to_contour_vertices, to_contour_compressor(context))
+def to_contour_compressor(context: Context) -> ContourCompressor:
+    return partial(_compress_contour, context.angle_orientation)
 
 
-def _to_contour_vertices(contour_compressor: ContourCompressor,
-                         points: Sequence[Point],
-                         size: int) -> Sequence[Point]:
-    """
-    Based on chi-algorithm by M. Duckham et al.
-
-    Time complexity:
-        ``O(len(points) * log len(points))``
-    Memory complexity:
-        ``O(len(points))``
-    Reference:
-        http://www.geosensor.net/papers/duckham08.PR.pdf
-    """
-    triangulation = triangular.delaunay(points)
-    boundary_edges = triangular.to_boundary_edges(triangulation)
-    boundary_points = {edge.start for edge in boundary_edges}
-
-    def is_mouth(edge: QuadEdge) -> bool:
-        return edge.left_from_start.end not in boundary_points
-
-    edges_neighbours = {edge: to_edge_neighbours(edge)
-                        for edge in boundary_edges}
-    candidates = red_black.set_(*filter(is_mouth, boundary_edges),
-                                key=_edge_key)
-    boundary_vertices = [edge.start for edge in boundary_edges]
-    contour_compressor(boundary_vertices)
-    current_size = len(boundary_vertices)
-    while current_size < size:
-        try:
-            edge = candidates.popmax()
-        except ValueError:
-            break
-        if not is_mouth(edge):
-            continue
-        size += 1
-        boundary_points.add(edge.left_from_start.end)
-        triangulation.delete(edge)
-        for neighbour in edges_neighbours.pop(edge):
-            edges_neighbours[neighbour] = to_edge_neighbours(neighbour)
-            candidates.add(neighbour)
-    result = [edge.start
-              for edge in triangular.to_boundary_edges(triangulation)]
-    contour_compressor(result)
-    return result
+def to_contour_edges_constructor(context: Context) -> ContourEdgesConstructor:
+    return partial(_contour_to_edges, context.segment_cls)
 
 
-def to_star_contour_vertices_factory(context: Context
-                                     ) -> PointsSequenceOperator:
-    return partial(_to_star_contour_vertices,
-                   to_angle_containment_detector(context),
-                   to_contour_compressor(context),
-                   context.contour_centroid, context.multipoint_centroid)
+def to_convex_hull_size_constrictor(context: Context,
+                                    *,
+                                    max_size: Optional[int]
+                                    ) -> PointsSequenceOperator:
+    return partial(_constrict_convex_hull_size, context.points_convex_hull,
+                   to_max_convex_hull_constructor(context),
+                   context.angle_orientation,
+                   max_size=max_size)
 
 
-def _to_star_contour_vertices(angle_containment_detector
-                              : QuaternaryPointFunction[bool],
-                              contour_compressor: ContourCompressor,
-                              contour_centroid_constructor
-                              : CentroidConstructor,
-                              multipoint_centroid_constructor
-                              : CentroidConstructor,
-                              points: Sequence[Point]) -> Sequence[Point]:
-    centroid = multipoint_centroid_constructor(points)
-    result, prev_size = points, len(points) + 1
-    while 2 < len(result) < prev_size:
-        prev_size = len(result)
-        result = [deque(candidates,
-                        maxlen=1)[0][1]
-                  for _, candidates in groupby(sorted(
-                    (_to_segment_angle(centroid, point), point)
-                    for point in result),
-                    key=itemgetter(0))]
-        if len(result) > 2:
-            centroid = contour_centroid_constructor(result)
-            index = 0
-            while max(index, 2) < len(result):
-                if not angle_containment_detector(
-                        result[index], result[index - 1],
-                        result[(index + 1) % len(result)], centroid):
-                    del result[index]
-                index += 1
-            contour_compressor(result)
-    return result
+def to_convex_vertices_sequence_factory(context: Context
+                                        ) -> Callable[[Sequence[Point],
+                                                       Random],
+                                                      Sequence[Point]]:
+    return partial(_to_convex_vertices_sequence, context.points_convex_hull)
+
+
+def to_max_convex_hull_constructor(context: Context) -> PointsSequenceOperator:
+    return partial(_to_max_convex_hull, context.angle_orientation)
 
 
 def to_multicontour_factory(context: Context
@@ -142,6 +80,12 @@ def to_multicontour_factory(context: Context
                                            Chooser], Multicontour]:
     return partial(_to_multicontour, to_vertices_sequence_factory(context),
                    context.contour_cls, to_contour_edges_constructor(context))
+
+
+def to_polygon_border_edges_constructor(context: Context
+                                        ) -> PolygonEdgesConstructor:
+    return partial(_polygon_to_border_edges,
+                   to_contour_edges_constructor(context))
 
 
 def to_polygon_factory(context: Context
@@ -154,8 +98,59 @@ def to_polygon_factory(context: Context
                    context.segments_relation)
 
 
-def _to_segment_angle(start: Point, end: Point) -> Coordinate:
-    return math.atan2(end.y - start.y, end.x - start.x)
+def to_star_contour_vertices_factory(context: Context
+                                     ) -> PointsSequenceOperator:
+    return partial(_to_star_contour_vertices,
+                   to_angle_containment_detector(context),
+                   to_contour_compressor(context),
+                   context.contour_centroid, context.multipoint_centroid)
+
+
+def to_vertices_sequence_factory(context: Context
+                                 ) -> Callable[[Sequence[Point], int],
+                                               Sequence[Point]]:
+    return partial(_to_vertices_sequence, to_contour_compressor(context))
+
+
+def _constrict_convex_hull_size(convex_hull_constructor
+                                : PointsSequenceOperator,
+                                max_convex_hull_constructor
+                                : PointsSequenceOperator,
+                                orienteer: Orienteer,
+                                points: Sequence[Point],
+                                *,
+                                max_size: Optional[int]) -> Sequence[Point]:
+    if max_size is None:
+        return points
+    convex_hull = convex_hull_constructor(points)
+    if len(convex_hull) <= max_size:
+        return points
+    sorted_convex_hull = sorted(
+            convex_hull,
+            key=partial(_to_squared_points_distance, convex_hull[0]))
+    new_border_points = []
+    for index in range(max_size):
+        quotient, remainder = divmod(index, 2)
+        if remainder:
+            new_border_points.append(sorted_convex_hull[-quotient - 1])
+        else:
+            new_border_points.append(sorted_convex_hull[quotient])
+    new_border = list(max_convex_hull_constructor(new_border_points))
+    new_border_extra_endpoints_pairs = tuple(
+            {(new_border[index - 1], new_border[index])
+             for index in range(len(new_border))}
+            - {(convex_hull[index], convex_hull[index - 1])
+               for index in range(len(convex_hull))})
+    return (new_border
+            + [point
+               for point in set(points) - set(convex_hull)
+               if all(orienteer(start, end, point)
+                      is Orientation.COUNTERCLOCKWISE
+                      for start, end in new_border_extra_endpoints_pairs)])
+
+
+def _edge_key(edge: QuadEdge) -> Key:
+    return _to_squared_edge_length(edge), edge.start, edge.end
 
 
 def _to_multicontour(contour_vertices_factory
@@ -287,76 +282,53 @@ def _to_polygon(contour_cls: Type[Contour],
     return contour_cls(border_vertices), holes
 
 
-def _edge_key(edge: QuadEdge) -> Key:
-    return _to_squared_edge_length(edge), edge.start, edge.end
+def _to_segment_angle(start: Point, end: Point) -> Coordinate:
+    return math.atan2(end.y - start.y, end.x - start.x)
+
+
+def _to_star_contour_vertices(angle_containment_detector
+                              : QuaternaryPointFunction[bool],
+                              contour_compressor: ContourCompressor,
+                              contour_centroid_constructor
+                              : CentroidConstructor,
+                              multipoint_centroid_constructor
+                              : CentroidConstructor,
+                              points: Sequence[Point]) -> Sequence[Point]:
+    centroid = multipoint_centroid_constructor(points)
+    result, prev_size = points, len(points) + 1
+    while 2 < len(result) < prev_size:
+        prev_size = len(result)
+        result = [deque(candidates,
+                        maxlen=1)[0][1]
+                  for _, candidates in groupby(sorted(
+                    (_to_segment_angle(centroid, point), point)
+                    for point in result),
+                    key=itemgetter(0))]
+        if len(result) > 2:
+            centroid = contour_centroid_constructor(result)
+            index = 0
+            while max(index, 2) < len(result):
+                if not angle_containment_detector(
+                        result[index], result[index - 1],
+                        result[(index + 1) % len(result)], centroid):
+                    del result[index]
+                index += 1
+            contour_compressor(result)
+    return result
 
 
 def _to_squared_edge_length(edge: QuadEdge) -> Coordinate:
     return _to_squared_points_distance(edge.start, edge.end)
 
 
-def to_convex_hull_size_constrictor(context: Context,
-                                    *,
-                                    max_size: Optional[int]
-                                    ) -> PointsSequenceOperator:
-    return partial(_constrict_convex_hull_size, context.points_convex_hull,
-                   to_max_convex_hull_constructor(context),
-                   context.angle_orientation,
-                   max_size=max_size)
-
-
-def _constrict_convex_hull_size(convex_hull_constructor
-                                : PointsSequenceOperator,
-                                max_convex_hull_constructor
-                                : PointsSequenceOperator,
-                                orienteer: Orienteer,
-                                points: Sequence[Point],
-                                *,
-                                max_size: Optional[int]) -> Sequence[Point]:
-    if max_size is None:
-        return points
-    convex_hull = convex_hull_constructor(points)
-    if len(convex_hull) <= max_size:
-        return points
-    sorted_convex_hull = sorted(
-            convex_hull,
-            key=partial(_to_squared_points_distance, convex_hull[0]))
-    new_border_points = []
-    for index in range(max_size):
-        quotient, remainder = divmod(index, 2)
-        if remainder:
-            new_border_points.append(sorted_convex_hull[-quotient - 1])
-        else:
-            new_border_points.append(sorted_convex_hull[quotient])
-    new_border = list(max_convex_hull_constructor(new_border_points))
-    new_border_extra_endpoints_pairs = tuple(
-            {(new_border[index - 1], new_border[index])
-             for index in range(len(new_border))}
-            - {(convex_hull[index], convex_hull[index - 1])
-               for index in range(len(convex_hull))})
-    return (new_border
-            + [point
-               for point in set(points) - set(convex_hull)
-               if all(orienteer(start, end, point)
-                      is Orientation.COUNTERCLOCKWISE
-                      for start, end in new_border_extra_endpoints_pairs)])
-
-
 def _to_squared_points_distance(left: Point, right: Point) -> Coordinate:
     return (left.x - right.x) ** 2 + (left.y - right.y) ** 2
 
 
-def to_convex_vertices_sequence_factory(context: Context
-                                        ) -> Callable[
-    [Sequence[Point], Random],
-    Sequence[Point]]:
-    return partial(_to_convex_contour_vertices, context.points_convex_hull)
-
-
-def _to_convex_contour_vertices(convex_hull_constructor
+def _to_convex_vertices_sequence(convex_hull_constructor
                                 : PointsSequenceOperator,
-                                points: Sequence[Point],
-                                random: Random) -> Sequence[Point]:
+                                 points: Sequence[Point],
+                                 random: Random) -> Sequence[Point]:
     """
     Based on Valtr algorithm by Sander Verdonschot.
 
@@ -415,10 +387,6 @@ def _to_convex_contour_vertices(convex_hull_constructor
                                     for x, y in coordinates_pairs])
 
 
-def to_contour_compressor(context: Context) -> ContourCompressor:
-    return partial(_compress_contour, context.angle_orientation)
-
-
 def _compress_contour(orienteer: Orienteer,
                       vertices: MutableSequence[Point]) -> None:
     index = -len(vertices) + 1
@@ -436,20 +404,6 @@ def _compress_contour(orienteer: Orienteer,
                     is Orientation.COLLINEAR)):
             del vertices[index - 1]
         index += 1
-
-
-def to_contour_edges_constructor(context: Context) -> ContourEdgesConstructor:
-    return partial(_contour_to_edges, context.segment_cls)
-
-
-def to_max_convex_hull_constructor(context: Context) -> PointsSequenceOperator:
-    return partial(_to_max_convex_hull, context.angle_orientation)
-
-
-def to_polygon_border_edges_constructor(context: Context
-                                        ) -> PolygonEdgesConstructor:
-    return partial(_polygon_to_border_edges,
-                   to_contour_edges_constructor(context))
 
 
 def _to_max_convex_hull(orienteer: Orienteer,
@@ -484,3 +438,49 @@ def _polygon_to_border_edges(contour_edges_constructor
                              polygon: Polygon) -> Sequence[Segment]:
     border, _ = polygon
     return contour_edges_constructor(border.vertices)
+
+
+def _to_vertices_sequence(contour_compressor: ContourCompressor,
+                          points: Sequence[Point],
+                          size: int) -> Sequence[Point]:
+    """
+    Based on chi-algorithm by M. Duckham et al.
+
+    Time complexity:
+        ``O(len(points) * log len(points))``
+    Memory complexity:
+        ``O(len(points))``
+    Reference:
+        http://www.geosensor.net/papers/duckham08.PR.pdf
+    """
+    triangulation = triangular.delaunay(points)
+    boundary_edges = triangular.to_boundary_edges(triangulation)
+    boundary_points = {edge.start for edge in boundary_edges}
+
+    def is_mouth(edge: QuadEdge) -> bool:
+        return edge.left_from_start.end not in boundary_points
+
+    edges_neighbours = {edge: to_edge_neighbours(edge)
+                        for edge in boundary_edges}
+    candidates = red_black.set_(*filter(is_mouth, boundary_edges),
+                                key=_edge_key)
+    boundary_vertices = [edge.start for edge in boundary_edges]
+    contour_compressor(boundary_vertices)
+    current_size = len(boundary_vertices)
+    while current_size < size:
+        try:
+            edge = candidates.popmax()
+        except ValueError:
+            break
+        if not is_mouth(edge):
+            continue
+        size += 1
+        boundary_points.add(edge.left_from_start.end)
+        triangulation.delete(edge)
+        for neighbour in edges_neighbours.pop(edge):
+            edges_neighbours[neighbour] = to_edge_neighbours(neighbour)
+            candidates.add(neighbour)
+    result = [edge.start
+              for edge in triangular.to_boundary_edges(triangulation)]
+    contour_compressor(result)
+    return result
