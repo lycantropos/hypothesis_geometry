@@ -93,9 +93,9 @@ def to_polygon_factory(context: Context
                                       Chooser], Polygon]:
     return partial(_to_polygon, context.contour_cls,
                    to_contour_compressor(context),
-                   to_contour_edges_constructor(context),
-                   to_vertices_sequence_factory(context), context.segment_cls,
-                   context.segments_relation)
+                   to_contour_edges_constructor(context), context.polygon_cls,
+                   context.segment_cls, context.segments_relation,
+                   to_vertices_sequence_factory(context))
 
 
 def to_star_contour_vertices_factory(context: Context
@@ -189,9 +189,11 @@ def _to_multicontour(contour_vertices_factory
 def _to_polygon(contour_cls: Type[Contour],
                 contour_compressor: ContourCompressor,
                 contour_edges_constructor: ContourEdgesConstructor,
-                contour_vertices_factory,
+                polygon_cls: Type[Polygon],
                 segment_cls: Type[Segment],
                 segments_relater: QuaternaryPointFunction[Relation],
+                vertices_sequence_factory: Callable[[Sequence[Point], int],
+                                                    Sequence[Point]],
                 points: Sequence[Point],
                 border_size: int,
                 holes_sizes: List[int],
@@ -214,7 +216,7 @@ def _to_polygon(contour_cls: Type[Contour],
     holes_segments = []
     for hole_size in holes_sizes:
         hole_points = inner_points[:hole_size]
-        hole_vertices = contour_vertices_factory(hole_points, hole_size)[::-1]
+        hole_vertices = vertices_sequence_factory(hole_points, hole_size)[::-1]
         holes.append(contour_cls(hole_vertices))
         hole_segments = contour_edges_constructor(hole_vertices)
         holes_segments.extend(hole_segments)
@@ -278,7 +280,7 @@ def _to_polygon(contour_cls: Type[Contour],
     border_vertices = [edge.start
                        for edge in triangular.to_boundary_edges(triangulation)]
     contour_compressor(border_vertices)
-    return contour_cls(border_vertices), holes
+    return polygon_cls(contour_cls(border_vertices), holes)
 
 
 def _to_segment_angle(start: Point, end: Point) -> Coordinate:
@@ -435,8 +437,7 @@ def _contour_to_edges(segments_cls: Type[Segment],
 def _polygon_to_border_edges(contour_edges_constructor
                              : ContourEdgesConstructor,
                              polygon: Polygon) -> Sequence[Segment]:
-    border, _ = polygon
-    return contour_edges_constructor(border.vertices)
+    return contour_edges_constructor(polygon.border.vertices)
 
 
 def _to_vertices_sequence(contour_compressor: ContourCompressor,

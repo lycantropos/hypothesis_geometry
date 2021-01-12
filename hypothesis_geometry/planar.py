@@ -8,6 +8,7 @@ from ground.hints import (Box,
                           Multipoint,
                           Multisegment,
                           Point,
+                          Polygon,
                           Segment)
 from hypothesis.errors import HypothesisWarning
 
@@ -35,7 +36,6 @@ from .core.enums import Size
 from .hints import (Mix,
                     Multicontour,
                     Multipolygon,
-                    Polygon,
                     Polyline,
                     Strategy)
 
