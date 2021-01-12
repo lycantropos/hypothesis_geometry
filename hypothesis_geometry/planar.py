@@ -107,7 +107,7 @@ def points(x_coordinates: Strategy[Coordinate],
 def multipoints(x_coordinates: Strategy[Coordinate],
                 y_coordinates: Optional[Strategy[Coordinate]] = None,
                 *,
-                min_size: int = Size.EMPTY_SEQUENCE,
+                min_size: int = 0,
                 max_size: Optional[int] = None) -> Strategy[Multipoint]:
     """
     Returns a strategy for multipoints.
@@ -180,10 +180,10 @@ def multipoints(x_coordinates: Strategy[Coordinate],
     ...     for point in multipoint.points)
     True
     """
-    _validate_sizes(min_size, max_size, Size.EMPTY_SEQUENCE)
+    _validate_sizes(min_size, max_size, 0)
     context = _get_context()
     return _multipoints(x_coordinates, y_coordinates,
-                        min_size=max(min_size, Size.EMPTY_SEQUENCE),
+                        min_size=max(min_size, 0),
                         max_size=max_size,
                         context=context)
 
@@ -260,7 +260,7 @@ def segments(x_coordinates: Strategy[Coordinate],
 def multisegments(x_coordinates: Strategy[Coordinate],
                   y_coordinates: Optional[Strategy[Coordinate]] = None,
                   *,
-                  min_size: int = Size.EMPTY_SEQUENCE,
+                  min_size: int = 0,
                   max_size: Optional[int] = None) -> Strategy[Multisegment]:
     """
     Returns a strategy for multisegments.
@@ -342,9 +342,9 @@ def multisegments(x_coordinates: Strategy[Coordinate],
     ...     for segment in multisegment.segments)
     True
     """
-    _validate_sizes(min_size, max_size, Size.EMPTY_SEQUENCE)
+    _validate_sizes(min_size, max_size, 0)
     return _multisegments(x_coordinates, y_coordinates,
-                          min_size=max(min_size, Size.EMPTY_SEQUENCE),
+                          min_size=max(min_size, 0),
                           max_size=max_size,
                           context=_get_context())
 
@@ -1021,7 +1021,7 @@ def star_contours(x_coordinates: Strategy[Coordinate],
 def multicontours(x_coordinates: Strategy[Coordinate],
                   y_coordinates: Optional[Strategy[Coordinate]] = None,
                   *,
-                  min_size: int = Size.EMPTY_SEQUENCE,
+                  min_size: int = 0,
                   max_size: Optional[int] = None,
                   min_contour_size: int = Size.TRIANGULAR_CONTOUR,
                   max_contour_size: Optional[int] = None
@@ -1121,12 +1121,12 @@ def multicontours(x_coordinates: Strategy[Coordinate],
     ...     for vertex in contour.vertices)
     True
     """
-    _validate_sizes(min_size, max_size, Size.EMPTY_SEQUENCE)
+    _validate_sizes(min_size, max_size, 0)
     _validate_sizes(min_contour_size, max_contour_size,
                     Size.TRIANGULAR_CONTOUR,
                     'min_contour_size', 'max_contour_size')
     return _multicontours(x_coordinates, y_coordinates,
-                          min_size=max(min_size, Size.EMPTY_SEQUENCE),
+                          min_size=max(min_size, 0),
                           max_size=max_size,
                           min_contour_size=max(min_contour_size,
                                                Size.TRIANGULAR_CONTOUR),
@@ -1139,7 +1139,7 @@ def polygons(x_coordinates: Strategy[Coordinate],
              *,
              min_size: int = Size.TRIANGULAR_CONTOUR,
              max_size: Optional[int] = None,
-             min_holes_size: int = Size.EMPTY_SEQUENCE,
+             min_holes_size: int = 0,
              max_holes_size: Optional[int] = None,
              min_hole_size: int = Size.TRIANGULAR_CONTOUR,
              max_hole_size: Optional[int] = None) -> Strategy[Polygon]:
@@ -1278,15 +1278,14 @@ def polygons(x_coordinates: Strategy[Coordinate],
     True
     """
     _validate_sizes(min_size, max_size, Size.TRIANGULAR_CONTOUR)
-    _validate_sizes(min_holes_size, max_holes_size, Size.EMPTY_SEQUENCE,
+    _validate_sizes(min_holes_size, max_holes_size, 0,
                     'min_holes_size', 'max_holes_size')
     _validate_sizes(min_hole_size, max_hole_size, Size.TRIANGULAR_CONTOUR,
                     'min_hole_size', 'max_hole_size')
     return _polygons(x_coordinates, y_coordinates,
                      min_size=max(min_size, Size.TRIANGULAR_CONTOUR),
                      max_size=max_size,
-                     min_holes_size=max(min_holes_size,
-                                        Size.EMPTY_SEQUENCE),
+                     min_holes_size=max(min_holes_size, 0),
                      max_holes_size=max_holes_size,
                      min_hole_size=max(min_hole_size, Size.TRIANGULAR_CONTOUR),
                      max_hole_size=max_hole_size,
@@ -1296,11 +1295,11 @@ def polygons(x_coordinates: Strategy[Coordinate],
 def multipolygons(x_coordinates: Strategy[Coordinate],
                   y_coordinates: Optional[Strategy[Coordinate]] = None,
                   *,
-                  min_size: int = Size.EMPTY_SEQUENCE,
+                  min_size: int = 0,
                   max_size: Optional[int] = None,
                   min_border_size: int = Size.TRIANGULAR_CONTOUR,
                   max_border_size: Optional[int] = None,
-                  min_holes_size: int = Size.EMPTY_SEQUENCE,
+                  min_holes_size: int = 0,
                   max_holes_size: Optional[int] = None,
                   min_hole_size: int = Size.TRIANGULAR_CONTOUR,
                   max_hole_size: Optional[int] = None
@@ -1471,26 +1470,24 @@ def multipolygons(x_coordinates: Strategy[Coordinate],
     ...     for border, holes in multipolygon)
     True
     """
-    _validate_sizes(min_size, max_size, Size.EMPTY_SEQUENCE)
+    _validate_sizes(min_size, max_size, 0)
     _validate_sizes(min_border_size, max_border_size, Size.TRIANGULAR_CONTOUR,
                     'min_border_size', 'max_border_size')
-    _validate_sizes(min_holes_size, max_holes_size, Size.EMPTY_SEQUENCE,
-                    'min_holes_size', 'max_holes_size')
+    _validate_sizes(min_holes_size, max_holes_size, 0, 'min_holes_size',
+                    'max_holes_size')
     _validate_sizes(min_hole_size, max_hole_size, Size.TRIANGULAR_CONTOUR,
                     'min_hole_size', 'max_hole_size')
-    min_size, min_border_size, min_hole_size = (
-        max(min_size, Size.EMPTY_SEQUENCE),
-        max(min_border_size, Size.TRIANGULAR_CONTOUR),
-        max(min_hole_size, Size.TRIANGULAR_CONTOUR))
     context = _get_context()
     return _multipolygons(x_coordinates, y_coordinates,
-                          min_size=min_size,
+                          min_size=max(min_size, 0),
                           max_size=max_size,
-                          min_border_size=min_border_size,
+                          min_border_size=max(min_border_size,
+                                              Size.TRIANGULAR_CONTOUR),
                           max_border_size=max_border_size,
                           min_holes_size=min_holes_size,
                           max_holes_size=max_holes_size,
-                          min_hole_size=min_hole_size,
+                          min_hole_size=max(min_hole_size,
+                                            Size.TRIANGULAR_CONTOUR),
                           max_hole_size=max_hole_size,
                           context=context)
 
@@ -1498,15 +1495,15 @@ def multipolygons(x_coordinates: Strategy[Coordinate],
 def mixes(x_coordinates: Strategy[Coordinate],
           y_coordinates: Optional[Strategy[Coordinate]] = None,
           *,
-          min_multipoint_size: int = Size.EMPTY_SEQUENCE,
+          min_multipoint_size: int = 0,
           max_multipoint_size: Optional[int] = None,
-          min_multisegment_size: int = Size.EMPTY_SEQUENCE,
+          min_multisegment_size: int = 0,
           max_multisegment_size: Optional[int] = None,
-          min_multipolygon_size: int = Size.EMPTY_SEQUENCE,
+          min_multipolygon_size: int = 0,
           max_multipolygon_size: Optional[int] = None,
           min_multipolygon_border_size: int = Size.TRIANGULAR_CONTOUR,
           max_multipolygon_border_size: Optional[int] = None,
-          min_multipolygon_holes_size: int = Size.EMPTY_SEQUENCE,
+          min_multipolygon_holes_size: int = 0,
           max_multipolygon_holes_size: Optional[int] = None,
           min_multipolygon_hole_size: int = Size.TRIANGULAR_CONTOUR,
           max_multipolygon_hole_size: Optional[int] = None) -> Strategy[Mix]:
@@ -1761,20 +1758,17 @@ def mixes(x_coordinates: Strategy[Coordinate],
     ...     for border, holes in multipolygon)
     True
     """
-    _validate_sizes(min_multipoint_size, max_multipoint_size,
-                    Size.EMPTY_SEQUENCE, 'min_multipoint_size',
-                    'max_multipoint_size')
-    _validate_sizes(min_multisegment_size, max_multisegment_size,
-                    Size.EMPTY_SEQUENCE, 'min_multisegment_size',
-                    'max_multisegment_size')
-    _validate_sizes(min_multipolygon_size, max_multipolygon_size,
-                    Size.EMPTY_SEQUENCE, 'min_multipolygon_size',
-                    'max_multipolygon_size')
+    _validate_sizes(min_multipoint_size, max_multipoint_size, 0,
+                    'min_multipoint_size', 'max_multipoint_size')
+    _validate_sizes(min_multisegment_size, max_multisegment_size, 0,
+                    'min_multisegment_size', 'max_multisegment_size')
+    _validate_sizes(min_multipolygon_size, max_multipolygon_size, 0,
+                    'min_multipolygon_size', 'max_multipolygon_size')
     _validate_sizes(min_multipolygon_border_size, max_multipolygon_border_size,
                     Size.TRIANGULAR_CONTOUR, 'min_multipolygon_border_size',
                     'max_multipolygon_border_size')
     _validate_sizes(min_multipolygon_holes_size, max_multipolygon_holes_size,
-                    Size.EMPTY_SEQUENCE, 'min_multipolygon_holes_size',
+                    0, 'min_multipolygon_holes_size',
                     'max_multipolygon_holes_size')
     _validate_sizes(min_multipolygon_hole_size, max_multipolygon_hole_size,
                     Size.TRIANGULAR_CONTOUR, 'min_multipolygon_hole_size',
@@ -1782,20 +1776,16 @@ def mixes(x_coordinates: Strategy[Coordinate],
     context = _get_context()
     return _mixes(
             x_coordinates, y_coordinates,
-            min_multipoint_size=max(min_multipoint_size,
-                                    Size.EMPTY_SEQUENCE),
+            min_multipoint_size=max(min_multipoint_size, 0),
             max_multipoint_size=max_multipoint_size,
-            min_multisegment_size=max(min_multisegment_size,
-                                      Size.EMPTY_SEQUENCE),
+            min_multisegment_size=max(min_multisegment_size, 0),
             max_multisegment_size=max_multisegment_size,
-            min_multipolygon_size=max(min_multipolygon_size,
-                                      Size.EMPTY_SEQUENCE),
+            min_multipolygon_size=max(min_multipolygon_size, 0),
             max_multipolygon_size=max_multipolygon_size,
             min_multipolygon_border_size=max(min_multipolygon_border_size,
                                              Size.TRIANGULAR_CONTOUR),
             max_multipolygon_border_size=max_multipolygon_border_size,
-            min_multipolygon_holes_size=max(min_multipolygon_holes_size,
-                                            Size.EMPTY_SEQUENCE),
+            min_multipolygon_holes_size=max(min_multipolygon_holes_size, 0),
             max_multipolygon_holes_size=max_multipolygon_holes_size,
             min_multipolygon_hole_size=max(min_multipolygon_hole_size,
                                            Size.TRIANGULAR_CONTOUR),
