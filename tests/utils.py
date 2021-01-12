@@ -539,11 +539,18 @@ are_vertices_strict = to_strict_vertices_detector(context)
 are_vertices_non_convex = to_non_convex_vertices_detector(context)
 
 
+def is_contour_strict(contour: Contour) -> bool:
+    return are_vertices_strict(contour.vertices)
+
+
 def is_multicontour_strict(multicontour: Multicontour) -> bool:
-    return all(are_vertices_strict(contour.vertices)
-               for contour in multicontour)
+    return all(is_contour_strict(contour) for contour in multicontour)
+
+
+def is_multipolygon_strict(multipolygon: Multipolygon) -> bool:
+    return all(is_polygon_strict(polygon) for polygon in multipolygon)
 
 
 def is_polygon_strict(polygon: Polygon) -> bool:
-    return (are_vertices_strict(polygon.border.vertices)
+    return (is_contour_strict(polygon.border)
             and is_multicontour_strict(polygon.holes))
