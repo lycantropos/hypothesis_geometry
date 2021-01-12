@@ -131,10 +131,9 @@ def _constrict_convex_hull_size(convex_hull_constructor
     new_border_points = []
     for index in range(max_size):
         quotient, remainder = divmod(index, 2)
-        if remainder:
-            new_border_points.append(sorted_convex_hull[-quotient - 1])
-        else:
-            new_border_points.append(sorted_convex_hull[quotient])
+        new_border_points.append(sorted_convex_hull[-quotient - 1]
+                                 if remainder
+                                 else sorted_convex_hull[quotient])
     new_border = list(max_convex_hull_constructor(new_border_points))
     new_border_extra_endpoints_pairs = tuple(
             {(new_border[index - 1], new_border[index])
