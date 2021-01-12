@@ -105,20 +105,21 @@ def test_properties(data: DataObject,
                                                  max_x_value=max_x_value,
                                                  min_y_value=min_y_value,
                                                  max_y_value=max_y_value)
-    assert all(are_vertices_strict(border.vertices)
-               and is_multicontour_strict(holes)
-               for border, holes in result)
-    assert all(is_contour_non_self_intersecting(border)
+    assert all(are_vertices_strict(polygon.border.vertices)
+               and is_multicontour_strict(polygon.holes)
+               for polygon in result)
+    assert all(is_contour_non_self_intersecting(polygon.border)
                and all(is_contour_non_self_intersecting(hole)
-                       for hole in holes)
-               for border, holes in result)
-    assert contours_do_not_cross_or_overlap([border for border, _ in result])
-    assert all(contours_do_not_cross_or_overlap(holes)
-               for _, holes in result)
-    assert all(is_contour_counterclockwise(border)
+                       for hole in polygon.holes)
+               for polygon in result)
+    assert contours_do_not_cross_or_overlap([polygon.border
+                                             for polygon in result])
+    assert all(contours_do_not_cross_or_overlap(polygon.holes)
+               for polygon in result)
+    assert all(is_contour_counterclockwise(polygon.border)
                and all(not is_contour_counterclockwise(hole)
-                       for hole in holes)
-               for border, holes in result)
+                       for hole in polygon.holes)
+               for polygon in result)
 
 
 @given(strategies.data,
@@ -172,20 +173,21 @@ def test_same_coordinates(data: DataObject,
                                                  max_x_value=max_value,
                                                  min_y_value=min_value,
                                                  max_y_value=max_value)
-    assert all(are_vertices_strict(border.vertices)
-               and is_multicontour_strict(holes)
-               for border, holes in result)
-    assert all(is_contour_non_self_intersecting(border)
+    assert all(are_vertices_strict(polygon.border.vertices)
+               and is_multicontour_strict(polygon.holes)
+               for polygon in result)
+    assert all(is_contour_non_self_intersecting(polygon.border)
                and all(is_contour_non_self_intersecting(hole)
-                       for hole in holes)
-               for border, holes in result)
-    assert contours_do_not_cross_or_overlap([border for border, _ in result])
-    assert all(contours_do_not_cross_or_overlap(holes)
-               for _, holes in result)
-    assert all(is_contour_counterclockwise(border)
+                       for hole in polygon.holes)
+               for polygon in result)
+    assert contours_do_not_cross_or_overlap([polygon.border
+                                             for polygon in result])
+    assert all(contours_do_not_cross_or_overlap(polygon.holes)
+               for polygon in result)
+    assert all(is_contour_counterclockwise(polygon.border)
                and all(not is_contour_counterclockwise(hole)
-                       for hole in holes)
-               for border, holes in result)
+                       for hole in polygon.holes)
+               for polygon in result)
 
 
 @given(strategies.coordinates_strategies,
