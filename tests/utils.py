@@ -18,6 +18,7 @@ from ground.hints import Coordinate
 from hypothesis import strategies
 
 from hypothesis_geometry.core.contracts import (
+    has_valid_size,
     to_non_convex_vertices_detector,
     to_strict_vertices_detector)
 from hypothesis_geometry.core.factories import to_contour_edges_constructor
@@ -27,10 +28,9 @@ from hypothesis_geometry.hints import (Mix,
                                        Multipolygon,
                                        Polygon,
                                        Strategy)
-from hypothesis_geometry.planar import (MIN_POLYLINE_SIZE,
-                                        _has_valid_size)
+from hypothesis_geometry.planar import Size
 
-has_valid_size = _has_valid_size
+has_valid_size = has_valid_size
 Domain = TypeVar('Domain')
 Key = Callable[[Domain], Any]
 Limits = Tuple[Coordinate, Optional[Coordinate]]
@@ -487,7 +487,7 @@ def is_polygon(object_: Any) -> bool:
 
 def is_polyline(object_: Any) -> bool:
     return (isinstance(object_, list)
-            and len(object_) >= MIN_POLYLINE_SIZE
+            and len(object_) >= Size.MIN_POLYLINE
             and all(map(is_point, object_)))
 
 
