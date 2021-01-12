@@ -31,6 +31,7 @@ from .contracts import (are_segments_non_crossing_non_overlapping,
                         has_horizontal_lowermost_segment,
                         has_valid_size,
                         has_vertical_leftmost_segment,
+                        multicontour_has_valid_sizes,
                         to_non_collinear_points_detector,
                         to_non_convex_vertices_detector,
                         to_strict_vertices_detector)
@@ -400,15 +401,6 @@ def multicontours(x_coordinates: Strategy[Coordinate],
                 .flatmap(pack(strategies.tuples))
                 .map(list))
 
-    def has_valid_sizes(multicontour: Multicontour) -> bool:
-        return (has_valid_size(multicontour,
-                               min_size=min_size,
-                               max_size=max_size)
-                and all(has_valid_size(contour.vertices,
-                                       min_size=min_contour_size,
-                                       max_size=max_contour_size)
-                        for contour in multicontour))
-
     return (_unique_points_sequences(
             x_coordinates, y_coordinates,
             min_size=min_size * min_contour_size,
@@ -417,7 +409,11 @@ def multicontours(x_coordinates: Strategy[Coordinate],
                       else max_size * max_contour_size),
             context=context)
             .flatmap(to_multicontours)
-            .filter(has_valid_sizes))
+            .filter(partial(multicontour_has_valid_sizes,
+                            min_size=min_size,
+                            max_size=max_size,
+                            min_contour_size=min_contour_size,
+                            max_contour_size=max_contour_size)))
 
 
 def multipoints(x_coordinates: Strategy[Coordinate],
