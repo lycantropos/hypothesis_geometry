@@ -25,6 +25,7 @@ from hypothesis_geometry.hints import (Mix,
                                        Multicontour,
                                        Multipolygon,
                                        Strategy)
+from .constants import MinContourSize
 from .contracts import (are_segments_non_crossing_non_overlapping,
                         has_horizontal_lowermost_segment,
                         has_valid_size,
@@ -33,7 +34,6 @@ from .contracts import (are_segments_non_crossing_non_overlapping,
                         to_non_collinear_points_detector,
                         to_non_convex_vertices_detector,
                         to_strict_vertices_detector)
-from .constants import MinContourSize
 from .factories import (to_contour_edges_constructor,
                         to_convex_hull_size_constrictor,
                         to_convex_vertices_sequence_factory,
