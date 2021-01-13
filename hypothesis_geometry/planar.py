@@ -6,6 +6,7 @@ from ground.hints import (Box as _Box,
                           Contour as _Contour,
                           Coordinate as _Coordinate,
                           Multipoint as _Multipoint,
+                          Multipolygon as _Multipolygon,
                           Multisegment as _Multisegment,
                           Point as _Point,
                           Polygon as _Polygon,
@@ -35,7 +36,6 @@ from .core.constants import (MIN_CONTOUR_SIZE as _MIN_CONTOUR_SIZE,
                              MinContourSize as _MinContourSize)
 from .hints import (Mix as _Mix,
                     Multicontour as _Multicontour,
-                    Multipolygon as _Multipolygon,
                     Strategy as _Strategy)
 
 
