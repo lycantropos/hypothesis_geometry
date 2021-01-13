@@ -12,7 +12,6 @@ from tests import strategies
 from tests.utils import (CoordinatesLimitsType,
                          SizesPair,
                          contours_do_not_cross_or_overlap,
-                         has_valid_size,
                          is_contour_counterclockwise,
                          is_contour_non_self_intersecting,
                          is_multipolygon,
@@ -108,15 +107,15 @@ def test_properties(data: DataObject,
     assert all(is_contour_non_self_intersecting(polygon.border)
                and all(is_contour_non_self_intersecting(hole)
                        for hole in polygon.holes)
-               for polygon in result)
+               for polygon in result.polygons)
     assert contours_do_not_cross_or_overlap([polygon.border
-                                             for polygon in result])
+                                             for polygon in result.polygons])
     assert all(contours_do_not_cross_or_overlap(polygon.holes)
-               for polygon in result)
+               for polygon in result.polygons)
     assert all(is_contour_counterclockwise(polygon.border)
                and all(not is_contour_counterclockwise(hole)
                        for hole in polygon.holes)
-               for polygon in result)
+               for polygon in result.polygons)
 
 
 @given(strategies.data,
@@ -150,9 +149,6 @@ def test_same_coordinates(data: DataObject,
     result = data.draw(strategy)
 
     assert is_multipolygon(result)
-    assert has_valid_size(result,
-                          min_size=min_size,
-                          max_size=max_size)
     assert multipolygon_has_valid_sizes(result,
                                         min_size=min_size,
                                         max_size=max_size,
@@ -174,15 +170,15 @@ def test_same_coordinates(data: DataObject,
     assert all(is_contour_non_self_intersecting(polygon.border)
                and all(is_contour_non_self_intersecting(hole)
                        for hole in polygon.holes)
-               for polygon in result)
+               for polygon in result.polygons)
     assert contours_do_not_cross_or_overlap([polygon.border
-                                             for polygon in result])
+                                             for polygon in result.polygons])
     assert all(contours_do_not_cross_or_overlap(polygon.holes)
-               for polygon in result)
+               for polygon in result.polygons)
     assert all(is_contour_counterclockwise(polygon.border)
                and all(not is_contour_counterclockwise(hole)
                        for hole in polygon.holes)
-               for polygon in result)
+               for polygon in result.polygons)
 
 
 @given(strategies.coordinates_strategies,

@@ -54,7 +54,7 @@ def test_properties(data: DataObject,
                                             max_x_value=max_x_value,
                                             min_y_value=min_y_value,
                                             max_y_value=max_y_value)
-    assert is_contour_strict(result.vertices)
+    assert is_contour_strict(result)
     assert not are_vertices_non_convex(result.vertices)
     assert is_contour_non_self_intersecting(result)
     assert is_contour_counterclockwise(result)
