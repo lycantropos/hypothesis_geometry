@@ -8,9 +8,9 @@ from typing import (Optional,
 from ground.hints import Coordinate
 from hypothesis import strategies
 
+from hypothesis_geometry.core.constants import MinContourSize
 from hypothesis_geometry.core.utils import sort_pair
 from hypothesis_geometry.hints import Strategy
-from hypothesis_geometry.planar import Size
 from tests.utils import (Limits,
                          identity,
                          to_pairs)
@@ -61,20 +61,20 @@ def to_invalid_sizes_pairs(min_valid_size: int
                .map(tuple)))
 
 
-concave_contours_sizes_pairs = to_sizes_pairs(Size.RECTANGULAR_CONTOUR)
-convex_contours_sizes_pairs = to_sizes_pairs(Size.TRIANGULAR_CONTOUR)
+concave_contours_sizes_pairs = to_sizes_pairs(MinContourSize.CONCAVE)
+convex_contours_sizes_pairs = to_sizes_pairs(MinContourSize.CONVEX)
 multicontours_sizes_pairs = to_sizes_pairs(0, 5)
 multipoints_sizes_pairs = to_sizes_pairs(0)
 multipolygons_sizes_pairs = to_sizes_pairs(0, 5)
 multisegments_sizes_pairs = to_sizes_pairs(0)
 non_valid_concave_contours_sizes_pairs = to_non_valid_sizes_pairs(
-        Size.RECTANGULAR_CONTOUR)
+        MinContourSize.CONCAVE)
 non_valid_convex_contours_sizes_pairs = to_non_valid_sizes_pairs(
-        Size.TRIANGULAR_CONTOUR)
+        MinContourSize.CONVEX)
 invalid_concave_contours_sizes_pairs = to_invalid_sizes_pairs(
-        Size.RECTANGULAR_CONTOUR)
+        MinContourSize.CONCAVE)
 invalid_convex_contours_sizes_pairs = to_invalid_sizes_pairs(
-        Size.TRIANGULAR_CONTOUR)
+        MinContourSize.CONVEX)
 invalid_multicontours_sizes_pairs = to_invalid_sizes_pairs(0)
 invalid_multipoints_sizes_pairs = to_invalid_sizes_pairs(0)
 invalid_multipolygons_sizes_pairs = to_invalid_sizes_pairs(0)
