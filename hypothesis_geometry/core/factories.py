@@ -29,7 +29,6 @@ from ground.hints import (Contour,
 from locus import segmental
 
 from hypothesis_geometry.hints import Multicontour
-from . import triangular
 from .contracts import (has_horizontal_lowermost_segment,
                         has_vertical_leftmost_segment,
                         to_angle_containment_detector)
@@ -40,9 +39,12 @@ from .hints import (CentroidConstructor,
                     Orienteer,
                     PointsSequenceOperator,
                     PolygonEdgesConstructor,
-                    QuaternaryPointFunction)
-from .subdivisional import (QuadEdge,
-                            to_edge_neighbours)
+                    QuadEdge,
+                    QuaternaryPointFunction,
+                    Triangulation)
+from .subdivisional import to_edge_neighbours
+from .triangular import (to_boundary_edges,
+                         to_triangulation_cls)
 
 
 def to_contour_compressor(context: Context) -> ContourCompressor:
@@ -95,6 +97,7 @@ def to_polygon_factory(context: Context
                    to_contour_compressor(context),
                    to_contour_edges_constructor(context), context.polygon_cls,
                    context.segment_cls, context.segments_relation,
+                   to_triangulation_cls(context),
                    to_vertices_sequence_factory(context))
 
 
@@ -109,7 +112,8 @@ def to_star_contour_vertices_factory(context: Context
 def to_vertices_sequence_factory(context: Context
                                  ) -> Callable[[Sequence[Point], int],
                                                Sequence[Point]]:
-    return partial(_to_vertices_sequence, to_contour_compressor(context))
+    return partial(_to_vertices_sequence, to_contour_compressor(context),
+                   to_triangulation_cls(context))
 
 
 def _constrict_convex_hull_size(convex_hull_constructor
@@ -192,14 +196,15 @@ def _to_polygon(contour_cls: Type[Contour],
                 polygon_cls: Type[Polygon],
                 segment_cls: Type[Segment],
                 segments_relater: QuaternaryPointFunction[Relation],
+                triangulation_cls: Type[Triangulation],
                 vertices_sequence_factory: Callable[[Sequence[Point], int],
                                                     Sequence[Point]],
                 points: Sequence[Point],
                 border_size: int,
                 holes_sizes: List[int],
                 chooser: Chooser) -> Polygon:
-    triangulation = triangular.delaunay(points)
-    boundary_edges = triangular.to_boundary_edges(triangulation)
+    triangulation = triangulation_cls.delaunay(points)
+    boundary_edges = to_boundary_edges(triangulation)
     boundary_points = {edge.start for edge in boundary_edges}
     sorting_key_chooser = partial(chooser, [None, attrgetter('y', 'x'),
                                             attrgetter('x', 'y')])
@@ -277,8 +282,7 @@ def _to_polygon(contour_cls: Type[Contour],
         for neighbour in edges_neighbours.pop(edge):
             edges_neighbours[neighbour] = to_edge_neighbours(neighbour)
             candidates.add(neighbour)
-    border_vertices = [edge.start
-                       for edge in triangular.to_boundary_edges(triangulation)]
+    border_vertices = [edge.start for edge in to_boundary_edges(triangulation)]
     contour_compressor(border_vertices)
     return polygon_cls(contour_cls(border_vertices), holes)
 
@@ -441,6 +445,7 @@ def _polygon_to_border_edges(contour_edges_constructor
 
 
 def _to_vertices_sequence(contour_compressor: ContourCompressor,
+                          triangulation_cls: Type[Triangulation],
                           points: Sequence[Point],
                           size: int) -> Sequence[Point]:
     """
@@ -453,8 +458,8 @@ def _to_vertices_sequence(contour_compressor: ContourCompressor,
     Reference:
         http://www.geosensor.net/papers/duckham08.PR.pdf
     """
-    triangulation = triangular.delaunay(points)
-    boundary_edges = triangular.to_boundary_edges(triangulation)
+    triangulation = triangulation_cls.delaunay(points)
+    boundary_edges = to_boundary_edges(triangulation)
     boundary_points = {edge.start for edge in boundary_edges}
 
     def is_mouth(edge: QuadEdge) -> bool:
@@ -480,7 +485,6 @@ def _to_vertices_sequence(contour_compressor: ContourCompressor,
         for neighbour in edges_neighbours.pop(edge):
             edges_neighbours[neighbour] = to_edge_neighbours(neighbour)
             candidates.add(neighbour)
-    result = [edge.start
-              for edge in triangular.to_boundary_edges(triangulation)]
+    result = [edge.start for edge in to_boundary_edges(triangulation)]
     contour_compressor(result)
     return result

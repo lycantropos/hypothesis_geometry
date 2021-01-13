@@ -7,8 +7,7 @@ from typing import (Callable,
 
 from bentley_ottmann.planar import segments_cross_or_overlap
 from ground.base import (Context,
-                         Orientation,
-                         get_context)
+                         Orientation)
 from ground.hints import (Coordinate,
                           Point,
                           Segment)
@@ -49,15 +48,6 @@ def has_vertical_leftmost_segment(segments: Sequence[Segment]) -> bool:
             or any(segment_to_max_x(segment) == max_x
                    and is_segment_vertical(segment)
                    for segment in segments))
-
-
-def is_point_inside_circumcircle(first_vertex: Point,
-                                 second_vertex: Point,
-                                 third_vertex: Point,
-                                 point: Point) -> bool:
-    context = get_context()
-    return context.point_point_point_incircle_test(first_vertex, second_vertex,
-                                                   third_vertex, point) > 0
 
 
 def is_segment_horizontal(segment: Segment) -> bool:
