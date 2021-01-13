@@ -15,6 +15,7 @@ from ground.base import (Context,
 from ground.hints import (Box,
                           Coordinate,
                           Multipoint,
+                          Multipolygon,
                           Multisegment,
                           Point,
                           Polygon,
@@ -23,7 +24,6 @@ from hypothesis import strategies
 
 from hypothesis_geometry.hints import (Mix,
                                        Multicontour,
-                                       Multipolygon,
                                        Strategy)
 from .constants import MinContourSize
 from .contracts import (are_segments_non_crossing_non_overlapping,
@@ -149,8 +149,9 @@ def mixes(x_coordinates: Strategy[Coordinate],
     min_multisegment_points_count = 2 * min_multisegment_size
     min_points_count = (min_multipoint_size + min_multisegment_points_count
                         + min_multipolygon_points_count)
-    multipoint_cls, multisegments_cls = (context.multipoint_cls,
-                                         context.multisegment_cls)
+    multipoint_cls = context.multipoint_cls
+    multipolygon_cls = context.multipolygon_cls
+    multisegments_cls = context.multisegment_cls
 
     @strategies.composite
     def xs_to_mix(draw: Callable[[Strategy[Domain]], Domain],
@@ -160,7 +161,7 @@ def mixes(x_coordinates: Strategy[Coordinate],
         (multipoint_points_counts, multisegment_points_counts,
          multipolygon_points_counts) = _to_points_counts(draw, len(xs))
         xs = sorted(xs)
-        points_sequence, segments_sequence, multipolygon = [], [], []
+        points_sequence, segments_sequence, polygons_sequence = [], [], []
 
         def draw_points(points_count: int) -> None:
             points_sequence.extend(draw(unique_points_sequences(
@@ -180,7 +181,7 @@ def mixes(x_coordinates: Strategy[Coordinate],
                             context=context)))
 
         def draw_polygon(points_count: int) -> None:
-            multipolygon.append(draw(polygons(
+            polygons_sequence.append(draw(polygons(
                     strategies.sampled_from(xs[:points_count]), y_coordinates,
                     min_size=min_multipolygon_border_size,
                     max_size=max_multipolygon_border_size,
@@ -210,10 +211,11 @@ def mixes(x_coordinates: Strategy[Coordinate],
                          is not draw_points)
                     and
                     not has_vertical_leftmost_segment(
-                            edges_constructor(multipolygon[-1])))
+                            edges_constructor(polygons_sequence[-1])))
             xs = xs[count - can_touch_next_geometry:]
         return (multipoint_cls(points_sequence),
-                multisegments_cls(segments_sequence), multipolygon)
+                multisegments_cls(segments_sequence),
+                multipolygon_cls(polygons_sequence))
 
     @strategies.composite
     def ys_to_mix(draw: Callable[[Strategy[Domain]], Domain],
@@ -223,7 +225,7 @@ def mixes(x_coordinates: Strategy[Coordinate],
         (multipoint_points_counts, multisegment_points_counts,
          multipolygon_points_counts) = _to_points_counts(draw, len(ys))
         ys = sorted(ys)
-        points_sequence, segments_sequence, multipolygon = [], [], []
+        points_sequence, segments_sequence, polygons_sequence = [], [], []
 
         def draw_points(points_count: int) -> None:
             points_sequence.extend(draw(unique_points_sequences(
@@ -243,7 +245,7 @@ def mixes(x_coordinates: Strategy[Coordinate],
                             context=context)))
 
         def draw_polygon(points_count: int) -> None:
-            multipolygon.append(draw(polygons(
+            polygons_sequence.append(draw(polygons(
                     x_coordinates, strategies.sampled_from(ys[:points_count]),
                     min_size=min_multipolygon_border_size,
                     max_size=max_multipolygon_border_size,
@@ -273,10 +275,11 @@ def mixes(x_coordinates: Strategy[Coordinate],
                          is not draw_points)
                     and
                     not has_horizontal_lowermost_segment(
-                            edges_constructor(multipolygon[-1])))
+                            edges_constructor(polygons_sequence[-1])))
             ys = ys[count - can_touch_next_geometry:]
         return (multipoint_cls(points_sequence),
-                multisegments_cls(segments_sequence), multipolygon)
+                multisegments_cls(segments_sequence),
+                multipolygon_cls(polygons_sequence))
 
     def _to_points_counts(draw: Callable[[Strategy[Domain]], Domain],
                           max_points_count: int
@@ -425,11 +428,11 @@ def multipolygons(x_coordinates: Strategy[Coordinate],
     min_polygon_points_count = min_border_size + min_holes_size * min_hole_size
 
     @strategies.composite
-    def xs_to_multipolygons(draw: Callable[[Strategy[Domain]], Domain],
-                            xs: List[Coordinate],
-                            edges_constructor: PolygonEdgesConstructor
-                            = to_polygon_border_edges_constructor(context)
-                            ) -> Multipolygon:
+    def xs_to_polygons_sequence(draw: Callable[[Strategy[Domain]], Domain],
+                                xs: List[Coordinate],
+                                edges_constructor: PolygonEdgesConstructor
+                                = to_polygon_border_edges_constructor(context)
+                                ) -> Sequence[Polygon]:
         size_upper_bound = len(xs) // min_polygon_points_count
         size = draw(strategies.integers(min_size,
                                         size_upper_bound
@@ -438,7 +441,7 @@ def multipolygons(x_coordinates: Strategy[Coordinate],
         if not size:
             return []
         xs = sorted(xs)
-        multipolygon = []
+        result = []
         start, coordinates_count = 0, len(xs)
         for index in range(size - 1):
             polygon_points_count = draw(strategies.integers(
@@ -454,27 +457,27 @@ def multipolygons(x_coordinates: Strategy[Coordinate],
                                     min_hole_size=min_hole_size,
                                     max_hole_size=max_hole_size,
                                     context=context))
-            multipolygon.append(polygon)
+            result.append(polygon)
             can_touch_next_polygon = not has_vertical_leftmost_segment(
                     edges_constructor(polygon))
             start += polygon_points_count - can_touch_next_polygon
-        multipolygon.append(draw(polygons(strategies.sampled_from(xs[start:]),
-                                          y_coordinates,
-                                          min_size=min_border_size,
-                                          max_size=max_border_size,
-                                          min_holes_size=min_holes_size,
-                                          max_holes_size=max_holes_size,
-                                          min_hole_size=min_hole_size,
-                                          max_hole_size=max_hole_size,
-                                          context=context)))
-        return multipolygon
+        result.append(draw(polygons(strategies.sampled_from(xs[start:]),
+                                    y_coordinates,
+                                    min_size=min_border_size,
+                                    max_size=max_border_size,
+                                    min_holes_size=min_holes_size,
+                                    max_holes_size=max_holes_size,
+                                    min_hole_size=min_hole_size,
+                                    max_hole_size=max_hole_size,
+                                    context=context)))
+        return result
 
     @strategies.composite
-    def ys_to_multipolygons(draw: Callable[[Strategy[Domain]], Domain],
-                            ys: List[Coordinate],
-                            edges_constructor: PolygonEdgesConstructor
-                            = to_polygon_border_edges_constructor(context)
-                            ) -> Multipolygon:
+    def ys_to_polygons_sequence(draw: Callable[[Strategy[Domain]], Domain],
+                                ys: List[Coordinate],
+                                edges_constructor: PolygonEdgesConstructor
+                                = to_polygon_border_edges_constructor(context)
+                                ) -> Sequence[Polygon]:
         size_scale = len(ys) // min_polygon_points_count
         size = draw(strategies.integers(min_size,
                                         size_scale
@@ -483,7 +486,7 @@ def multipolygons(x_coordinates: Strategy[Coordinate],
         if not size:
             return []
         ys = sorted(ys)
-        multipolygon = []
+        result = []
         start, coordinates_count = 0, len(ys)
         for index in range(size - 1):
             polygon_points_count = draw(strategies.integers(
@@ -499,20 +502,20 @@ def multipolygons(x_coordinates: Strategy[Coordinate],
                                     min_hole_size=min_hole_size,
                                     max_hole_size=max_hole_size,
                                     context=context))
-            multipolygon.append(polygon)
+            result.append(polygon)
             can_touch_next_polygon = not has_horizontal_lowermost_segment(
                     edges_constructor(polygon))
             start += polygon_points_count - can_touch_next_polygon
-        multipolygon.append(draw(polygons(x_coordinates,
-                                          strategies.sampled_from(ys[start:]),
-                                          min_size=min_border_size,
-                                          max_size=max_border_size,
-                                          min_holes_size=min_holes_size,
-                                          max_holes_size=max_holes_size,
-                                          min_hole_size=min_hole_size,
-                                          max_hole_size=max_hole_size,
-                                          context=context)))
-        return multipolygon
+        result.append(draw(polygons(x_coordinates,
+                                    strategies.sampled_from(ys[start:]),
+                                    min_size=min_border_size,
+                                    max_size=max_border_size,
+                                    min_holes_size=min_holes_size,
+                                    max_holes_size=max_holes_size,
+                                    min_hole_size=min_hole_size,
+                                    max_hole_size=max_hole_size,
+                                    context=context)))
+        return result
 
     min_points_count = min_size * min_polygon_points_count
     max_points_count = (None
@@ -522,32 +525,32 @@ def multipolygons(x_coordinates: Strategy[Coordinate],
                             or max_hole_size is None)
                         else max_size * (max_border_size
                                          + max_hole_size * max_holes_size))
-    result = ((strategies.lists(x_coordinates,
-                                min_size=min_points_count,
-                                max_size=max_points_count,
-                                unique=True)
-               .flatmap(xs_to_multipolygons))
-              | (strategies.lists(y_coordinates,
-                                  min_size=min_points_count,
-                                  max_size=max_points_count,
-                                  unique=True)
-                 .flatmap(ys_to_multipolygons)))
+    polygons_sequences = ((strategies.lists(x_coordinates,
+                                            min_size=min_points_count,
+                                            max_size=max_points_count,
+                                            unique=True)
+                           .flatmap(xs_to_polygons_sequence))
+                          | (strategies.lists(y_coordinates,
+                                              min_size=min_points_count,
+                                              max_size=max_points_count,
+                                              unique=True)
+                             .flatmap(ys_to_polygons_sequence)))
     if not min_holes_size:
-        def multicontour_to_multipolygon(multicontour: Multicontour,
-                                         polygon_cls: Type[Polygon]
-                                         = context.polygon_cls
-                                         ) -> Multipolygon:
+        def multicontour_to_polygons_sequence(multicontour: Multicontour,
+                                              polygon_cls: Type[Polygon]
+                                              = context.polygon_cls
+                                              ) -> Multipolygon:
             return [polygon_cls(contour, []) for contour in multicontour]
 
-        result = ((multicontours(x_coordinates, y_coordinates,
-                                 min_size=min_size,
-                                 max_size=max_size,
-                                 min_contour_size=min_border_size,
-                                 max_contour_size=max_border_size,
-                                 context=context)
-                   .map(multicontour_to_multipolygon))
-                  | result)
-    return result
+        polygons_sequences = ((multicontours(x_coordinates, y_coordinates,
+                                             min_size=min_size,
+                                             max_size=max_size,
+                                             min_contour_size=min_border_size,
+                                             max_contour_size=max_border_size,
+                                             context=context)
+                               .map(multicontour_to_polygons_sequence))
+                              | polygons_sequences)
+    return polygons_sequences.map(context.multipolygon_cls)
 
 
 def multisegments(x_coordinates: Strategy[Coordinate],

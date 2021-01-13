@@ -25,11 +25,11 @@ from ground.base import (Context,
 from ground.hints import (Contour,
                           Coordinate,
                           Point,
+                          Polygon,
                           Segment)
 from locus import segmental
 
-from hypothesis_geometry.hints import (Multicontour,
-                                       Polygon)
+from hypothesis_geometry.hints import Multicontour
 from . import triangular
 from .contracts import (has_horizontal_lowermost_segment,
                         has_vertical_leftmost_segment,
