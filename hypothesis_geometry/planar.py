@@ -1,16 +1,16 @@
-import warnings
-from typing import Optional
+import warnings as _warnings
+from typing import Optional as _Optional
 
 from ground.base import get_context as _get_context
-from ground.hints import (Box,
-                          Contour,
-                          Coordinate,
-                          Multipoint,
-                          Multisegment,
-                          Point,
-                          Polygon,
-                          Segment)
-from hypothesis.errors import HypothesisWarning
+from ground.hints import (Box as _Box,
+                          Contour as _Contour,
+                          Coordinate as _Coordinate,
+                          Multipoint as _Multipoint,
+                          Multisegment as _Multisegment,
+                          Point as _Point,
+                          Polygon as _Polygon,
+                          Segment as _Segment)
+from hypothesis.errors import HypothesisWarning as _HypothesisWarning
 
 from .core.base import (boxes as _boxes,
                         concave_vertices_sequences
@@ -33,15 +33,15 @@ from .core.base import (boxes as _boxes,
                         vertices_sequences as _vertices_sequences)
 from .core.constants import (MIN_CONTOUR_SIZE as _MIN_CONTOUR_SIZE,
                              MinContourSize as _MinContourSize)
-from .hints import (Mix,
-                    Multicontour,
-                    Multipolygon,
-                    Strategy)
+from .hints import (Mix as _Mix,
+                    Multicontour as _Multicontour,
+                    Multipolygon as _Multipolygon,
+                    Strategy as _Strategy)
 
 
-def points(x_coordinates: Strategy[Coordinate],
-           y_coordinates: Optional[Strategy[Coordinate]] = None
-           ) -> Strategy[Point]:
+def points(x_coordinates: _Strategy[_Coordinate],
+           y_coordinates: _Optional[_Strategy[_Coordinate]] = None
+           ) -> _Strategy[_Point]:
     """
     Returns a strategy for points.
     Point is a pair of numbers.
@@ -101,11 +101,11 @@ def points(x_coordinates: Strategy[Coordinate],
                    context=_get_context())
 
 
-def multipoints(x_coordinates: Strategy[Coordinate],
-                y_coordinates: Optional[Strategy[Coordinate]] = None,
+def multipoints(x_coordinates: _Strategy[_Coordinate],
+                y_coordinates: _Optional[_Strategy[_Coordinate]] = None,
                 *,
                 min_size: int = 0,
-                max_size: Optional[int] = None) -> Strategy[Multipoint]:
+                max_size: _Optional[int] = None) -> _Strategy[_Multipoint]:
     """
     Returns a strategy for multipoints.
     Multipoint is a possibly empty sequence of distinct points.
@@ -185,9 +185,9 @@ def multipoints(x_coordinates: Strategy[Coordinate],
                         context=context)
 
 
-def segments(x_coordinates: Strategy[Coordinate],
-             y_coordinates: Optional[Strategy[Coordinate]] = None
-             ) -> Strategy[Segment]:
+def segments(x_coordinates: _Strategy[_Coordinate],
+             y_coordinates: _Optional[_Strategy[_Coordinate]] = None
+             ) -> _Strategy[_Segment]:
     """
     Returns a strategy for segments.
 
@@ -254,11 +254,11 @@ def segments(x_coordinates: Strategy[Coordinate],
                      context=_get_context())
 
 
-def multisegments(x_coordinates: Strategy[Coordinate],
-                  y_coordinates: Optional[Strategy[Coordinate]] = None,
+def multisegments(x_coordinates: _Strategy[_Coordinate],
+                  y_coordinates: _Optional[_Strategy[_Coordinate]] = None,
                   *,
                   min_size: int = 0,
-                  max_size: Optional[int] = None) -> Strategy[Multisegment]:
+                  max_size: _Optional[int] = None) -> _Strategy[_Multisegment]:
     """
     Returns a strategy for multisegments.
     Multisegment is a possibly empty sequence of segments
@@ -346,11 +346,11 @@ def multisegments(x_coordinates: Strategy[Coordinate],
                           context=_get_context())
 
 
-def contours(x_coordinates: Strategy[Coordinate],
-             y_coordinates: Optional[Strategy[Coordinate]] = None,
+def contours(x_coordinates: _Strategy[_Coordinate],
+             y_coordinates: _Optional[_Strategy[_Coordinate]] = None,
              *,
              min_size: int = _MIN_CONTOUR_SIZE,
-             max_size: Optional[int] = None) -> Strategy[Contour]:
+             max_size: _Optional[int] = None) -> _Strategy[_Contour]:
     """
     Returns a strategy for contours.
     Contour is a sequence of points (called contour's vertices)
@@ -434,11 +434,11 @@ def contours(x_coordinates: Strategy[Coordinate],
             .map(context.contour_cls))
 
 
-def convex_contours(x_coordinates: Strategy[Coordinate],
-                    y_coordinates: Optional[Strategy[Coordinate]] = None,
+def convex_contours(x_coordinates: _Strategy[_Coordinate],
+                    y_coordinates: _Optional[_Strategy[_Coordinate]] = None,
                     *,
                     min_size: int = _MinContourSize.CONVEX,
-                    max_size: Optional[int] = None) -> Strategy[Contour]:
+                    max_size: _Optional[int] = None) -> _Strategy[_Contour]:
     """
     Returns a strategy for convex contours.
     Convex contour is a contour such that the line segment
@@ -522,11 +522,11 @@ def convex_contours(x_coordinates: Strategy[Coordinate],
             .map(context.contour_cls))
 
 
-def concave_contours(x_coordinates: Strategy[Coordinate],
-                     y_coordinates: Optional[Strategy[Coordinate]] = None,
+def concave_contours(x_coordinates: _Strategy[_Coordinate],
+                     y_coordinates: _Optional[_Strategy[_Coordinate]] = None,
                      *,
                      min_size: int = _MinContourSize.CONCAVE,
-                     max_size: Optional[int] = None) -> Strategy[Contour]:
+                     max_size: _Optional[int] = None) -> _Strategy[_Contour]:
     """
     Returns a strategy for concave contours.
     Concave contour is a contour that is not convex.
@@ -608,9 +608,9 @@ def concave_contours(x_coordinates: Strategy[Coordinate],
             .map(context.contour_cls))
 
 
-def triangular_contours(x_coordinates: Strategy[Coordinate],
-                        y_coordinates: Optional[Strategy[Coordinate]] = None,
-                        ) -> Strategy[Contour]:
+def triangular_contours(x_coordinates: _Strategy[_Coordinate],
+                        y_coordinates: _Optional[_Strategy[_Coordinate]] = None
+                        ) -> _Strategy[_Contour]:
     """
     Returns a strategy for triangular contours.
     Triangular contour is a contour formed by 3 points.
@@ -680,9 +680,9 @@ def triangular_contours(x_coordinates: Strategy[Coordinate],
             .map(context.contour_cls))
 
 
-def rectangular_contours(x_coordinates: Strategy[Coordinate],
-                         y_coordinates: Optional[Strategy[Coordinate]] = None,
-                         ) -> Strategy[Contour]:
+def rectangular_contours(x_coordinates: _Strategy[_Coordinate],
+                         y_coordinates: _Optional[_Strategy[_Coordinate]]
+                         = None) -> _Strategy[_Contour]:
     """
     Returns a strategy for axis-aligned rectangular contours.
     Rectangular contour is a contour formed by 4 points.
@@ -752,9 +752,9 @@ def rectangular_contours(x_coordinates: Strategy[Coordinate],
             .map(context.contour_cls))
 
 
-def boxes(x_coordinates: Strategy[Coordinate],
-          y_coordinates: Optional[Strategy[Coordinate]] = None
-          ) -> Strategy[Box]:
+def boxes(x_coordinates: _Strategy[_Coordinate],
+          y_coordinates: _Optional[_Strategy[_Coordinate]] = None
+          ) -> _Strategy[_Box]:
     """
     Returns a strategy for boxes.
 
@@ -822,11 +822,11 @@ def boxes(x_coordinates: Strategy[Coordinate],
                   context=_get_context())
 
 
-def star_contours(x_coordinates: Strategy[Coordinate],
-                  y_coordinates: Optional[Strategy[Coordinate]] = None,
+def star_contours(x_coordinates: _Strategy[_Coordinate],
+                  y_coordinates: _Optional[_Strategy[_Coordinate]] = None,
                   *,
                   min_size: int = _MIN_CONTOUR_SIZE,
-                  max_size: Optional[int] = None) -> Strategy[Contour]:
+                  max_size: _Optional[int] = None) -> _Strategy[_Contour]:
     """
     Returns a strategy for star contours.
     Star contour is a contour such that every vertex is visible from centroid,
@@ -908,14 +908,14 @@ def star_contours(x_coordinates: Strategy[Coordinate],
             .map(context.contour_cls))
 
 
-def multicontours(x_coordinates: Strategy[Coordinate],
-                  y_coordinates: Optional[Strategy[Coordinate]] = None,
+def multicontours(x_coordinates: _Strategy[_Coordinate],
+                  y_coordinates: _Optional[_Strategy[_Coordinate]] = None,
                   *,
                   min_size: int = 0,
-                  max_size: Optional[int] = None,
+                  max_size: _Optional[int] = None,
                   min_contour_size: int = _MIN_CONTOUR_SIZE,
-                  max_contour_size: Optional[int] = None
-                  ) -> Strategy[Multicontour]:
+                  max_contour_size: _Optional[int] = None
+                  ) -> _Strategy[_Multicontour]:
     """
     Returns a strategy for multicontours.
     Multicontour is a possibly empty sequence of non-crossing
@@ -1023,15 +1023,15 @@ def multicontours(x_coordinates: Strategy[Coordinate],
                           context=_get_context())
 
 
-def polygons(x_coordinates: Strategy[Coordinate],
-             y_coordinates: Optional[Strategy[Coordinate]] = None,
+def polygons(x_coordinates: _Strategy[_Coordinate],
+             y_coordinates: _Optional[_Strategy[_Coordinate]] = None,
              *,
              min_size: int = _MIN_CONTOUR_SIZE,
-             max_size: Optional[int] = None,
+             max_size: _Optional[int] = None,
              min_holes_size: int = 0,
-             max_holes_size: Optional[int] = None,
+             max_holes_size: _Optional[int] = None,
              min_hole_size: int = _MIN_CONTOUR_SIZE,
-             max_hole_size: Optional[int] = None) -> Strategy[Polygon]:
+             max_hole_size: _Optional[int] = None) -> _Strategy[_Polygon]:
     """
     Returns a strategy for polygons.
     Polygon is a pair of contour (called polygon’s border)
@@ -1165,18 +1165,18 @@ def polygons(x_coordinates: Strategy[Coordinate],
                      context=_get_context())
 
 
-def multipolygons(x_coordinates: Strategy[Coordinate],
-                  y_coordinates: Optional[Strategy[Coordinate]] = None,
+def multipolygons(x_coordinates: _Strategy[_Coordinate],
+                  y_coordinates: _Optional[_Strategy[_Coordinate]] = None,
                   *,
                   min_size: int = 0,
-                  max_size: Optional[int] = None,
+                  max_size: _Optional[int] = None,
                   min_border_size: int = _MIN_CONTOUR_SIZE,
-                  max_border_size: Optional[int] = None,
+                  max_border_size: _Optional[int] = None,
                   min_holes_size: int = 0,
-                  max_holes_size: Optional[int] = None,
+                  max_holes_size: _Optional[int] = None,
                   min_hole_size: int = _MIN_CONTOUR_SIZE,
-                  max_hole_size: Optional[int] = None
-                  ) -> Strategy[Multipolygon]:
+                  max_hole_size: _Optional[int] = None
+                  ) -> _Strategy[_Multipolygon]:
     """
     Returns a strategy for multipolygons.
     Multipolygon is a possibly empty sequence of polygons
@@ -1333,21 +1333,22 @@ def multipolygons(x_coordinates: Strategy[Coordinate],
                           context=context)
 
 
-def mixes(x_coordinates: Strategy[Coordinate],
-          y_coordinates: Optional[Strategy[Coordinate]] = None,
+def mixes(x_coordinates: _Strategy[_Coordinate],
+          y_coordinates: _Optional[_Strategy[_Coordinate]] = None,
           *,
           min_multipoint_size: int = 0,
-          max_multipoint_size: Optional[int] = None,
+          max_multipoint_size: _Optional[int] = None,
           min_multisegment_size: int = 0,
-          max_multisegment_size: Optional[int] = None,
+          max_multisegment_size: _Optional[int] = None,
           min_multipolygon_size: int = 0,
-          max_multipolygon_size: Optional[int] = None,
+          max_multipolygon_size: _Optional[int] = None,
           min_multipolygon_border_size: int = _MIN_CONTOUR_SIZE,
-          max_multipolygon_border_size: Optional[int] = None,
+          max_multipolygon_border_size: _Optional[int] = None,
           min_multipolygon_holes_size: int = 0,
-          max_multipolygon_holes_size: Optional[int] = None,
+          max_multipolygon_holes_size: _Optional[int] = None,
           min_multipolygon_hole_size: int = _MIN_CONTOUR_SIZE,
-          max_multipolygon_hole_size: Optional[int] = None) -> Strategy[Mix]:
+          max_multipolygon_hole_size: _Optional[int] = None
+          ) -> _Strategy[_Mix]:
     """
     Returns a strategy for mixes.
     Mix is a triplet of disjoint multipoint, multisegment and multipolygon.
@@ -1620,7 +1621,7 @@ def mixes(x_coordinates: Strategy[Coordinate],
             context=context)
 
 
-def _validate_sizes(min_size: int, max_size: Optional[int],
+def _validate_sizes(min_size: int, max_size: _Optional[int],
                     min_expected_size: int,
                     min_size_name: str = 'min_size',
                     max_size_name: str = 'max_size') -> None:
@@ -1648,10 +1649,10 @@ def _validate_sizes(min_size: int, max_size: Optional[int],
                          .format(min_size_name=min_size_name,
                                  min_size=min_size))
     if min_size < min_expected_size:
-        warnings.warn('`{min_size_name}` is expected to be '
-                      'not less than {min_expected_size}, '
-                      'but found {min_size}.'
-                      .format(min_size_name=min_size_name,
-                              min_expected_size=min_expected_size,
-                              min_size=min_size),
-                      HypothesisWarning)
+        _warnings.warn('`{min_size_name}` is expected to be '
+                       'not less than {min_expected_size}, '
+                       'but found {min_size}.'
+                       .format(min_size_name=min_size_name,
+                               min_expected_size=min_expected_size,
+                               min_size=min_size),
+                       _HypothesisWarning)
