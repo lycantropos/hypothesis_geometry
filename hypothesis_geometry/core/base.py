@@ -25,7 +25,8 @@ from hypothesis import strategies
 from hypothesis_geometry.hints import (Mix,
                                        Multicontour,
                                        Strategy)
-from .constants import MinContourSize
+from .constants import (MIN_CONTOUR_SIZE,
+                        MinContourSize)
 from .contracts import (are_segments_non_crossing_non_overlapping,
                         has_horizontal_lowermost_segment,
                         has_valid_size,
@@ -610,7 +611,7 @@ def non_crossing_non_overlapping_segments_sequences(
                                                    max_size=next_max_size,
                                                    unique=True),
                                   y_coordinates))
-    if min_size >= min(MinContourSize):
+    if min_size >= MIN_CONTOUR_SIZE:
         result |= (vertices_sequences(x_coordinates, y_coordinates,
                                       min_size=min_size,
                                       max_size=max_size,
