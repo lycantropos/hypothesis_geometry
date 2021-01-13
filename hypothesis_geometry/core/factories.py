@@ -20,8 +20,7 @@ from dendroid import red_black
 from dendroid.hints import Key
 from ground.base import (Context,
                          Orientation,
-                         Relation,
-                         get_context)
+                         Relation)
 from ground.hints import (Contour,
                           Coordinate,
                           Point,
@@ -68,7 +67,8 @@ def to_convex_vertices_sequence_factory(context: Context
                                         ) -> Callable[[Sequence[Point],
                                                        Random],
                                                       Sequence[Point]]:
-    return partial(_to_convex_vertices_sequence, context.points_convex_hull)
+    return partial(_to_convex_vertices_sequence, context.points_convex_hull,
+                   context.point_cls)
 
 
 def to_max_convex_hull_constructor(context: Context) -> PointsSequenceOperator:
@@ -328,6 +328,7 @@ def _to_squared_points_distance(left: Point, right: Point) -> Coordinate:
 
 def _to_convex_vertices_sequence(convex_hull_constructor
                                  : PointsSequenceOperator,
+                                 point_cls: Type[Point],
                                  points: Sequence[Point],
                                  random: Random) -> Sequence[Point]:
     """
@@ -380,7 +381,6 @@ def _to_convex_vertices_sequence(convex_hull_constructor
         min_polygon_x, min_polygon_y = (min(min_polygon_x, point_x),
                                         min(min_polygon_y, point_y))
     shift_x, shift_y = min_x - min_polygon_x, min_y - min_polygon_y
-    point_cls = get_context().point_cls
     return convex_hull_constructor([point_cls(min(max(x + shift_x, min_x),
                                                   max_x),
                                               min(max(y + shift_y, min_y),
