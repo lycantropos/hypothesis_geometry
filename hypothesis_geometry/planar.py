@@ -1169,8 +1169,6 @@ def multipolygons(x_coordinates: _Strategy[_Coordinate],
                   ) -> _Strategy[_Multipolygon]:
     """
     Returns a strategy for multipolygons.
-    Multipolygon is a possibly empty sequence of polygons
-    with non-crossing and non-overlapping borders.
 
     :param x_coordinates: strategy for vertices' x-coordinates.
     :param y_coordinates:
@@ -1192,7 +1190,7 @@ def multipolygons(x_coordinates: _Strategy[_Coordinate],
     >>> from hypothesis import strategies
     >>> from hypothesis_geometry import planar
     >>> context = get_context()
-    >>> Polygon = context.polygon_cls
+    >>> Multipolygon = context.multipolygon_cls
 
     For same coordinates' domain:
 
@@ -1215,17 +1213,15 @@ def multipolygons(x_coordinates: _Strategy[_Coordinate],
     ...                                      min_hole_size=min_hole_size,
     ...                                      max_hole_size=max_hole_size)
     >>> multipolygon = multipolygons.example()
-    >>> isinstance(multipolygon, list)
+    >>> isinstance(multipolygon, Multipolygon)
     True
-    >>> min_size <= len(multipolygon) <= max_size
-    True
-    >>> all(isinstance(polygon, Polygon) for polygon in multipolygon)
+    >>> min_size <= len(multipolygon.polygons) <= max_size
     True
     >>> all(min_border_size <= len(polygon.border.vertices) <= max_border_size
     ...     and min_holes_size <= len(polygon.holes) <= max_holes_size
     ...     and all(min_hole_size <= len(hole.vertices) <= max_hole_size
     ...             for hole in polygon.holes)
-    ...     for polygon in multipolygon)
+    ...     for polygon in multipolygon.polygons)
     True
     >>> all(all(isinstance(vertex.x, coordinates_type)
     ...         and isinstance(vertex.y, coordinates_type)
@@ -1234,7 +1230,7 @@ def multipolygons(x_coordinates: _Strategy[_Coordinate],
     ...             and isinstance(vertex.y, coordinates_type)
     ...             for hole in polygon.holes
     ...             for vertex in hole.vertices)
-    ...     for polygon in multipolygon)
+    ...     for polygon in multipolygon.polygons)
     True
     >>> all(all(min_coordinate <= vertex.x <= max_coordinate
     ...         and min_coordinate <= vertex.y <= max_coordinate
@@ -1243,7 +1239,7 @@ def multipolygons(x_coordinates: _Strategy[_Coordinate],
     ...             and min_coordinate <= vertex.y <= max_coordinate
     ...             for hole in polygon.holes
     ...             for vertex in hole.vertices)
-    ...     for polygon in multipolygon)
+    ...     for polygon in multipolygon.polygons)
     True
 
     For different coordinates' domains:
@@ -1271,17 +1267,15 @@ def multipolygons(x_coordinates: _Strategy[_Coordinate],
     ...                                      min_hole_size=min_hole_size,
     ...                                      max_hole_size=max_hole_size)
     >>> multipolygon = multipolygons.example()
-    >>> isinstance(multipolygon, list)
+    >>> isinstance(multipolygon, Multipolygon)
     True
-    >>> min_size <= len(multipolygon) <= max_size
-    True
-    >>> all(isinstance(polygon, Polygon) for polygon in multipolygon)
+    >>> min_size <= len(multipolygon.polygons) <= max_size
     True
     >>> all(min_border_size <= len(polygon.border.vertices) <= max_border_size
     ...     and min_holes_size <= len(polygon.holes) <= max_holes_size
     ...     and all(min_hole_size <= len(hole.vertices) <= max_hole_size
     ...             for hole in polygon.holes)
-    ...     for polygon in multipolygon)
+    ...     for polygon in multipolygon.polygons)
     True
     >>> all(all(isinstance(vertex.x, coordinates_type)
     ...         and isinstance(vertex.y, coordinates_type)
@@ -1290,7 +1284,7 @@ def multipolygons(x_coordinates: _Strategy[_Coordinate],
     ...             and isinstance(vertex.y, coordinates_type)
     ...             for hole in polygon.holes
     ...             for vertex in hole.vertices)
-    ...     for polygon in multipolygon)
+    ...     for polygon in multipolygon.polygons)
     True
     >>> all(all(min_x_coordinate <= vertex.x <= max_x_coordinate
     ...         and min_y_coordinate <= vertex.y <= max_y_coordinate
@@ -1299,7 +1293,7 @@ def multipolygons(x_coordinates: _Strategy[_Coordinate],
     ...             and min_y_coordinate <= vertex.y <= max_y_coordinate
     ...             for hole in polygon.holes
     ...             for vertex in hole.vertices)
-    ...     for polygon in multipolygon)
+    ...     for polygon in multipolygon.polygons)
     True
     """
     _validate_sizes(min_size, max_size, 0)
@@ -1370,9 +1364,9 @@ def mixes(x_coordinates: _Strategy[_Coordinate],
     >>> from hypothesis import strategies
     >>> from hypothesis_geometry import planar
     >>> context = get_context()
-    >>> Multipoint, Multisegment, Polygon = (context.multipoint_cls,
-    ...                                      context.multisegment_cls,
-    ...                                      context.polygon_cls)
+    >>> Multipoint, Multipolygon, Multisegment = (context.multipoint_cls,
+    ...                                           context.multipolygon_cls,
+    ...                                           context.multisegment_cls)
 
     For same coordinates' domain:
 
@@ -1436,11 +1430,10 @@ def mixes(x_coordinates: _Strategy[_Coordinate],
     ...     and min_coordinate <= segment.end.y <= max_coordinate
     ...     for segment in multisegment.segments)
     True
-    >>> isinstance(multipolygon, list)
+    >>> isinstance(multipolygon, Multipolygon)
     True
-    >>> min_multipolygon_size <= len(multipolygon) <= max_multipolygon_size
-    True
-    >>> all(isinstance(polygon, Polygon) for polygon in multipolygon)
+    >>> (min_multipolygon_size <= len(multipolygon.polygons)
+    ...  <= max_multipolygon_size)
     True
     >>> all(min_multipolygon_border_size
     ...     <= len(polygon.border.vertices)
@@ -1452,7 +1445,7 @@ def mixes(x_coordinates: _Strategy[_Coordinate],
     ...             <= len(hole.vertices)
     ...             <= max_multipolygon_hole_size
     ...             for hole in polygon.holes)
-    ...     for polygon in multipolygon)
+    ...     for polygon in multipolygon.polygons)
     True
     >>> all(all(isinstance(vertex.x, coordinates_type)
     ...         and isinstance(vertex.y, coordinates_type)
@@ -1461,7 +1454,7 @@ def mixes(x_coordinates: _Strategy[_Coordinate],
     ...             and isinstance(vertex.y, coordinates_type)
     ...             for hole in polygon.holes
     ...             for vertex in hole.vertices)
-    ...     for polygon in multipolygon)
+    ...     for polygon in multipolygon.polygons)
     True
     >>> all(all(min_coordinate <= vertex.x <= max_coordinate
     ...         and min_coordinate <= vertex.y <= max_coordinate
@@ -1470,7 +1463,7 @@ def mixes(x_coordinates: _Strategy[_Coordinate],
     ...             and min_coordinate <= vertex.y <= max_coordinate
     ...             for hole in polygon.holes
     ...             for vertex in hole.vertices)
-    ...     for polygon in multipolygon)
+    ...     for polygon in multipolygon.polygons)
     True
 
     For different coordinates' domains:
@@ -1539,11 +1532,10 @@ def mixes(x_coordinates: _Strategy[_Coordinate],
     ...     and min_y_coordinate <= segment.end.y <= max_y_coordinate
     ...     for segment in multisegment.segments)
     True
-    >>> isinstance(multipolygon, list)
+    >>> isinstance(multipolygon, Multipolygon)
     True
-    >>> min_multipolygon_size <= len(multipolygon) <= max_multipolygon_size
-    True
-    >>> all(isinstance(polygon, Polygon) for polygon in multipolygon)
+    >>> (min_multipolygon_size <= len(multipolygon.polygons)
+    ...  <= max_multipolygon_size)
     True
     >>> all(min_multipolygon_border_size
     ...     <= len(polygon.border.vertices)
@@ -1555,7 +1547,7 @@ def mixes(x_coordinates: _Strategy[_Coordinate],
     ...             <= len(hole.vertices)
     ...             <= max_multipolygon_hole_size
     ...             for hole in polygon.holes)
-    ...     for polygon in multipolygon)
+    ...     for polygon in multipolygon.polygons)
     True
     >>> all(all(isinstance(vertex.x, coordinates_type)
     ...         and isinstance(vertex.y, coordinates_type)
@@ -1564,7 +1556,7 @@ def mixes(x_coordinates: _Strategy[_Coordinate],
     ...             and isinstance(vertex.y, coordinates_type)
     ...             for hole in polygon.holes
     ...             for vertex in hole.vertices)
-    ...     for polygon in multipolygon)
+    ...     for polygon in multipolygon.polygons)
     True
     >>> all(all(min_x_coordinate <= vertex.x <= max_x_coordinate
     ...         and min_y_coordinate <= vertex.y <= max_y_coordinate
@@ -1573,7 +1565,7 @@ def mixes(x_coordinates: _Strategy[_Coordinate],
     ...             and min_y_coordinate <= vertex.y <= max_y_coordinate
     ...             for hole in polygon.holes
     ...             for vertex in hole.vertices)
-    ...     for polygon in multipolygon)
+    ...     for polygon in multipolygon.polygons)
     True
     """
     _validate_sizes(min_multipoint_size, max_multipoint_size, 0,
