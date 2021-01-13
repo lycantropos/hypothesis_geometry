@@ -53,6 +53,7 @@ With setup
 >>> context = get_context()
 >>> Contour = context.contour_cls
 >>> Multipoint = context.multipoint_cls
+>>> Multipolygon = context.multipolygon_cls
 >>> Multisegment = context.multisegment_cls
 >>> Point = context.point_cls
 >>> Polygon = context.polygon_cls
@@ -256,17 +257,15 @@ True
 ...                                      min_hole_size=min_hole_size,
 ...                                      max_hole_size=max_hole_size)
 >>> multipolygon = multipolygons.example()
->>> isinstance(multipolygon, list)
+>>> isinstance(multipolygon, Multipolygon)
 True
->>> min_size <= len(multipolygon) <= max_size
-True
->>> all(isinstance(polygon, Polygon) for polygon in multipolygon)
+>>> min_size <= len(multipolygon.polygons) <= max_size
 True
 >>> all(min_border_size <= len(polygon.border.vertices) <= max_border_size
 ...     and min_holes_size <= len(polygon.holes) <= max_holes_size
 ...     and all(min_hole_size <= len(hole.vertices) <= max_hole_size
 ...             for hole in polygon.holes)
-...     for polygon in multipolygon)
+...     for polygon in multipolygon.polygons)
 True
 >>> all(all(isinstance(vertex.x, coordinates_type)
 ...         and isinstance(vertex.y, coordinates_type)
@@ -275,7 +274,7 @@ True
 ...             and isinstance(vertex.y, coordinates_type)
 ...             for hole in polygon.holes
 ...             for vertex in hole.vertices)
-...     for polygon in multipolygon)
+...     for polygon in multipolygon.polygons)
 True
 >>> all(all(min_coordinate <= vertex.x <= max_coordinate
 ...         and min_coordinate <= vertex.y <= max_coordinate
@@ -284,7 +283,7 @@ True
 ...             and min_coordinate <= vertex.y <= max_coordinate
 ...             for hole in polygon.holes
 ...             for vertex in hole.vertices)
-...     for polygon in multipolygon)
+...     for polygon in multipolygon.polygons)
 True
 
 ```
@@ -321,8 +320,6 @@ True
 True
 >>> min_multipoint_size <= len(multipoint.points) <= max_multipoint_size
 True
->>> all(isinstance(point, Point) for point in multipoint.points)
-True
 >>> all(isinstance(point.x, coordinates_type)
 ...     and isinstance(point.y, coordinates_type)
 ...     for point in multipoint.points)
@@ -347,11 +344,9 @@ True
 ...     and min_coordinate <= segment.end.y <= max_coordinate
 ...     for segment in multisegment.segments)
 True
->>> isinstance(multipolygon, list)
+>>> isinstance(multipolygon, Multipolygon)
 True
->>> min_multipolygon_size <= len(multipolygon) <= max_multipolygon_size
-True
->>> all(isinstance(polygon, Polygon) for polygon in multipolygon)
+>>> min_multipolygon_size <= len(multipolygon.polygons) <= max_multipolygon_size
 True
 >>> all(min_multipolygon_border_size
 ...     <= len(polygon.border.vertices)
@@ -363,7 +358,7 @@ True
 ...             <= len(hole.vertices)
 ...             <= max_multipolygon_hole_size
 ...             for hole in polygon.holes)
-...     for polygon in multipolygon)
+...     for polygon in multipolygon.polygons)
 True
 >>> all(all(isinstance(vertex.x, coordinates_type)
 ...         and isinstance(vertex.y, coordinates_type)
@@ -372,7 +367,7 @@ True
 ...             and isinstance(vertex.y, coordinates_type)
 ...             for hole in polygon.holes
 ...             for vertex in hole.vertices)
-...     for polygon in multipolygon)
+...     for polygon in multipolygon.polygons)
 True
 >>> all(all(min_coordinate <= vertex.x <= max_coordinate
 ...         and min_coordinate <= vertex.y <= max_coordinate
@@ -381,7 +376,7 @@ True
 ...             and min_coordinate <= vertex.y <= max_coordinate
 ...             for hole in polygon.holes
 ...             for vertex in hole.vertices)
-...     for polygon in multipolygon)
+...     for polygon in multipolygon.polygons)
 True
 
 ```
