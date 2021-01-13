@@ -44,7 +44,6 @@ def points(x_coordinates: _Strategy[_Coordinate],
            ) -> _Strategy[_Point]:
     """
     Returns a strategy for points.
-    Point is a pair of numbers.
 
     :param x_coordinates: strategy for points' x-coordinates.
     :param y_coordinates:
@@ -108,7 +107,6 @@ def multipoints(x_coordinates: _Strategy[_Coordinate],
                 max_size: _Optional[int] = None) -> _Strategy[_Multipoint]:
     """
     Returns a strategy for multipoints.
-    Multipoint is a possibly empty sequence of distinct points.
 
     :param x_coordinates: strategy for points' x-coordinates.
     :param y_coordinates:
@@ -261,8 +259,6 @@ def multisegments(x_coordinates: _Strategy[_Coordinate],
                   max_size: _Optional[int] = None) -> _Strategy[_Multisegment]:
     """
     Returns a strategy for multisegments.
-    Multisegment is a possibly empty sequence of segments
-    such that any pair of them do not cross/overlap each other.
 
     :param x_coordinates: strategy for segments' x-coordinates.
     :param y_coordinates:
@@ -353,10 +349,6 @@ def contours(x_coordinates: _Strategy[_Coordinate],
              max_size: _Optional[int] = None) -> _Strategy[_Contour]:
     """
     Returns a strategy for contours.
-    Contour is a sequence of points (called contour's vertices)
-    such that line segments formed by pairs of consecutive points
-    (including the last-first point pair)
-    do not cross/overlap each other.
 
     :param x_coordinates: strategy for vertices' x-coordinates.
     :param y_coordinates:
@@ -1034,8 +1026,6 @@ def polygons(x_coordinates: _Strategy[_Coordinate],
              max_hole_size: _Optional[int] = None) -> _Strategy[_Polygon]:
     """
     Returns a strategy for polygons.
-    Polygon is a pair of contour (called polygon’s border)
-    and multicontour which lies within the border (called polygon’s holes).
 
     :param x_coordinates: strategy for vertices' x-coordinates.
     :param y_coordinates:
