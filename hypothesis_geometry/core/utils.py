@@ -8,7 +8,26 @@ from typing import (Callable,
 from .hints import (Domain,
                     Range)
 
+
+def apply(function: Callable[..., Range],
+          args: Iterable[Domain]) -> Range:
+    return function(*args)
+
+
+def ceil_log2(number: int) -> int:
+    return number.bit_length() - (not (number & (number - 1)))
+
+
+def cut(values: Domain, limit: int) -> Domain:
+    return values[:limit] if limit < len(values) else values
+
+
 flatten = chain.from_iterable
+
+
+def pack(function: Callable[..., Range]
+         ) -> Callable[[Iterable[Domain]], Range]:
+    return partial(apply, function)
 
 
 def pairwise(iterable: Iterable[Domain]) -> Iterable[Tuple[Domain, Domain]]:
@@ -17,20 +36,6 @@ def pairwise(iterable: Iterable[Domain]) -> Iterable[Tuple[Domain, Domain]]:
     for next_element in iterator:
         yield element, next_element
         element = next_element
-
-
-def apply(function: Callable[..., Range],
-          args: Iterable[Domain]) -> Range:
-    return function(*args)
-
-
-def cut(values: Domain, limit: int) -> Domain:
-    return values[:limit] if limit < len(values) else values
-
-
-def pack(function: Callable[..., Range]
-         ) -> Callable[[Iterable[Domain]], Range]:
-    return partial(apply, function)
 
 
 def sort_pair(pair: Sequence[Domain]) -> Tuple[Domain, Domain]:
