@@ -5,8 +5,7 @@ from hypothesis import given
 from hypothesis.strategies import DataObject
 
 from hypothesis_geometry.hints import Strategy
-from hypothesis_geometry.planar import (Size,
-                                        triangular_contours)
+from hypothesis_geometry.planar import triangular_contours
 from tests import strategies
 from tests.utils import (CoordinatesLimitsType,
                          are_vertices_non_convex,
@@ -45,8 +44,8 @@ def test_properties(data: DataObject,
 
     assert is_contour(result)
     assert contour_has_valid_sizes(result,
-                                   min_size=Size.TRIANGULAR_CONTOUR,
-                                   max_size=Size.TRIANGULAR_CONTOUR)
+                                   min_size=3,
+                                   max_size=3)
     assert contour_has_coordinates_types(result,
                                          x_type=x_type,
                                          y_type=y_type)
@@ -74,8 +73,8 @@ def test_same_coordinates(data: DataObject,
 
     assert is_contour(result)
     assert contour_has_valid_sizes(result,
-                                   min_size=Size.TRIANGULAR_CONTOUR,
-                                   max_size=Size.TRIANGULAR_CONTOUR)
+                                   min_size=3,
+                                   max_size=3)
     assert contour_has_coordinates_types(result,
                                          x_type=type_,
                                          y_type=type_)
