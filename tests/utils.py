@@ -25,7 +25,6 @@ from hypothesis_geometry.core.factories import to_contour_edges_constructor
 from hypothesis_geometry.core.utils import flatten
 from hypothesis_geometry.hints import (Mix,
                                        Multicontour,
-                                       Multipolygon,
                                        Strategy)
 
 has_valid_size = has_valid_size
@@ -39,6 +38,7 @@ context = get_context()
 Box = context.box_cls
 Contour = context.contour_cls
 Multipoint = context.multipoint_cls
+Multipolygon = context.multipolygon_cls
 Multisegment = context.multisegment_cls
 Point = context.point_cls
 Polygon = context.polygon_cls
@@ -128,7 +128,7 @@ def multipolygon_has_valid_sizes(multipolygon: Multipolygon,
                                  max_holes_size: Optional[int],
                                  min_hole_size: int,
                                  max_hole_size: Optional[int]) -> bool:
-    return (has_valid_size(multipolygon,
+    return (has_valid_size(multipolygon.polygons,
                            min_size=min_size,
                            max_size=max_size)
             and all(polygon_has_valid_sizes(polygon,
@@ -138,7 +138,7 @@ def multipolygon_has_valid_sizes(multipolygon: Multipolygon,
                                             max_holes_size=max_holes_size,
                                             min_hole_size=min_hole_size,
                                             max_hole_size=max_hole_size)
-                    for polygon in multipolygon))
+                    for polygon in multipolygon.polygons))
 
 
 def polygon_has_valid_sizes(polygon: Polygon,
@@ -241,7 +241,7 @@ def multipolygon_has_coordinates_in_range(multipolygon: Multipolygon,
                                                 max_x_value=max_x_value,
                                                 min_y_value=min_y_value,
                                                 max_y_value=max_y_value)
-               for polygon in multipolygon)
+               for polygon in multipolygon.polygons)
 
 
 def multisegment_has_coordinates_in_range(multisegment: Multisegment,
@@ -381,7 +381,7 @@ def multipolygon_has_coordinates_types(multipolygon: Multipolygon,
     return all(polygon_has_coordinates_types(polygon,
                                              x_type=x_type,
                                              y_type=y_type)
-               for polygon in multipolygon)
+               for polygon in multipolygon.polygons)
 
 
 def multisegment_has_coordinates_types(multisegment: Multisegment,
@@ -462,12 +462,7 @@ def is_multicontour(object_: Any) -> bool:
 
 
 is_multipoint = Multipoint.__instancecheck__
-
-
-def is_multipolygon(object_: Any) -> bool:
-    return isinstance(object_, list) and all(map(is_polygon, object_))
-
-
+is_multipolygon = Multipolygon.__instancecheck__
 is_multisegment = Multisegment.__instancecheck__
 is_point = Point.__instancecheck__
 is_polygon = Polygon.__instancecheck__
@@ -503,7 +498,7 @@ def mix_segments_do_not_cross_or_overlap(mix: Mix) -> bool:
                                        polygon.border.vertices),
                                flatten(contour_edges_constructor(hole.vertices)
                                        for hole in polygon.holes))
-                               for polygon in multipolygon))))
+                               for polygon in multipolygon.polygons))))
 
 
 def contours_do_not_cross_or_overlap(contours: Sequence[Contour]) -> bool:
@@ -529,7 +524,7 @@ def is_multicontour_strict(multicontour: Multicontour) -> bool:
 
 
 def is_multipolygon_strict(multipolygon: Multipolygon) -> bool:
-    return all(is_polygon_strict(polygon) for polygon in multipolygon)
+    return all(is_polygon_strict(polygon) for polygon in multipolygon.polygons)
 
 
 def is_polygon_strict(polygon: Polygon) -> bool:
