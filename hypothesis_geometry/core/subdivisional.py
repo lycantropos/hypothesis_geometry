@@ -73,8 +73,7 @@ def to_quad_edge_cls(context: Context,
             alpha._left_from_start, beta._left_from_start = (
                 beta.left_from_start, alpha.left_from_start)
 
-    Result.__name__ = Result.__qualname__ = (context.coordinate_cls.__name__
-                                             + QuadEdge.__name__)
+    Result.__name__ = Result.__qualname__ = QuadEdge.__name__
     return Result
 
 

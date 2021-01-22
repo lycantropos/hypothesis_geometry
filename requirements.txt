@@ -1,7 +1,7 @@
-bentley_ottmann~=1.1
+bentley-ottmann~=1.1
 decision~=0.2
 dendroid~=1.1
-ground~=2.0
+ground~=3.0
 hypothesis>=5.33.2
 locus~=1.1
 reprit~=0.3

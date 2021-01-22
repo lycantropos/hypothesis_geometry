@@ -174,8 +174,7 @@ def to_triangulation_cls(context: Context,
             self._connect(self._find_base_edge(other))
             return type(self)(self.left_side, other.right_side)
 
-    Result.__name__ = Result.__qualname__ = (context.coordinate_cls.__name__
-                                             + Triangulation.__name__)
+    Result.__name__ = Result.__qualname__ = Triangulation.__name__
     return Result
 
 
