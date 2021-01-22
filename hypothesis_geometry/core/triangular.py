@@ -18,7 +18,7 @@ from reprit.base import generate_repr
 
 from .hints import (QuadEdge,
                     Triangulation)
-from .subdivisional import (to_quad_edge_cls)
+from .subdivisional import to_quad_edge_cls
 from .utils import (ceil_log2,
                     pairwise)
 
