@@ -1,3 +1,3 @@
 """hypothesis strategies for geometric objects (points, polygons, etc.)."""
 
-__version__ = '1.1.0'
+__version__ = '1.2.0-alpha'
