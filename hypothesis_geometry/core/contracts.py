@@ -1,4 +1,3 @@
-from functools import partial
 from typing import (Callable,
                     Iterable,
                     Optional,
@@ -6,15 +5,13 @@ from typing import (Callable,
                     Sized)
 
 from bentley_ottmann.planar import segments_cross_or_overlap
-from ground.base import (Context,
-                         Orientation)
+from ground.base import Orientation
 from ground.hints import (Coordinate,
                           Point,
                           Segment)
 
 from hypothesis_geometry.hints import Multicontour
-from .hints import (Orienteer,
-                    QuaternaryPointFunction)
+from .hints import Orienteer
 
 
 def are_segments_non_crossing_non_overlapping(segments: Sequence[Segment]
@@ -81,32 +78,6 @@ def segment_to_min_y(segment: Segment) -> Coordinate:
     return min(segment.start.y, segment.end.y)
 
 
-def to_angle_containment_detector(context: Context
-                                  ) -> QuaternaryPointFunction[bool]:
-    return partial(angle_contains_point,
-                   orienteer=context.angle_orientation)
-
-
-def to_contour_orienteer(context: Context) -> Callable[[Sequence[Point]],
-                                                       Iterable[Orientation]]:
-    return partial(_to_contour_orientations, context.angle_orientation)
-
-
-def to_non_collinear_points_detector(context: Context
-                                     ) -> Callable[[Sequence[Point]], bool]:
-    return partial(_are_points_non_collinear, to_contour_orienteer(context))
-
-
-def to_non_convex_vertices_detector(context: Context
-                                    ) -> Callable[[Sequence[Point]], bool]:
-    return partial(_are_vertices_non_convex, to_contour_orienteer(context))
-
-
-def to_strict_vertices_detector(context: Context
-                                ) -> Callable[[Sequence[Point]], bool]:
-    return partial(_are_vertices_strict, to_contour_orienteer(context))
-
-
 def angle_contains_point(vertex: Point,
                          first_ray_point: Point,
                          second_ray_point: Point,
@@ -125,18 +96,16 @@ def angle_contains_point(vertex: Point,
                             or Orientation.COUNTERCLOCKWISE))))
 
 
-def _are_points_non_collinear(contour_orienteer
-                              : Callable[[Sequence[Point]],
-                                         Iterable[Orientation]],
-                              points: Sequence[Point]) -> bool:
+def are_points_non_collinear(points: Sequence[Point],
+                             orienteer: Orienteer) -> bool:
     return any(orientation is not Orientation.COLLINEAR
-               for orientation in contour_orienteer(points))
+               for orientation in to_contour_orientations(points, orienteer))
 
 
-def _are_vertices_non_convex(contour_orienteer
-                             : Callable[[Sequence[Point]],
-                                        Iterable[Orientation]],
-                             vertices: Sequence[Point]) -> bool:
+def are_vertices_non_convex(contour_orienteer
+                            : Callable[[Sequence[Point]],
+                                       Iterable[Orientation]],
+                            vertices: Sequence[Point]) -> bool:
     orientations = iter(contour_orienteer(vertices))
     base_orientation = next(orientations)
     # orientation change means
@@ -145,16 +114,14 @@ def _are_vertices_non_convex(contour_orienteer
                for orientation in orientations)
 
 
-def _are_vertices_strict(contour_orienteer
-                         : Callable[[Sequence[Point]], Iterable[Orientation]],
-                         vertices: Sequence[Point]) -> bool:
+def are_vertices_strict(vertices: Sequence[Point],
+                        orienteer: Orienteer) -> bool:
     return all(orientation is not Orientation.COLLINEAR
-               for orientation in contour_orienteer(vertices))
+               for orientation in to_contour_orientations(vertices, orienteer))
 
 
-def _to_contour_orientations(orienteer: Orienteer,
-                             vertices: Sequence[Point]
-                             ) -> Iterable[Orientation]:
+def to_contour_orientations(vertices: Sequence[Point],
+                            orienteer: Orienteer) -> Iterable[Orientation]:
     return (orienteer(vertices[index], vertices[index - 1],
                       vertices[(index + 1) % len(vertices)])
             for index in range(len(vertices)))

@@ -27,14 +27,14 @@ from hypothesis_geometry.hints import (Mix,
                                        Strategy)
 from .constants import (MIN_CONTOUR_SIZE,
                         MinContourSize)
-from .contracts import (are_segments_non_crossing_non_overlapping,
+from .contracts import (are_points_non_collinear,
+                        are_segments_non_crossing_non_overlapping,
+                        are_vertices_non_convex,
+                        are_vertices_strict,
                         has_horizontal_lowermost_segment,
                         has_valid_size,
                         has_vertical_leftmost_segment,
-                        multicontour_has_valid_sizes,
-                        to_non_collinear_points_detector,
-                        to_non_convex_vertices_detector,
-                        to_strict_vertices_detector)
+                        multicontour_has_valid_sizes)
 from .factories import (constrict_convex_hull_size,
                         contour_to_edges,
                         polygon_to_edges,
@@ -88,7 +88,8 @@ def concave_vertices_sequences(x_coordinates: Strategy[Coordinate],
                                 min_size=min_size,
                                 max_size=max_size,
                                 context=context)
-            .filter(to_non_convex_vertices_detector(context)))
+            .filter(partial(are_vertices_non_convex,
+                            orienteer=context.angle_orientation)))
 
 
 def convex_vertices_sequences(x_coordinates: Strategy[Coordinate],
@@ -722,7 +723,8 @@ def polygons(x_coordinates: Strategy[Coordinate],
                           or max_hole_size is None)
                       else max_size + max_hole_size * max_holes_size),
             context=context)
-            .filter(to_non_collinear_points_detector(context))
+            .filter(partial(are_points_non_collinear,
+                            orienteer=context.angle_orientation))
             .map(sorted)
             .map(partial(constrict_convex_hull_size,
                          context=context,
@@ -774,7 +776,8 @@ def star_vertices_sequences(x_coordinates: Strategy[Coordinate],
                                     min_size=min_size,
                                     max_size=max_size,
                                     context=context)
-            .filter(to_non_collinear_points_detector(context))
+            .filter(partial(are_points_non_collinear,
+                            orienteer=context.angle_orientation))
             .map(partial(to_star_contour_vertices,
                          context=context))
             .filter(partial(has_valid_size,
@@ -808,7 +811,8 @@ def triangular_vertices_sequences(x_coordinates: Strategy[Coordinate],
     vertices = points(x_coordinates, y_coordinates,
                       context=context)
     return (strategies.tuples(vertices, vertices, vertices)
-            .filter(to_strict_vertices_detector(context))
+            .filter(partial(are_vertices_strict,
+                            orienteer=context.angle_orientation))
             .map(to_counterclockwise_vertices)
             .map(list))
 
@@ -864,7 +868,8 @@ def _vertices_sequences(x_coordinates: Strategy[Coordinate],
                                        min_size=min_size,
                                        max_size=max_size,
                                        context=context)
-               .filter(to_non_collinear_points_detector(context))
+               .filter(partial(are_points_non_collinear,
+                               orienteer=context.angle_orientation))
                .flatmap(to_points_with_sizes)
                .map(pack(partial(to_vertices_sequence,
                                  context=context)))

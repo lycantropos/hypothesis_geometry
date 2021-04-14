@@ -13,5 +13,3 @@ except ImportError:
 Orienteer = Callable[[Point, Point, Point], Orientation]
 Domain = TypeVar('Domain')
 Chooser = Callable[[Sequence[Domain]], Domain]
-Range = TypeVar('Range')
-QuaternaryPointFunction = Callable[[Point, Point, Point, Point], Range]

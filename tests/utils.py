@@ -18,10 +18,10 @@ from ground.hints import Coordinate
 from hypothesis import strategies
 
 from hypothesis_geometry.core.contracts import (
+    are_vertices_non_convex as _are_vertices_non_convex,
+    are_vertices_strict as _are_vertices_strict,
     has_valid_size,
-    multicontour_has_valid_sizes,
-    to_non_convex_vertices_detector,
-    to_strict_vertices_detector)
+    multicontour_has_valid_sizes)
 from hypothesis_geometry.core.factories import contour_to_edges
 from hypothesis_geometry.core.utils import flatten
 from hypothesis_geometry.hints import (Mix,
@@ -513,8 +513,10 @@ def segments_do_not_cross_or_overlap(segments: Sequence[Segment]) -> bool:
     return not segments_cross_or_overlap(segments)
 
 
-are_vertices_strict = to_strict_vertices_detector(context)
-are_vertices_non_convex = to_non_convex_vertices_detector(context)
+are_vertices_non_convex = partial(_are_vertices_non_convex,
+                                  orienteer=context.angle_orientation)
+are_vertices_strict = partial(_are_vertices_strict,
+                              orienteer=context.angle_orientation)
 
 
 def is_contour_strict(contour: Contour) -> bool:
