@@ -39,12 +39,11 @@ from .hints import (CentroidConstructor,
                     Orienteer,
                     PointsSequenceOperator,
                     PolygonEdgesConstructor,
-                    QuadEdge,
-                    QuaternaryPointFunction,
-                    Triangulation)
-from .subdivisional import to_edge_neighbours
-from .triangular import (to_boundary_edges,
-                         to_triangulation_cls)
+                    QuaternaryPointFunction)
+from .subdivisional import (QuadEdge,
+                            to_edge_neighbours)
+from .triangular import (Triangulation,
+                         to_boundary_edges)
 
 
 def to_contour_compressor(context: Context) -> ContourCompressor:
@@ -97,8 +96,8 @@ def to_polygon_factory(context: Context
                    to_contour_compressor(context),
                    to_contour_edges_constructor(context), context.polygon_cls,
                    context.segment_cls, context.segments_relation,
-                   to_triangulation_cls(context),
-                   to_vertices_sequence_factory(context))
+                   to_vertices_sequence_factory(context),
+                   context)
 
 
 def to_star_contour_vertices_factory(context: Context
@@ -113,7 +112,7 @@ def to_vertices_sequence_factory(context: Context
                                  ) -> Callable[[Sequence[Point], int],
                                                Sequence[Point]]:
     return partial(_to_vertices_sequence, to_contour_compressor(context),
-                   to_triangulation_cls(context))
+                   context)
 
 
 def _constrict_convex_hull_size(convex_hull_constructor
@@ -196,14 +195,14 @@ def _to_polygon(contour_cls: Type[Contour],
                 polygon_cls: Type[Polygon],
                 segment_cls: Type[Segment],
                 segments_relater: QuaternaryPointFunction[Relation],
-                triangulation_cls: Type[Triangulation],
                 vertices_sequence_factory: Callable[[Sequence[Point], int],
                                                     Sequence[Point]],
+                context: Context,
                 points: Sequence[Point],
                 border_size: int,
                 holes_sizes: List[int],
                 chooser: Chooser) -> Polygon:
-    triangulation = triangulation_cls.delaunay(points)
+    triangulation = Triangulation.delaunay(points, context)
     boundary_edges = to_boundary_edges(triangulation)
     boundary_points = {edge.start for edge in boundary_edges}
     sorting_key_chooser = partial(chooser, [None, attrgetter('y', 'x'),
@@ -217,14 +216,13 @@ def _to_polygon(contour_cls: Type[Contour],
                        else (has_horizontal_lowermost_segment,
                              has_vertical_leftmost_segment))
     current_predicate = next(predicates)
-    holes = []
-    holes_segments = []
+    holes, holes_edges = [], []
     for hole_size in holes_sizes:
         hole_points = inner_points[:hole_size]
         hole_vertices = vertices_sequence_factory(hole_points, hole_size)[::-1]
         holes.append(contour_cls(hole_vertices))
         hole_segments = contour_edges_constructor(hole_vertices)
-        holes_segments.extend(hole_segments)
+        holes_edges.extend(hole_segments)
         boundary_points.update(hole_points)
         can_touch_next_hole = current_predicate(hole_segments)
         inner_points = inner_points[hole_size - can_touch_next_hole:]
@@ -236,18 +234,18 @@ def _to_polygon(contour_cls: Type[Contour],
                                           key=next_sorting_key),
                                    next(predicates))
 
-    def to_segment_cross_or_overlap_detector(segments: Sequence[Segment]
-                                             ) -> Callable[[Segment], bool]:
-        return ((lambda segment, to_nearest_segment=(segmental.Tree(segments)
-                                                     .nearest_segment)
-                 : segments_cross_or_overlap(to_nearest_segment(segment),
-                                             segment))
-                if segments
+    def to_edges_cross_or_overlap_detector(edges: Sequence[Segment]
+                                           ) -> Callable[[Segment], bool]:
+        return ((lambda edge, to_nearest_edge=(segmental.Tree(edges,
+                                                              context=context)
+                                               .nearest_segment)
+                 : segments_cross_or_overlap(to_nearest_edge(edge), edge))
+                if edges
                 else (lambda segment: False))
 
     def is_mouth(edge: QuadEdge,
                  cross_or_overlap_holes: Callable[[Segment], bool]
-                 = to_segment_cross_or_overlap_detector(holes_segments)
+                 = to_edges_cross_or_overlap_detector(holes_edges)
                  ) -> bool:
         neighbour_end = edge.left_from_start.end
         return (neighbour_end not in boundary_points
@@ -445,7 +443,7 @@ def _polygon_to_border_edges(contour_edges_constructor
 
 
 def _to_vertices_sequence(contour_compressor: ContourCompressor,
-                          triangulation_cls: Type[Triangulation],
+                          context: Context,
                           points: Sequence[Point],
                           size: int) -> Sequence[Point]:
     """
@@ -458,7 +456,7 @@ def _to_vertices_sequence(contour_compressor: ContourCompressor,
     Reference:
         http://www.geosensor.net/papers/duckham08.PR.pdf
     """
-    triangulation = triangulation_cls.delaunay(points)
+    triangulation = Triangulation.delaunay(points, context)
     boundary_edges = to_boundary_edges(triangulation)
     boundary_points = {edge.start for edge in boundary_edges}
 
