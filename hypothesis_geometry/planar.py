@@ -51,6 +51,7 @@ def points(x_coordinates: _Strategy[_Coordinate],
     :param y_coordinates:
         strategy for points' y-coordinates,
         ``None`` for reusing x-coordinates strategy.
+    :param context: strategy context.
 
     >>> from ground.base import get_context
     >>> from hypothesis import strategies
@@ -117,6 +118,7 @@ def multipoints(x_coordinates: _Strategy[_Coordinate],
         ``None`` for reusing x-coordinates strategy.
     :param min_size: lower bound for multipoint size.
     :param max_size: upper bound for multipoint size, ``None`` for unbound.
+    :param context: strategy context.
 
     >>> from ground.base import get_context
     >>> from hypothesis import strategies
@@ -198,6 +200,7 @@ def segments(x_coordinates: _Strategy[_Coordinate],
     :param y_coordinates:
         strategy for endpoints' y-coordinates,
         ``None`` for reusing x-coordinates strategy.
+    :param context: strategy context.
 
     >>> from ground.base import get_context
     >>> from hypothesis import strategies
@@ -273,6 +276,7 @@ def multisegments(x_coordinates: _Strategy[_Coordinate],
         ``None`` for reusing x-coordinates strategy.
     :param min_size: lower bound for multisegment size.
     :param max_size: upper bound for multisegment size, ``None`` for unbound.
+    :param context: strategy context.
 
     >>> from ground.base import get_context
     >>> from hypothesis import strategies
@@ -366,6 +370,7 @@ def contours(x_coordinates: _Strategy[_Coordinate],
         ``None`` for reusing x-coordinates strategy.
     :param min_size: lower bound for contour size.
     :param max_size: upper bound for contour size, ``None`` for unbound.
+    :param context: strategy context.
 
     >>> from ground.base import get_context
     >>> from hypothesis import strategies
@@ -456,6 +461,7 @@ def convex_contours(x_coordinates: _Strategy[_Coordinate],
         ``None`` for reusing x-coordinates strategy.
     :param min_size: lower bound for contour size.
     :param max_size: upper bound for contour size, ``None`` for unbound.
+    :param context: strategy context.
 
     >>> from ground.base import get_context
     >>> from hypothesis import strategies
@@ -545,6 +551,7 @@ def concave_contours(x_coordinates: _Strategy[_Coordinate],
         ``None`` for reusing x-coordinates strategy.
     :param min_size: lower bound for contour size.
     :param max_size: upper bound for contour size, ``None`` for unbound.
+    :param context: strategy context.
 
     >>> from ground.base import get_context
     >>> from hypothesis import strategies
@@ -630,6 +637,7 @@ def triangular_contours(x_coordinates: _Strategy[_Coordinate],
     :param y_coordinates:
         strategy for vertices' y-coordinates,
         ``None`` for reusing x-coordinates strategy.
+    :param context: strategy context.
 
     >>> from ground.base import get_context
     >>> from hypothesis import strategies
@@ -705,6 +713,7 @@ def rectangular_contours(x_coordinates: _Strategy[_Coordinate],
     :param y_coordinates:
         strategy for vertices' y-coordinates,
         ``None`` for reusing x-coordinates strategy.
+    :param context: strategy context.
 
     >>> from ground.base import get_context
     >>> from hypothesis import strategies
@@ -777,6 +786,7 @@ def boxes(x_coordinates: _Strategy[_Coordinate],
     :param y_coordinates:
         strategy for vertices' y-coordinates,
         ``None`` for reusing x-coordinates strategy.
+    :param context: strategy context.
 
     >>> from ground.base import get_context
     >>> from hypothesis import strategies
@@ -854,6 +864,7 @@ def star_contours(x_coordinates: _Strategy[_Coordinate],
         ``None`` for reusing x-coordinates strategy.
     :param min_size: lower bound for contour size.
     :param max_size: upper bound for contour size, ``None`` for unbound.
+    :param context: strategy context.
 
     >>> from ground.base import get_context
     >>> from hypothesis import strategies
@@ -948,6 +959,7 @@ def multicontours(x_coordinates: _Strategy[_Coordinate],
     :param min_contour_size: lower bound for contour size.
     :param max_contour_size:
         upper bound for contour size, ``None`` for unbound.
+    :param context: strategy context.
 
     >>> from ground.base import get_context
     >>> from hypothesis import strategies
@@ -1066,6 +1078,7 @@ def polygons(x_coordinates: _Strategy[_Coordinate],
     :param max_holes_size: upper bound for holes count, ``None`` for countless.
     :param min_hole_size: lower bound for hole size.
     :param max_hole_size: upper bound for hole size, ``None`` for unbound.
+    :param context: strategy context.
 
     >>> from ground.base import get_context
     >>> from hypothesis import strategies
@@ -1215,6 +1228,7 @@ def multipolygons(x_coordinates: _Strategy[_Coordinate],
     :param min_hole_size: lower bound for hole size.
     :param max_hole_size:
         upper bound for polygons' hole size, ``None`` for unbound.
+    :param context: strategy context.
 
     >>> from ground.base import get_context
     >>> from hypothesis import strategies
@@ -1390,6 +1404,7 @@ def mixes(x_coordinates: _Strategy[_Coordinate],
     :param min_multipolygon_hole_size: lower bound for hole size.
     :param max_multipolygon_hole_size:
         upper bound for polygons' hole size, ``None`` for unbound.
+    :param context: strategy context.
 
     >>> from ground.base import get_context
     >>> from hypothesis import strategies
