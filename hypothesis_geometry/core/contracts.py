@@ -83,7 +83,8 @@ def segment_to_min_y(segment: Segment) -> Coordinate:
 
 def to_angle_containment_detector(context: Context
                                   ) -> QuaternaryPointFunction[bool]:
-    return partial(_angle_contains_point, context.angle_orientation)
+    return partial(angle_contains_point,
+                   orienteer=context.angle_orientation)
 
 
 def to_contour_orienteer(context: Context) -> Callable[[Sequence[Point]],
@@ -106,11 +107,11 @@ def to_strict_vertices_detector(context: Context
     return partial(_are_vertices_strict, to_contour_orienteer(context))
 
 
-def _angle_contains_point(orienteer: Orienteer,
-                          vertex: Point,
-                          first_ray_point: Point,
-                          second_ray_point: Point,
-                          point: Point) -> bool:
+def angle_contains_point(vertex: Point,
+                         first_ray_point: Point,
+                         second_ray_point: Point,
+                         point: Point,
+                         orienteer: Orienteer) -> bool:
     angle_orientation = orienteer(vertex, first_ray_point, second_ray_point)
     first_half_orientation = orienteer(vertex, first_ray_point, point)
     second_half_orientation = orienteer(second_ray_point, vertex, point)

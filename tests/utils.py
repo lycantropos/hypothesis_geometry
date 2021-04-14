@@ -1,3 +1,4 @@
+from functools import partial
 from itertools import chain
 from typing import (Any,
                     Callable,
@@ -21,7 +22,7 @@ from hypothesis_geometry.core.contracts import (
     multicontour_has_valid_sizes,
     to_non_convex_vertices_detector,
     to_strict_vertices_detector)
-from hypothesis_geometry.core.factories import to_contour_edges_constructor
+from hypothesis_geometry.core.factories import contour_to_edges
 from hypothesis_geometry.core.utils import flatten
 from hypothesis_geometry.hints import (Mix,
                                        Multicontour,
@@ -473,7 +474,8 @@ def is_contour_non_self_intersecting(contour: Contour) -> bool:
     return not edges_intersect(contour)
 
 
-contour_edges_constructor = to_contour_edges_constructor(context)
+contour_edges_constructor = partial(contour_to_edges,
+                                    segment_cls=Segment)
 
 
 def is_star_contour(contour: Contour) -> bool:
