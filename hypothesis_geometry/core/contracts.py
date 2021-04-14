@@ -1,5 +1,4 @@
-from typing import (Callable,
-                    Iterable,
+from typing import (Iterable,
                     Optional,
                     Sequence,
                     Sized)
@@ -102,11 +101,9 @@ def are_points_non_collinear(points: Sequence[Point],
                for orientation in to_contour_orientations(points, orienteer))
 
 
-def are_vertices_non_convex(contour_orienteer
-                            : Callable[[Sequence[Point]],
-                                       Iterable[Orientation]],
-                            vertices: Sequence[Point]) -> bool:
-    orientations = iter(contour_orienteer(vertices))
+def are_vertices_non_convex(vertices: Sequence[Point],
+                            orienteer: Orienteer) -> bool:
+    orientations = iter(to_contour_orientations(vertices, orienteer))
     base_orientation = next(orientations)
     # orientation change means
     # that internal angle is greater than 180 degrees
