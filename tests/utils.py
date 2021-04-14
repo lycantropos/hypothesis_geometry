@@ -485,7 +485,7 @@ def is_star_contour(contour: Contour) -> bool:
 
 
 def contour_to_star_segments(contour: Contour) -> Sequence[Segment]:
-    centroid = context.contour_centroid(contour.vertices)
+    centroid = context.region_centroid(contour.vertices)
     return [Segment(centroid, vertex)
             for vertex in contour.vertices
             if vertex != centroid]
