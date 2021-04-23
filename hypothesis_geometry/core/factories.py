@@ -50,7 +50,7 @@ def constrict_convex_hull_size(points: Sequence[Point],
         return points
     sorted_convex_hull = sorted(
             convex_hull,
-            key=partial(_to_squared_points_distance, convex_hull[0]))
+            key=partial(context.points_squared_distance, convex_hull[0]))
     new_border_points = []
     for index in range(max_size):
         quotient, remainder = divmod(index, 2)
@@ -72,8 +72,9 @@ def constrict_convex_hull_size(points: Sequence[Point],
                       for start, end in new_border_extra_endpoints_pairs)])
 
 
-def _edge_key(edge: QuadEdge) -> Key:
-    return _to_squared_edge_length(edge), edge.start, edge.end
+def _edge_key(context: Context, edge: QuadEdge) -> Key:
+    return (context.points_squared_distance(edge.start, edge.end), edge.start,
+            edge.end)
 
 
 def to_multicontour(points: Sequence[Point],
@@ -174,7 +175,7 @@ def to_polygon(points: Sequence[Point],
     edges_neighbours = {edge: to_edge_neighbours(edge)
                         for edge in boundary_edges}
     candidates = red_black.set_(*filter(is_mouth, boundary_edges),
-                                key=_edge_key)
+                                key=partial(_edge_key, context))
     boundary_vertices = [edge.start for edge in boundary_edges]
     compress_contour(boundary_vertices, context.angle_orientation)
     current_border_size = len(boundary_vertices)
@@ -225,14 +226,6 @@ def to_star_contour_vertices(points: Sequence[Point],
                 index += 1
             compress_contour(result, orienteer)
     return result
-
-
-def _to_squared_edge_length(edge: QuadEdge) -> Coordinate:
-    return _to_squared_points_distance(edge.start, edge.end)
-
-
-def _to_squared_points_distance(left: Point, right: Point) -> Coordinate:
-    return (left.x - right.x) ** 2 + (left.y - right.y) ** 2
 
 
 def to_convex_vertices_sequence(points: Sequence[Point],
@@ -370,7 +363,7 @@ def to_vertices_sequence(points: Sequence[Point],
     edges_neighbours = {edge: to_edge_neighbours(edge)
                         for edge in boundary_edges}
     candidates = red_black.set_(*filter(is_mouth, boundary_edges),
-                                key=_edge_key)
+                                key=partial(_edge_key, context))
     boundary_vertices = [edge.start for edge in boundary_edges]
     compress_contour(boundary_vertices, context.angle_orientation)
     current_size = len(boundary_vertices)
