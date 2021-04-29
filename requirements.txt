@@ -1,7 +1,7 @@
-bentley-ottmann>=2.3.0,<3.0
+bentley-ottmann>=3.0.0,<3.0
 decision>=0.2.0,<1.0
 dendroid>=1.1.1,<2.0
-ground>=3.7.0,<4.0
+ground>=4.0.0,<5.0
 hypothesis>=5.33.2
-locus>=3.0.0,<4.0
+locus>=4.0.0,<5.0
 reprit>=0.4.0,<1.0

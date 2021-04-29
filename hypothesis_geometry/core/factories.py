@@ -21,9 +21,9 @@ from dendroid.hints import Key
 from ground.base import (Context,
                          Orientation,
                          Relation)
-from ground.hints import (Coordinate,
-                          Point,
+from ground.hints import (Point,
                           Polygon,
+                          Scalar,
                           Segment)
 from locus import segmental
 
@@ -167,8 +167,7 @@ def to_polygon(points: Sequence[Point],
                                                            neighbour_end)))
 
     def segments_cross_or_overlap(left: Segment, right: Segment) -> bool:
-        relation = context.segments_relation(left.start, left.end, right.start,
-                                             right.end)
+        relation = context.segments_relation(left, right)
         return (relation is not Relation.DISJOINT
                 or relation is not Relation.TOUCH)
 
@@ -197,15 +196,15 @@ def to_polygon(points: Sequence[Point],
     return context.polygon_cls(contour_cls(border_vertices), holes)
 
 
-def _to_segment_angle(start: Point, end: Point) -> Coordinate:
+def _to_segment_angle(start: Point, end: Point) -> Scalar:
     return math.atan2(end.y - start.y, end.x - start.x)
 
 
 def to_star_contour_vertices(points: Sequence[Point],
                              context: Context) -> Sequence[Point]:
-    centroid = context.multipoint_centroid(points)
-    region_centroid_constructor, orienteer = (context.region_centroid,
-                                              context.angle_orientation)
+    centroid = context.multipoint_centroid(context.multipoint_cls(points))
+    contour_cls, region_centroid_constructor, orienteer = (
+        context.contour_cls, context.region_centroid, context.angle_orientation)
     result, prev_size = points, len(points) + 1
     while 2 < len(result) < prev_size:
         prev_size = len(result)
@@ -216,7 +215,7 @@ def to_star_contour_vertices(points: Sequence[Point],
                     for point in result),
                     key=itemgetter(0))]
         if len(result) > 2:
-            centroid = region_centroid_constructor(result)
+            centroid = region_centroid_constructor(contour_cls(result))
             index = 0
             while max(index, 2) < len(result):
                 if not angle_contains_point(result[index], result[index - 1],
@@ -246,9 +245,9 @@ def to_convex_vertices_sequence(points: Sequence[Point],
     min_x, *xs, max_x = xs
     min_y, *ys, max_y = ys
 
-    def to_vectors_coordinates(coordinates: List[Coordinate],
-                               min_coordinate: Coordinate,
-                               max_coordinate: Coordinate) -> List[Coordinate]:
+    def to_vectors_coordinates(coordinates: List[Scalar],
+                               min_coordinate: Scalar,
+                               max_coordinate: Scalar) -> List[Scalar]:
         last_min = last_max = min_coordinate
         result = []
         for coordinate in coordinates:
@@ -265,7 +264,7 @@ def to_convex_vertices_sequence(points: Sequence[Point],
     vectors_ys = to_vectors_coordinates(ys, min_y, max_y)
     random.shuffle(vectors_ys)
 
-    def to_vector_angle(vector: Tuple[Coordinate, Coordinate]) -> Key:
+    def to_vector_angle(vector: Tuple[Scalar, Scalar]) -> Key:
         x, y = vector
         return atan2(y, x)
 

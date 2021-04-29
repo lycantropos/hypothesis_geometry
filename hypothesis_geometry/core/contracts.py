@@ -5,8 +5,8 @@ from typing import (Iterable,
 
 from bentley_ottmann.planar import segments_cross_or_overlap
 from ground.base import Orientation
-from ground.hints import (Coordinate,
-                          Point,
+from ground.hints import (Point,
+                          Scalar,
                           Segment)
 
 from hypothesis_geometry.hints import Multicontour
@@ -69,11 +69,11 @@ def multicontour_has_valid_sizes(multicontour: Multicontour,
                     for contour in multicontour))
 
 
-def segment_to_max_x(segment: Segment) -> Coordinate:
+def segment_to_max_x(segment: Segment) -> Scalar:
     return min(segment.start.x, segment.end.x)
 
 
-def segment_to_min_y(segment: Segment) -> Coordinate:
+def segment_to_min_y(segment: Segment) -> Scalar:
     return min(segment.start.y, segment.end.y)
 
 

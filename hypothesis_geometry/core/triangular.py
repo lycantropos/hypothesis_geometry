@@ -11,8 +11,8 @@ from typing import (Callable,
 from decision.partition import coin_change
 from ground.base import (Context,
                          Orientation)
-from ground.hints import (Coordinate,
-                          Point)
+from ground.hints import (Point,
+                          Scalar)
 from reprit.base import generate_repr
 
 from .subdivisional import QuadEdge
@@ -64,8 +64,7 @@ class Triangulation:
         edge.delete()
 
     @property
-    def _incircle_test(self) -> Callable[[Point, Point, Point, Point],
-                                         Coordinate]:
+    def _incircle_test(self) -> Callable[[Point, Point, Point, Point], Scalar]:
         return self.context.point_point_point_incircle_test
 
     def _connect(self, base_edge: QuadEdge) -> None:
