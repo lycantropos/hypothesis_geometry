@@ -1,30 +1,30 @@
 from typing import Tuple
 
-from ground.hints import Coordinate
+from ground.hints import Scalar
 from hypothesis import given
 from hypothesis.strategies import DataObject
 
 from hypothesis_geometry.hints import Strategy
 from hypothesis_geometry.planar import points
 from tests import strategies
-from tests.utils import (CoordinatesLimitsType,
+from tests.utils import (ScalarsLimitsType,
                          is_point,
                          point_has_coordinates_in_range,
                          point_has_coordinates_types)
 
 
-@given(strategies.coordinates_strategies)
-def test_basic(coordinates: Strategy[Coordinate]) -> None:
-    result = points(coordinates)
+@given(strategies.scalars_strategies)
+def test_basic(scalars: Strategy[Scalar]) -> None:
+    result = points(scalars)
 
     assert isinstance(result, Strategy)
 
 
 @given(strategies.data,
-       strategies.coordinates_strategy_with_limit_and_type_pairs)
+       strategies.scalars_strategy_with_limit_and_type_pairs)
 def test_properties(data: DataObject,
-                    coordinates_limits_type_pair: Tuple[CoordinatesLimitsType,
-                                                        CoordinatesLimitsType]
+                    coordinates_limits_type_pair: Tuple[ScalarsLimitsType,
+                                                        ScalarsLimitsType]
                     ) -> None:
     (x_coordinates_limits_type,
      y_coordinates_limits_type) = coordinates_limits_type_pair
@@ -49,13 +49,13 @@ def test_properties(data: DataObject,
 
 
 @given(strategies.data,
-       strategies.coordinates_strategies_with_limits_and_types)
+       strategies.scalars_strategies_with_limits_and_types)
 def test_same_coordinates(data: DataObject,
-                          coordinates_limits_type: CoordinatesLimitsType
+                          coordinates_limits_type: ScalarsLimitsType
                           ) -> None:
-    (coordinates, (min_value, max_value)), type_ = coordinates_limits_type
+    (scalars, (min_value, max_value)), type_ = coordinates_limits_type
 
-    strategy = points(coordinates)
+    strategy = points(scalars)
 
     result = data.draw(strategy)
 

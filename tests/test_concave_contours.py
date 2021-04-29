@@ -1,7 +1,7 @@
 from typing import Tuple
 
 import pytest
-from ground.hints import Coordinate
+from ground.hints import Scalar
 from hypothesis import given
 from hypothesis.errors import HypothesisWarning
 from hypothesis.strategies import DataObject
@@ -9,7 +9,7 @@ from hypothesis.strategies import DataObject
 from hypothesis_geometry.hints import Strategy
 from hypothesis_geometry.planar import concave_contours
 from tests import strategies
-from tests.utils import (CoordinatesLimitsType,
+from tests.utils import (ScalarsLimitsType,
                          SizesPair,
                          are_vertices_non_convex,
                          are_vertices_strict,
@@ -22,13 +22,13 @@ from tests.utils import (CoordinatesLimitsType,
                          is_contour_strict)
 
 
-@given(strategies.coordinates_strategies,
+@given(strategies.scalars_strategies,
        strategies.concave_contours_sizes_pairs)
-def test_basic(coordinates: Strategy[Coordinate],
+def test_basic(scalars: Strategy[Scalar],
                sizes_pair: SizesPair) -> None:
     min_size, max_size = sizes_pair
 
-    result = concave_contours(coordinates,
+    result = concave_contours(scalars,
                               min_size=min_size,
                               max_size=max_size)
 
@@ -36,11 +36,11 @@ def test_basic(coordinates: Strategy[Coordinate],
 
 
 @given(strategies.data,
-       strategies.coordinates_strategy_with_limit_and_type_pairs,
+       strategies.scalars_strategy_with_limit_and_type_pairs,
        strategies.concave_contours_sizes_pairs)
 def test_properties(data: DataObject,
-                    coordinates_limits_type_pair: Tuple[CoordinatesLimitsType,
-                                                        CoordinatesLimitsType],
+                    coordinates_limits_type_pair: Tuple[ScalarsLimitsType,
+                                                        ScalarsLimitsType],
                     sizes_pair: SizesPair) -> None:
     (x_coordinates_limits_type,
      y_coordinates_limits_type) = coordinates_limits_type_pair
@@ -75,15 +75,15 @@ def test_properties(data: DataObject,
 
 
 @given(strategies.data,
-       strategies.coordinates_strategies_with_limits_and_types,
+       strategies.scalars_strategies_with_limits_and_types,
        strategies.concave_contours_sizes_pairs)
 def test_same_coordinates(data: DataObject,
-                          coordinates_limits_type: CoordinatesLimitsType,
+                          coordinates_limits_type: ScalarsLimitsType,
                           sizes_pair: SizesPair) -> None:
-    (coordinates, (min_value, max_value)), type_ = coordinates_limits_type
+    (scalars, (min_value, max_value)), type_ = coordinates_limits_type
     min_size, max_size = sizes_pair
 
-    strategy = concave_contours(coordinates,
+    strategy = concave_contours(scalars,
                                 min_size=min_size,
                                 max_size=max_size)
 
@@ -107,26 +107,26 @@ def test_same_coordinates(data: DataObject,
     assert is_contour_counterclockwise(result)
 
 
-@given(strategies.coordinates_strategies,
+@given(strategies.scalars_strategies,
        strategies.invalid_concave_contours_sizes_pairs)
-def test_invalid_sizes(coordinates: Strategy[Coordinate],
+def test_invalid_sizes(scalars: Strategy[Scalar],
                        invalid_sizes_pair: SizesPair) -> None:
     min_size, max_size = invalid_sizes_pair
 
     with pytest.raises(ValueError):
-        concave_contours(coordinates,
+        concave_contours(scalars,
                          min_size=min_size,
                          max_size=max_size)
 
 
-@given(strategies.coordinates_strategies,
+@given(strategies.scalars_strategies,
        strategies.non_valid_concave_contours_sizes_pairs)
-def test_non_valid_sizes(coordinates: Strategy[Coordinate],
+def test_non_valid_sizes(scalars: Strategy[Scalar],
                          non_valid_sizes_pair: SizesPair) -> None:
     min_size, max_size = non_valid_sizes_pair
 
     with pytest.warns(HypothesisWarning) as warnings:
-        concave_contours(coordinates,
+        concave_contours(scalars,
                          min_size=min_size,
                          max_size=max_size)
 

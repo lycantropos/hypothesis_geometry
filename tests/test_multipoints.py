@@ -1,14 +1,14 @@
 from typing import Tuple
 
 import pytest
-from ground.hints import Coordinate
+from ground.hints import Scalar
 from hypothesis import given
 from hypothesis.strategies import DataObject
 
 from hypothesis_geometry.hints import Strategy
 from hypothesis_geometry.planar import multipoints
 from tests import strategies
-from tests.utils import (CoordinatesLimitsType,
+from tests.utils import (ScalarsLimitsType,
                          SizesPair,
                          all_unique,
                          has_valid_size,
@@ -17,25 +17,22 @@ from tests.utils import (CoordinatesLimitsType,
                          multipoint_has_coordinates_types)
 
 
-@given(strategies.coordinates_strategies,
-       strategies.multipoints_sizes_pairs)
-def test_basic(coordinates: Strategy[Coordinate],
-               sizes_pair: SizesPair) -> None:
+@given(strategies.scalars_strategies, strategies.multipoints_sizes_pairs)
+def test_basic(scalars: Strategy[Scalar], sizes_pair: SizesPair) -> None:
     min_size, max_size = sizes_pair
 
-    result = multipoints(coordinates,
+    result = multipoints(scalars,
                          min_size=min_size,
                          max_size=max_size)
 
     assert isinstance(result, Strategy)
 
 
-@given(strategies.data,
-       strategies.coordinates_strategy_with_limit_and_type_pairs,
+@given(strategies.data, strategies.scalars_strategy_with_limit_and_type_pairs,
        strategies.multipoints_sizes_pairs)
 def test_properties(data: DataObject,
-                    coordinates_limits_type_pair: Tuple[CoordinatesLimitsType,
-                                                        CoordinatesLimitsType],
+                    coordinates_limits_type_pair: Tuple[ScalarsLimitsType,
+                                                        ScalarsLimitsType],
                     sizes_pair: SizesPair) -> None:
     (x_coordinates_limits_type,
      y_coordinates_limits_type) = coordinates_limits_type_pair
@@ -66,16 +63,15 @@ def test_properties(data: DataObject,
     assert all_unique(result.points)
 
 
-@given(strategies.data,
-       strategies.coordinates_strategies_with_limits_and_types,
+@given(strategies.data, strategies.scalars_strategies_with_limits_and_types,
        strategies.multipoints_sizes_pairs)
 def test_same_coordinates(data: DataObject,
-                          coordinates_limits_type: CoordinatesLimitsType,
+                          coordinates_limits_type: ScalarsLimitsType,
                           sizes_pair: SizesPair) -> None:
-    (coordinates, (min_value, max_value)), type_ = coordinates_limits_type
+    (scalars, (min_value, max_value)), type_ = coordinates_limits_type
     min_size, max_size = sizes_pair
 
-    strategy = multipoints(coordinates,
+    strategy = multipoints(scalars,
                            min_size=min_size,
                            max_size=max_size)
 
@@ -96,13 +92,13 @@ def test_same_coordinates(data: DataObject,
     assert all_unique(result.points)
 
 
-@given(strategies.coordinates_strategies,
+@given(strategies.scalars_strategies,
        strategies.invalid_multipoints_sizes_pairs)
-def test_invalid_sizes(coordinates: Strategy[Coordinate],
+def test_invalid_sizes(scalars: Strategy[Scalar],
                        invalid_sizes_pair: SizesPair) -> None:
     min_size, max_size = invalid_sizes_pair
 
     with pytest.raises(ValueError):
-        multipoints(coordinates,
+        multipoints(scalars,
                     min_size=min_size,
                     max_size=max_size)

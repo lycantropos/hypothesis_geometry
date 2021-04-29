@@ -5,7 +5,7 @@ from typing import (Optional,
                     Tuple,
                     Type)
 
-from ground.hints import Coordinate
+from ground.hints import Scalar
 from hypothesis import strategies
 
 from hypothesis_geometry.core.constants import MinContourSize
@@ -19,17 +19,17 @@ data = strategies.data()
 
 MAX_VALUE = 10 ** 15
 MIN_VALUE = -MAX_VALUE
-coordinates_strategies_factories = {float: partial(strategies.floats,
-                                                   min_value=MIN_VALUE,
-                                                   max_value=MAX_VALUE,
-                                                   allow_nan=False,
-                                                   allow_infinity=False),
-                                    Fraction: strategies.fractions,
-                                    int: strategies.integers}
-coordinates_types = strategies.sampled_from(
-        list(coordinates_strategies_factories.keys()))
-coordinates_strategies = strategies.sampled_from(
-        [factory() for factory in coordinates_strategies_factories.values()])
+scalars_strategies_factories = {float: partial(strategies.floats,
+                                               min_value=MIN_VALUE,
+                                               max_value=MAX_VALUE,
+                                               allow_nan=False,
+                                               allow_infinity=False),
+                                Fraction: strategies.fractions,
+                                int: strategies.integers}
+scalars_types = strategies.sampled_from(list(scalars_strategies_factories
+                                             .keys()))
+scalars_strategies = strategies.sampled_from(
+        [factory() for factory in scalars_strategies_factories.values()])
 
 
 def to_sizes_pairs(min_size: int, max_size: int = 10
@@ -82,23 +82,22 @@ invalid_multisegments_sizes_pairs = to_invalid_sizes_pairs(0)
 
 
 def to_coordinates_strategies_with_limits_and_types(
-        type_: Type[Coordinate]) -> Strategy[Tuple[Tuple[Strategy[Coordinate],
-                                                         Limits],
-                                                   Type[Coordinate]]]:
-    strategy_factory = coordinates_strategies_factories[type_]
+        type_: Type[Scalar]) -> Strategy[Tuple[Tuple[Strategy[Scalar], Limits],
+                                               Type[Scalar]]]:
+    strategy_factory = scalars_strategies_factories[type_]
 
     def to_strategy_with_limits(limits: Limits
-                                ) -> Tuple[Strategy[Coordinate], Limits]:
+                                ) -> Tuple[Strategy[Scalar], Limits]:
         min_value, max_value = limits
         return (strategy_factory(min_value=min_value,
                                  max_value=max_value),
                 limits)
 
-    def to_limits(coordinates: Strategy[Coordinate]) -> Strategy[Limits]:
-        result = (strategies.tuples(coordinates, coordinates)
+    def to_limits(scalars: Strategy[Scalar]) -> Strategy[Limits]:
+        result = (strategies.tuples(scalars, scalars)
                   .filter(are_pair_coordinates_sparse)
                   .map(sort_pair))
-        return (strategies.tuples(coordinates, strategies.none()) | result
+        return (strategies.tuples(scalars, strategies.none()) | result
                 if type_ is not float
                 else result)
 
@@ -107,14 +106,14 @@ def to_coordinates_strategies_with_limits_and_types(
                              strategies.just(type_))
 
 
-def are_pair_coordinates_sparse(pair: Tuple[Coordinate, Coordinate]) -> bool:
+def are_pair_coordinates_sparse(pair: Tuple[Scalar, Scalar]) -> bool:
     first, second = pair
     return abs(first - second) >= 10
 
 
-coordinates_strategies_with_limits_and_types_strategies = (
-    coordinates_types.map(to_coordinates_strategies_with_limits_and_types))
-coordinates_strategies_with_limits_and_types = (
-    coordinates_strategies_with_limits_and_types_strategies.flatmap(identity))
-coordinates_strategy_with_limit_and_type_pairs = (
-    coordinates_strategies_with_limits_and_types_strategies.flatmap(to_pairs))
+scalars_strategies_with_limits_and_types_strategies = (
+    scalars_types.map(to_coordinates_strategies_with_limits_and_types))
+scalars_strategies_with_limits_and_types = (
+    scalars_strategies_with_limits_and_types_strategies.flatmap(identity))
+scalars_strategy_with_limit_and_type_pairs = (
+    scalars_strategies_with_limits_and_types_strategies.flatmap(to_pairs))

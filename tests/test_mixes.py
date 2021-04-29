@@ -1,7 +1,7 @@
 from typing import Tuple
 
 import pytest
-from ground.hints import Coordinate
+from ground.hints import Scalar
 from hypothesis import given
 from hypothesis.errors import HypothesisWarning
 from hypothesis.strategies import DataObject
@@ -9,7 +9,7 @@ from hypothesis.strategies import DataObject
 from hypothesis_geometry.hints import Strategy
 from hypothesis_geometry.planar import mixes
 from tests import strategies
-from tests.utils import (CoordinatesLimitsType,
+from tests.utils import (ScalarsLimitsType,
                          SizesPair,
                          is_mix,
                          mix_has_coordinates_in_range,
@@ -18,14 +18,14 @@ from tests.utils import (CoordinatesLimitsType,
                          mix_segments_do_not_cross_or_overlap)
 
 
-@given(strategies.coordinates_strategies,
+@given(strategies.scalars_strategies,
        strategies.multipoints_sizes_pairs,
        strategies.multisegments_sizes_pairs,
        strategies.multipolygons_sizes_pairs,
        strategies.concave_contours_sizes_pairs,
        strategies.multicontours_sizes_pairs,
        strategies.convex_contours_sizes_pairs)
-def test_basic(coordinates: Strategy[Coordinate],
+def test_basic(scalars: Strategy[Scalar],
                multipoints_sizes_pair: SizesPair,
                multisegments_sizes_pair: SizesPair,
                multipolygons_sizes_pair: SizesPair,
@@ -42,7 +42,7 @@ def test_basic(coordinates: Strategy[Coordinate],
     (min_multipolygon_hole_size,
      max_multipolygon_hole_size) = multipolygons_holes_sizes_pair
 
-    result = mixes(coordinates,
+    result = mixes(scalars,
                    min_multipoint_size=min_multipoint_size,
                    max_multipoint_size=max_multipoint_size,
                    min_multisegment_size=min_multisegment_size,
@@ -60,7 +60,7 @@ def test_basic(coordinates: Strategy[Coordinate],
 
 
 @given(strategies.data,
-       strategies.coordinates_strategy_with_limit_and_type_pairs,
+       strategies.scalars_strategy_with_limit_and_type_pairs,
        strategies.multipoints_sizes_pairs,
        strategies.multisegments_sizes_pairs,
        strategies.multipolygons_sizes_pairs,
@@ -68,8 +68,8 @@ def test_basic(coordinates: Strategy[Coordinate],
        strategies.multicontours_sizes_pairs,
        strategies.convex_contours_sizes_pairs)
 def test_properties(data: DataObject,
-                    coordinates_limits_type_pair: Tuple[CoordinatesLimitsType,
-                                                        CoordinatesLimitsType],
+                    coordinates_limits_type_pair: Tuple[ScalarsLimitsType,
+                                                        ScalarsLimitsType],
                     multipoints_sizes_pair: SizesPair,
                     multisegments_sizes_pair: SizesPair,
                     multipolygons_sizes_pair: SizesPair,
@@ -135,7 +135,7 @@ def test_properties(data: DataObject,
 
 
 @given(strategies.data,
-       strategies.coordinates_strategies_with_limits_and_types,
+       strategies.scalars_strategies_with_limits_and_types,
        strategies.multipoints_sizes_pairs,
        strategies.multisegments_sizes_pairs,
        strategies.multipolygons_sizes_pairs,
@@ -143,15 +143,15 @@ def test_properties(data: DataObject,
        strategies.multicontours_sizes_pairs,
        strategies.convex_contours_sizes_pairs)
 def test_same_coordinates(data: DataObject,
-                          coordinates_limits_type: CoordinatesLimitsType,
+                          coordinates_limits_type: ScalarsLimitsType,
                           multipoints_sizes_pair: SizesPair,
                           multisegments_sizes_pair: SizesPair,
                           multipolygons_sizes_pair: SizesPair,
                           multipolygons_border_sizes_pair: SizesPair,
                           multipolygons_holes_list_sizes_pair: SizesPair,
                           multipolygons_holes_sizes_pair: SizesPair) -> None:
-    (coordinates, (min_multipolygon_value,
-                   max_multipolygon_value)), type_ = coordinates_limits_type
+    ((scalars, (min_multipolygon_value, max_multipolygon_value)),
+     type_) = coordinates_limits_type
     min_multipoint_size, max_multipoint_size = multipoints_sizes_pair
     min_multisegment_size, max_multisegment_size = multisegments_sizes_pair
     min_multipolygon_size, max_multipolygon_size = multipolygons_sizes_pair
@@ -162,7 +162,7 @@ def test_same_coordinates(data: DataObject,
     (min_multipolygon_hole_size,
      max_multipolygon_hole_size) = multipolygons_holes_sizes_pair
 
-    strategy = mixes(coordinates,
+    strategy = mixes(scalars,
                      min_multipoint_size=min_multipoint_size,
                      max_multipoint_size=max_multipoint_size,
                      min_multisegment_size=min_multisegment_size,
@@ -204,85 +204,84 @@ def test_same_coordinates(data: DataObject,
     assert mix_segments_do_not_cross_or_overlap(result)
 
 
-@given(strategies.coordinates_strategies,
+@given(strategies.scalars_strategies,
        strategies.invalid_multipolygons_sizes_pairs)
-def test_invalid_multipolygon_sizes(coordinates: Strategy[Coordinate],
+def test_invalid_multipolygon_sizes(scalars: Strategy[Scalar],
                                     invalid_sizes_pair: SizesPair) -> None:
     min_multipolygon_size, max_multipolygon_size = invalid_sizes_pair
 
     with pytest.raises(ValueError):
-        mixes(coordinates,
+        mixes(scalars,
               min_multipolygon_size=min_multipolygon_size,
               max_multipolygon_size=max_multipolygon_size)
 
 
-@given(strategies.coordinates_strategies,
+@given(strategies.scalars_strategies,
        strategies.invalid_convex_contours_sizes_pairs)
-def test_invalid_multipolygon_border_sizes(coordinates: Strategy[Coordinate],
+def test_invalid_multipolygon_border_sizes(scalars: Strategy[Scalar],
                                            invalid_sizes_pair: SizesPair
                                            ) -> None:
     (min_multipolygon_border_size,
      max_multipolygon_border_size) = invalid_sizes_pair
 
     with pytest.raises(ValueError):
-        mixes(coordinates,
+        mixes(scalars,
               min_multipolygon_border_size=min_multipolygon_border_size,
               max_multipolygon_border_size=max_multipolygon_border_size)
 
 
-@given(strategies.coordinates_strategies,
+@given(strategies.scalars_strategies,
        strategies.invalid_multicontours_sizes_pairs)
-def test_invalid_multipolygon_holes_list_sizes(coordinates
-                                               : Strategy[Coordinate],
+def test_invalid_multipolygon_holes_list_sizes(scalars: Strategy[Scalar],
                                                invalid_sizes_pair: SizesPair
                                                ) -> None:
     (min_multipolygon_holes_size,
      max_multipolygon_holes_size) = invalid_sizes_pair
 
     with pytest.raises(ValueError):
-        mixes(coordinates,
+        mixes(scalars,
               min_multipolygon_holes_size=min_multipolygon_holes_size,
               max_multipolygon_holes_size=max_multipolygon_holes_size)
 
 
-@given(strategies.coordinates_strategies,
+@given(strategies.scalars_strategies,
        strategies.invalid_convex_contours_sizes_pairs)
-def test_invalid_multipolygon_holes_sizes(coordinates: Strategy[Coordinate],
+def test_invalid_multipolygon_holes_sizes(scalars: Strategy[Scalar],
                                           invalid_sizes_pair: SizesPair
                                           ) -> None:
     min_multipolygon_hole_size, max_multipolygon_hole_size = invalid_sizes_pair
 
     with pytest.raises(ValueError):
-        mixes(coordinates,
+        mixes(scalars,
               min_multipolygon_hole_size=min_multipolygon_hole_size,
               max_multipolygon_hole_size=max_multipolygon_hole_size)
 
 
-@given(strategies.coordinates_strategies,
+@given(strategies.scalars_strategies,
        strategies.non_valid_convex_contours_sizes_pairs)
-def test_non_valid_multipolygon_border_sizes(coordinates: Strategy[Coordinate],
+def test_non_valid_multipolygon_border_sizes(scalars: Strategy[Scalar],
                                              non_valid_sizes_pair: SizesPair
                                              ) -> None:
     (min_multipolygon_border_size,
      max_multipolygon_border_size) = non_valid_sizes_pair
 
     with pytest.warns(HypothesisWarning) as warnings:
-        mixes(coordinates,
+        mixes(scalars,
               min_multipolygon_border_size=min_multipolygon_border_size,
               max_multipolygon_border_size=max_multipolygon_border_size)
 
     assert len(warnings) == 1
 
 
-@given(strategies.coordinates_strategies,
+@given(strategies.scalars_strategies,
        strategies.non_valid_convex_contours_sizes_pairs)
-def test_non_valid_multipolygon_holes_sizes(coordinates: Strategy[Coordinate],
+def test_non_valid_multipolygon_holes_sizes(scalars: Strategy[Scalar],
                                             non_valid_sizes_pair: SizesPair
                                             ) -> None:
     min_multipolygon_size, max_multipolygon_size = non_valid_sizes_pair
 
     with pytest.warns(HypothesisWarning) as warnings:
-        mixes(coordinates,
+        mixes(scalars,
               min_multipolygon_hole_size=min_multipolygon_size,
               max_multipolygon_hole_size=max_multipolygon_size)
 

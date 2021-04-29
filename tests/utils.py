@@ -14,7 +14,7 @@ from bentley_ottmann.planar import (edges_intersect,
                                     segments_cross_or_overlap)
 from ground.base import (Orientation,
                          get_context)
-from ground.hints import Coordinate
+from ground.hints import Scalar
 from hypothesis import strategies
 
 from hypothesis_geometry.core.contracts import (
@@ -31,9 +31,9 @@ from hypothesis_geometry.hints import (Mix,
 has_valid_size = has_valid_size
 Domain = TypeVar('Domain')
 Key = Callable[[Domain], Any]
-Limits = Tuple[Coordinate, Optional[Coordinate]]
-CoordinatesLimitsType = Tuple[Tuple[Strategy[Coordinate], Limits],
-                              Type[Coordinate]]
+Limits = Tuple[Scalar, Optional[Scalar]]
+ScalarsLimitsType = Tuple[Tuple[Strategy[Scalar], Limits],
+                          Type[Scalar]]
 SizesPair = Tuple[int, Optional[int]]
 context = get_context()
 Box = context.box_cls
@@ -56,10 +56,10 @@ def to_pairs(strategy: Strategy[Domain]) -> Strategy[Tuple[Domain, Domain]]:
 
 def box_has_coordinates_in_range(box: Box,
                                  *,
-                                 min_x_value: Coordinate,
-                                 max_x_value: Optional[Coordinate],
-                                 min_y_value: Coordinate,
-                                 max_y_value: Optional[Coordinate]) -> bool:
+                                 min_x_value: Scalar,
+                                 max_x_value: Optional[Scalar],
+                                 min_y_value: Scalar,
+                                 max_y_value: Optional[Scalar]) -> bool:
     return (is_coordinate_in_range(box.min_x,
                                    min_value=min_x_value,
                                    max_value=max_x_value)
@@ -162,10 +162,10 @@ def polygon_has_valid_sizes(polygon: Polygon,
 
 def contour_has_coordinates_in_range(contour: Contour,
                                      *,
-                                     min_x_value: Coordinate,
-                                     max_x_value: Optional[Coordinate],
-                                     min_y_value: Coordinate,
-                                     max_y_value: Optional[Coordinate]
+                                     min_x_value: Scalar,
+                                     max_x_value: Optional[Scalar],
+                                     min_y_value: Scalar,
+                                     max_y_value: Optional[Scalar]
                                      ) -> bool:
     return all(point_has_coordinates_in_range(vertex,
                                               min_x_value=min_x_value,
@@ -177,10 +177,10 @@ def contour_has_coordinates_in_range(contour: Contour,
 
 def mix_has_coordinates_in_range(mix: Mix,
                                  *,
-                                 min_x_value: Coordinate,
-                                 max_x_value: Optional[Coordinate],
-                                 min_y_value: Coordinate,
-                                 max_y_value: Optional[Coordinate]
+                                 min_x_value: Scalar,
+                                 max_x_value: Optional[Scalar],
+                                 min_y_value: Scalar,
+                                 max_y_value: Optional[Scalar]
                                  ) -> bool:
     multipoint, multisegment, multipolygon = mix
     return (multipoint_has_coordinates_in_range(multipoint,
@@ -202,10 +202,10 @@ def mix_has_coordinates_in_range(mix: Mix,
 
 def multicontour_has_coordinates_in_range(multicontour: Multicontour,
                                           *,
-                                          min_x_value: Coordinate,
-                                          max_x_value: Optional[Coordinate],
-                                          min_y_value: Coordinate,
-                                          max_y_value: Optional[Coordinate]
+                                          min_x_value: Scalar,
+                                          max_x_value: Optional[Scalar],
+                                          min_y_value: Scalar,
+                                          max_y_value: Optional[Scalar]
                                           ) -> bool:
     return all(contour_has_coordinates_in_range(contour,
                                                 min_x_value=min_x_value,
@@ -217,10 +217,10 @@ def multicontour_has_coordinates_in_range(multicontour: Multicontour,
 
 def multipoint_has_coordinates_in_range(multipoint: Multipoint,
                                         *,
-                                        min_x_value: Coordinate,
-                                        max_x_value: Optional[Coordinate],
-                                        min_y_value: Coordinate,
-                                        max_y_value: Optional[Coordinate]
+                                        min_x_value: Scalar,
+                                        max_x_value: Optional[Scalar],
+                                        min_y_value: Scalar,
+                                        max_y_value: Optional[Scalar]
                                         ) -> bool:
     return all(point_has_coordinates_in_range(point,
                                               min_x_value=min_x_value,
@@ -232,10 +232,10 @@ def multipoint_has_coordinates_in_range(multipoint: Multipoint,
 
 def multipolygon_has_coordinates_in_range(multipolygon: Multipolygon,
                                           *,
-                                          min_x_value: Coordinate,
-                                          max_x_value: Optional[Coordinate],
-                                          min_y_value: Coordinate,
-                                          max_y_value: Optional[Coordinate]
+                                          min_x_value: Scalar,
+                                          max_x_value: Optional[Scalar],
+                                          min_y_value: Scalar,
+                                          max_y_value: Optional[Scalar]
                                           ) -> bool:
     return all(polygon_has_coordinates_in_range(polygon,
                                                 min_x_value=min_x_value,
@@ -247,10 +247,10 @@ def multipolygon_has_coordinates_in_range(multipolygon: Multipolygon,
 
 def multisegment_has_coordinates_in_range(multisegment: Multisegment,
                                           *,
-                                          min_x_value: Coordinate,
-                                          max_x_value: Optional[Coordinate],
-                                          min_y_value: Coordinate,
-                                          max_y_value: Optional[Coordinate]
+                                          min_x_value: Scalar,
+                                          max_x_value: Optional[Scalar],
+                                          min_y_value: Scalar,
+                                          max_y_value: Optional[Scalar]
                                           ) -> bool:
     return all(segment_has_coordinates_in_range(segment,
                                                 min_x_value=min_x_value,
@@ -262,10 +262,10 @@ def multisegment_has_coordinates_in_range(multisegment: Multisegment,
 
 def point_has_coordinates_in_range(point: Point,
                                    *,
-                                   min_x_value: Coordinate,
-                                   max_x_value: Optional[Coordinate],
-                                   min_y_value: Coordinate,
-                                   max_y_value: Optional[Coordinate]) -> bool:
+                                   min_x_value: Scalar,
+                                   max_x_value: Optional[Scalar],
+                                   min_y_value: Scalar,
+                                   max_y_value: Optional[Scalar]) -> bool:
     return (is_coordinate_in_range(point.x,
                                    min_value=min_x_value,
                                    max_value=max_x_value)
@@ -276,10 +276,10 @@ def point_has_coordinates_in_range(point: Point,
 
 def polygon_has_coordinates_in_range(polygon: Polygon,
                                      *,
-                                     min_x_value: Coordinate,
-                                     max_x_value: Optional[Coordinate],
-                                     min_y_value: Coordinate,
-                                     max_y_value: Optional[Coordinate]
+                                     min_x_value: Scalar,
+                                     max_x_value: Optional[Scalar],
+                                     min_y_value: Scalar,
+                                     max_y_value: Optional[Scalar]
                                      ) -> bool:
     return (contour_has_coordinates_in_range(polygon.border,
                                              min_x_value=min_x_value,
@@ -295,10 +295,10 @@ def polygon_has_coordinates_in_range(polygon: Polygon,
 
 def segment_has_coordinates_in_range(segment: Segment,
                                      *,
-                                     min_x_value: Coordinate,
-                                     max_x_value: Optional[Coordinate],
-                                     min_y_value: Coordinate,
-                                     max_y_value: Optional[Coordinate]
+                                     min_x_value: Scalar,
+                                     max_x_value: Optional[Scalar],
+                                     min_y_value: Scalar,
+                                     max_y_value: Optional[Scalar]
                                      ) -> bool:
     return (point_has_coordinates_in_range(segment.start,
                                            min_x_value=min_x_value,
@@ -312,18 +312,18 @@ def segment_has_coordinates_in_range(segment: Segment,
                                                max_y_value=max_y_value))
 
 
-def is_coordinate_in_range(coordinate: Coordinate,
+def is_coordinate_in_range(coordinate: Scalar,
                            *,
-                           min_value: Coordinate,
-                           max_value: Optional[Coordinate]) -> bool:
+                           min_value: Scalar,
+                           max_value: Optional[Scalar]) -> bool:
     return (min_value <= coordinate
             and (max_value is None or coordinate <= max_value))
 
 
 def box_has_coordinates_types(box: Box,
                               *,
-                              x_type: Type[Coordinate],
-                              y_type: Type[Coordinate]) -> bool:
+                              x_type: Type[Scalar],
+                              y_type: Type[Scalar]) -> bool:
     return (isinstance(box.min_x, x_type) and isinstance(box.max_x, x_type)
             and isinstance(box.min_y, y_type)
             and isinstance(box.max_y, y_type))
@@ -331,8 +331,8 @@ def box_has_coordinates_types(box: Box,
 
 def contour_has_coordinates_types(contour: Contour,
                                   *,
-                                  x_type: Type[Coordinate],
-                                  y_type: Type[Coordinate]) -> bool:
+                                  x_type: Type[Scalar],
+                                  y_type: Type[Scalar]) -> bool:
     return all(point_has_coordinates_types(vertex,
                                            x_type=x_type,
                                            y_type=y_type)
@@ -341,8 +341,8 @@ def contour_has_coordinates_types(contour: Contour,
 
 def mix_has_coordinates_types(mix: Mix,
                               *,
-                              x_type: Type[Coordinate],
-                              y_type: Type[Coordinate]) -> bool:
+                              x_type: Type[Scalar],
+                              y_type: Type[Scalar]) -> bool:
     multipoint, multisegment, multipolygon = mix
     return (multipoint_has_coordinates_types(multipoint,
                                              x_type=x_type,
@@ -357,8 +357,8 @@ def mix_has_coordinates_types(mix: Mix,
 
 def multicontour_has_coordinates_types(multicontour: Multicontour,
                                        *,
-                                       x_type: Type[Coordinate],
-                                       y_type: Type[Coordinate]) -> bool:
+                                       x_type: Type[Scalar],
+                                       y_type: Type[Scalar]) -> bool:
     return all(contour_has_coordinates_types(contour,
                                              x_type=x_type,
                                              y_type=y_type)
@@ -367,8 +367,8 @@ def multicontour_has_coordinates_types(multicontour: Multicontour,
 
 def multipoint_has_coordinates_types(multipoint: Multipoint,
                                      *,
-                                     x_type: Type[Coordinate],
-                                     y_type: Type[Coordinate]) -> bool:
+                                     x_type: Type[Scalar],
+                                     y_type: Type[Scalar]) -> bool:
     return all(point_has_coordinates_types(point,
                                            x_type=x_type,
                                            y_type=y_type)
@@ -377,8 +377,8 @@ def multipoint_has_coordinates_types(multipoint: Multipoint,
 
 def multipolygon_has_coordinates_types(multipolygon: Multipolygon,
                                        *,
-                                       x_type: Type[Coordinate],
-                                       y_type: Type[Coordinate]) -> bool:
+                                       x_type: Type[Scalar],
+                                       y_type: Type[Scalar]) -> bool:
     return all(polygon_has_coordinates_types(polygon,
                                              x_type=x_type,
                                              y_type=y_type)
@@ -387,8 +387,8 @@ def multipolygon_has_coordinates_types(multipolygon: Multipolygon,
 
 def multisegment_has_coordinates_types(multisegment: Multisegment,
                                        *,
-                                       x_type: Type[Coordinate],
-                                       y_type: Type[Coordinate]):
+                                       x_type: Type[Scalar],
+                                       y_type: Type[Scalar]):
     return all(segment_has_coordinates_types(segment,
                                              x_type=x_type,
                                              y_type=y_type)
@@ -397,15 +397,15 @@ def multisegment_has_coordinates_types(multisegment: Multisegment,
 
 def point_has_coordinates_types(point: Point,
                                 *,
-                                x_type: Type[Coordinate],
-                                y_type: Type[Coordinate]) -> bool:
+                                x_type: Type[Scalar],
+                                y_type: Type[Scalar]) -> bool:
     return isinstance(point.x, x_type) and isinstance(point.y, y_type)
 
 
 def polygon_has_coordinates_types(polygon: Polygon,
                                   *,
-                                  x_type: Type[Coordinate],
-                                  y_type: Type[Coordinate]) -> bool:
+                                  x_type: Type[Scalar],
+                                  y_type: Type[Scalar]) -> bool:
     return (contour_has_coordinates_types(polygon.border,
                                           x_type=x_type,
                                           y_type=y_type)
@@ -416,8 +416,8 @@ def polygon_has_coordinates_types(polygon: Polygon,
 
 def segment_has_coordinates_types(segment: Segment,
                                   *,
-                                  x_type: Type[Coordinate],
-                                  y_type: Type[Coordinate]) -> bool:
+                                  x_type: Type[Scalar],
+                                  y_type: Type[Scalar]) -> bool:
     return (point_has_coordinates_types(segment.start,
                                         x_type=x_type,
                                         y_type=y_type)
@@ -485,7 +485,7 @@ def is_star_contour(contour: Contour) -> bool:
 
 
 def contour_to_star_segments(contour: Contour) -> Sequence[Segment]:
-    centroid = context.region_centroid(contour.vertices)
+    centroid = context.region_centroid(contour)
     return [Segment(centroid, vertex)
             for vertex in contour.vertices
             if vertex != centroid]
