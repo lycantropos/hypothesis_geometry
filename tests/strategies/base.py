@@ -66,6 +66,9 @@ def to_invalid_sizes_pairs(min_valid_size: int
 
 concave_contours_sizes_pairs = to_sizes_pairs(MinContourSize.CONCAVE)
 convex_contours_sizes_pairs = to_sizes_pairs(MinContourSize.CONVEX)
+mix_points_sizes_pairs = to_sizes_pairs(0)
+mix_polygons_sizes_pairs = to_sizes_pairs(0)
+mix_segments_sizes_pairs = to_sizes_pairs(0)
 multicontours_sizes_pairs = to_sizes_pairs(0, 5)
 multipoints_sizes_pairs = to_sizes_pairs(MIN_MULTIPOINT_SIZE)
 multipolygons_sizes_pairs = to_sizes_pairs(MIN_MULTIPOLYGON_SIZE, 5)
@@ -82,6 +85,9 @@ invalid_multicontours_sizes_pairs = to_invalid_sizes_pairs(0)
 invalid_multipoints_sizes_pairs = to_invalid_sizes_pairs(MIN_MULTIPOINT_SIZE)
 invalid_multipolygons_sizes_pairs = to_invalid_sizes_pairs(
         MIN_MULTIPOLYGON_SIZE)
+invalid_mix_points_sizes_pairs = to_invalid_sizes_pairs(0)
+invalid_mix_polygons_sizes_pairs = to_invalid_sizes_pairs(0)
+invalid_mix_segments_sizes_pairs = to_invalid_sizes_pairs(0)
 invalid_multisegments_sizes_pairs = to_invalid_sizes_pairs(
         MIN_MULTISEGMENT_SIZE)
 
