@@ -5,6 +5,7 @@ from ground.base import (Context as _Context,
                          get_context as _get_context)
 from ground.hints import (Box as _Box,
                           Contour as _Contour,
+                          Empty as _Empty,
                           Multipoint as _Multipoint,
                           Multipolygon as _Multipolygon,
                           Multisegment as _Multisegment,
@@ -19,6 +20,7 @@ from .core.base import (boxes as _boxes,
                         as _concave_vertices_sequences,
                         convex_vertices_sequences
                         as _convex_vertices_sequences,
+                        empty as _empty,
                         mixes as _mixes,
                         multicontours as _multicontours,
                         multipoints as _multipoints,
@@ -38,6 +40,24 @@ from .core.constants import (MIN_CONTOUR_SIZE as _MIN_CONTOUR_SIZE,
 from .hints import (Mix as _Mix,
                     Multicontour as _Multicontour,
                     Strategy as _Strategy)
+
+
+def empty(context: _Optional[_Context] = None) -> _Strategy[_Empty]:
+    """
+    Returns a strategy for empty geometries.
+
+    :param context: strategy context.
+
+    >>> from ground.base import get_context
+    >>> from hypothesis_geometry import planar
+    >>> context = get_context()
+    >>> Empty = context.empty_cls
+    >>> empty_geometries = planar.empty()
+    >>> empty_geometry = empty_geometries.example()
+    >>> isinstance(empty_geometry, Empty)
+    True
+    """
+    return _empty(_get_context() if context is None else context)
 
 
 def points(x_coordinates: _Strategy[_Scalar],

@@ -13,6 +13,7 @@ from typing import (Callable,
 from ground.base import (Context,
                          Orientation)
 from ground.hints import (Box,
+                          Empty,
                           Multipoint,
                           Multipolygon,
                           Multisegment,
@@ -122,6 +123,10 @@ def convex_vertices_sequences(x_coordinates: Strategy[Scalar],
             | result
             if min_size == 3
             else result)
+
+
+def empty(context: Context) -> Strategy[Empty]:
+    return strategies.builds(context.empty_cls)
 
 
 def mixes(x_coordinates: Strategy[Scalar],
