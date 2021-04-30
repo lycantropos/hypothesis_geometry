@@ -79,9 +79,11 @@ invalid_concave_contours_sizes_pairs = to_invalid_sizes_pairs(
 invalid_convex_contours_sizes_pairs = to_invalid_sizes_pairs(
         MinContourSize.CONVEX)
 invalid_multicontours_sizes_pairs = to_invalid_sizes_pairs(0)
-invalid_multipoints_sizes_pairs = to_invalid_sizes_pairs(0)
-invalid_multipolygons_sizes_pairs = to_invalid_sizes_pairs(0)
-invalid_multisegments_sizes_pairs = to_invalid_sizes_pairs(0)
+invalid_multipoints_sizes_pairs = to_invalid_sizes_pairs(MIN_MULTIPOINT_SIZE)
+invalid_multipolygons_sizes_pairs = to_invalid_sizes_pairs(
+        MIN_MULTIPOLYGON_SIZE)
+invalid_multisegments_sizes_pairs = to_invalid_sizes_pairs(
+        MIN_MULTISEGMENT_SIZE)
 
 
 def to_coordinates_strategies_with_limits_and_types(
