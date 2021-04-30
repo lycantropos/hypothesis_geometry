@@ -20,7 +20,7 @@ from .core.base import (boxes as _boxes,
                         as _concave_vertices_sequences,
                         convex_vertices_sequences
                         as _convex_vertices_sequences,
-                        empty as _empty,
+                        empty_geometries as _empty_geometries,
                         mixes as _mixes,
                         multicontours as _multicontours,
                         multipoints as _multipoints,
@@ -45,7 +45,7 @@ from .hints import (Mix as _Mix,
                     Strategy as _Strategy)
 
 
-def empty(context: _Optional[_Context] = None) -> _Strategy[_Empty]:
+def empty_geometries(context: _Optional[_Context] = None) -> _Strategy[_Empty]:
     """
     Returns a strategy for empty geometries.
 
@@ -55,12 +55,12 @@ def empty(context: _Optional[_Context] = None) -> _Strategy[_Empty]:
     >>> from hypothesis_geometry import planar
     >>> context = get_context()
     >>> Empty = context.empty_cls
-    >>> empty_geometries = planar.empty()
-    >>> empty_geometry = empty_geometries.example()
-    >>> isinstance(empty_geometry, Empty)
+    >>> empty_geometries = planar.empty_geometries()
+    >>> empty = empty_geometries.example()
+    >>> isinstance(empty, Empty)
     True
     """
-    return _empty(_get_context() if context is None else context)
+    return _empty_geometries(_get_context() if context is None else context)
 
 
 def points(x_coordinates: _Strategy[_Scalar],

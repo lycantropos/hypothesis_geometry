@@ -125,7 +125,7 @@ def convex_vertices_sequences(x_coordinates: Strategy[Scalar],
             else result)
 
 
-def empty(context: Context) -> Strategy[Empty]:
+def empty_geometries(context: Context) -> Strategy[Empty]:
     return strategies.builds(context.empty_cls)
 
 
