@@ -203,11 +203,11 @@ def multipoints(x_coordinates: _Strategy[_Scalar],
     ...     for point in multipoint.points)
     True
     """
-    _validate_sizes(min_size, max_size, 0)
+    _validate_sizes(min_size, max_size, _MIN_MULTIPOINT_SIZE)
     if context is None:
         context = _get_context()
     return _multipoints(x_coordinates, y_coordinates,
-                        min_size=max(min_size, 0),
+                        min_size=max(min_size, _MIN_MULTIPOINT_SIZE),
                         max_size=max_size,
                         context=context)
 
@@ -369,9 +369,9 @@ def multisegments(x_coordinates: _Strategy[_Scalar],
     ...     for segment in multisegment.segments)
     True
     """
-    _validate_sizes(min_size, max_size, 0)
+    _validate_sizes(min_size, max_size, _MIN_MULTISEGMENT_SIZE)
     return _multisegments(x_coordinates, y_coordinates,
-                          min_size=max(min_size, 0),
+                          min_size=max(min_size, _MIN_MULTISEGMENT_SIZE),
                           max_size=max_size,
                           context=(_get_context()
                                    if context is None
@@ -1363,7 +1363,7 @@ def multipolygons(x_coordinates: _Strategy[_Scalar],
     ...     for polygon in multipolygon.polygons)
     True
     """
-    _validate_sizes(min_size, max_size, 0)
+    _validate_sizes(min_size, max_size, _MIN_MULTIPOLYGON_SIZE)
     _validate_sizes(min_border_size, max_border_size, _MIN_CONTOUR_SIZE,
                     'min_border_size', 'max_border_size')
     _validate_sizes(min_holes_size, max_holes_size, 0, 'min_holes_size',
@@ -1371,7 +1371,7 @@ def multipolygons(x_coordinates: _Strategy[_Scalar],
     _validate_sizes(min_hole_size, max_hole_size, _MIN_CONTOUR_SIZE,
                     'min_hole_size', 'max_hole_size')
     return _multipolygons(x_coordinates, y_coordinates,
-                          min_size=max(min_size, 0),
+                          min_size=max(min_size, _MIN_MULTIPOLYGON_SIZE),
                           max_size=max_size,
                           min_border_size=max(min_border_size,
                                               _MIN_CONTOUR_SIZE),
