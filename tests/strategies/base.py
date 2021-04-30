@@ -74,6 +74,7 @@ multicontours_sizes_pairs = to_sizes_pairs(MIN_MULTICONTOUR_SIZE, 5)
 multipoints_sizes_pairs = to_sizes_pairs(MIN_MULTIPOINT_SIZE)
 multipolygons_sizes_pairs = to_sizes_pairs(MIN_MULTIPOLYGON_SIZE, 5)
 multisegments_sizes_pairs = to_sizes_pairs(MIN_MULTISEGMENT_SIZE)
+polygon_holes_sizes_pairs = to_sizes_pairs(0, 5)
 non_valid_concave_contours_sizes_pairs = to_non_valid_sizes_pairs(
         MinContourSize.CONCAVE)
 non_valid_convex_contours_sizes_pairs = to_non_valid_sizes_pairs(

@@ -19,52 +19,52 @@ from tests.utils import (ScalarsLimitsType,
 
 
 @given(strategies.scalars_strategies,
-       strategies.multipoints_sizes_pairs,
-       strategies.multisegments_sizes_pairs,
-       strategies.multipolygons_sizes_pairs,
+       strategies.mix_points_sizes_pairs,
+       strategies.mix_segments_sizes_pairs,
+       strategies.mix_polygons_sizes_pairs,
        strategies.concave_contours_sizes_pairs,
-       strategies.multicontours_sizes_pairs,
+       strategies.polygon_holes_sizes_pairs,
        strategies.convex_contours_sizes_pairs)
 def test_basic(scalars: Strategy[Scalar],
-               multipoints_sizes_pair: SizesPair,
-               multisegments_sizes_pair: SizesPair,
-               multipolygons_sizes_pair: SizesPair,
-               multipolygons_border_sizes_pair: SizesPair,
-               multipolygons_holes_list_sizes_pair: SizesPair,
-               multipolygons_holes_sizes_pair: SizesPair) -> None:
-    min_multipoint_size, max_multipoint_size = multipoints_sizes_pair
-    min_multisegment_size, max_multisegment_size = multisegments_sizes_pair
-    min_multipolygon_size, max_multipolygon_size = multipolygons_sizes_pair
-    (min_multipolygon_border_size,
-     max_multipolygon_border_size) = multipolygons_border_sizes_pair
-    (min_multipolygon_holes_size,
-     max_multipolygon_holes_size) = multipolygons_holes_list_sizes_pair
-    (min_multipolygon_hole_size,
-     max_multipolygon_hole_size) = multipolygons_holes_sizes_pair
+               mix_points_sizes_pair: SizesPair,
+               mix_segments_sizes_pair: SizesPair,
+               mix_polygons_sizes_pair: SizesPair,
+               mix_polygons_border_sizes_pair: SizesPair,
+               mix_polygons_holes_list_sizes_pair: SizesPair,
+               mix_polygons_holes_sizes_pair: SizesPair) -> None:
+    min_mix_point_size, max_mix_point_size = mix_points_sizes_pair
+    min_mix_segment_size, max_mix_segment_size = mix_segments_sizes_pair
+    min_mix_polygon_size, max_mix_polygon_size = mix_polygons_sizes_pair
+    (min_mix_polygon_border_size,
+     max_mix_polygon_border_size) = mix_polygons_border_sizes_pair
+    (min_mix_polygon_holes_size,
+     max_mix_polygon_holes_size) = mix_polygons_holes_list_sizes_pair
+    (min_mix_polygon_hole_size,
+     max_mix_polygon_hole_size) = mix_polygons_holes_sizes_pair
 
-    result = mixes(scalars, min_points_size=min_multipoint_size,
-                   max_points_size=max_multipoint_size,
-                   min_segments_size=min_multisegment_size,
-                   max_segments_size=max_multisegment_size,
-                   min_polygons_size=min_multipolygon_size,
-                   max_polygons_size=max_multipolygon_size,
-                   min_polygon_border_size=min_multipolygon_border_size,
-                   max_polygon_border_size=max_multipolygon_border_size,
-                   min_polygon_holes_size=min_multipolygon_holes_size,
-                   max_polygon_holes_size=max_multipolygon_holes_size,
-                   min_polygon_hole_size=min_multipolygon_hole_size,
-                   max_polygon_hole_size=max_multipolygon_hole_size)
+    result = mixes(scalars, min_points_size=min_mix_point_size,
+                   max_points_size=max_mix_point_size,
+                   min_segments_size=min_mix_segment_size,
+                   max_segments_size=max_mix_segment_size,
+                   min_polygons_size=min_mix_polygon_size,
+                   max_polygons_size=max_mix_polygon_size,
+                   min_polygon_border_size=min_mix_polygon_border_size,
+                   max_polygon_border_size=max_mix_polygon_border_size,
+                   min_polygon_holes_size=min_mix_polygon_holes_size,
+                   max_polygon_holes_size=max_mix_polygon_holes_size,
+                   min_polygon_hole_size=min_mix_polygon_hole_size,
+                   max_polygon_hole_size=max_mix_polygon_hole_size)
 
     assert isinstance(result, Strategy)
 
 
 @given(strategies.data,
        strategies.scalars_strategy_with_limit_and_type_pairs,
-       strategies.multipoints_sizes_pairs,
-       strategies.multisegments_sizes_pairs,
-       strategies.multipolygons_sizes_pairs,
+       strategies.mix_points_sizes_pairs,
+       strategies.mix_segments_sizes_pairs,
+       strategies.mix_polygons_sizes_pairs,
        strategies.concave_contours_sizes_pairs,
-       strategies.multicontours_sizes_pairs,
+       strategies.polygon_holes_sizes_pairs,
        strategies.convex_contours_sizes_pairs)
 def test_properties(data: DataObject,
                     coordinates_limits_type_pair: Tuple[ScalarsLimitsType,
@@ -132,38 +132,38 @@ def test_properties(data: DataObject,
 
 @given(strategies.data,
        strategies.scalars_strategies_with_limits_and_types,
-       strategies.multipoints_sizes_pairs,
-       strategies.multisegments_sizes_pairs,
-       strategies.multipolygons_sizes_pairs,
+       strategies.mix_points_sizes_pairs,
+       strategies.mix_segments_sizes_pairs,
+       strategies.mix_polygons_sizes_pairs,
        strategies.concave_contours_sizes_pairs,
-       strategies.multicontours_sizes_pairs,
+       strategies.polygon_holes_sizes_pairs,
        strategies.convex_contours_sizes_pairs)
 def test_same_coordinates(data: DataObject,
                           coordinates_limits_type: ScalarsLimitsType,
-                          multipoints_sizes_pair: SizesPair,
-                          multisegments_sizes_pair: SizesPair,
-                          multipolygons_sizes_pair: SizesPair,
-                          multipolygons_border_sizes_pair: SizesPair,
+                          mix_points_sizes_pair: SizesPair,
+                          mix_segments_sizes_pair: SizesPair,
+                          mix_polygons_sizes_pair: SizesPair,
+                          mix_polygons_border_sizes_pair: SizesPair,
                           polygon_holes_sizes_pair: SizesPair,
                           polygon_hole_sizes_pair: SizesPair) -> None:
-    ((scalars, (min_multipolygon_value, max_multipolygon_value)),
+    ((scalars, (min_mix_polygon_value, max_mix_polygon_value)),
      type_) = coordinates_limits_type
-    min_multipoint_size, max_multipoint_size = multipoints_sizes_pair
-    min_multisegment_size, max_multisegment_size = multisegments_sizes_pair
-    min_multipolygon_size, max_multipolygon_size = multipolygons_sizes_pair
-    (min_multipolygon_border_size,
-     max_multipolygon_border_size) = multipolygons_border_sizes_pair
+    min_mix_point_size, max_mix_point_size = mix_points_sizes_pair
+    min_mix_segment_size, max_mix_segment_size = mix_segments_sizes_pair
+    min_mix_polygon_size, max_mix_polygon_size = mix_polygons_sizes_pair
+    (min_mix_polygon_border_size,
+     max_mix_polygon_border_size) = mix_polygons_border_sizes_pair
     min_polygon_holes_size, max_polygon_holes_size = polygon_holes_sizes_pair
     min_polygon_hole_size, max_polygon_hole_size = polygon_hole_sizes_pair
 
-    strategy = mixes(scalars, min_points_size=min_multipoint_size,
-                     max_points_size=max_multipoint_size,
-                     min_segments_size=min_multisegment_size,
-                     max_segments_size=max_multisegment_size,
-                     min_polygons_size=min_multipolygon_size,
-                     max_polygons_size=max_multipolygon_size,
-                     min_polygon_border_size=min_multipolygon_border_size,
-                     max_polygon_border_size=max_multipolygon_border_size,
+    strategy = mixes(scalars, min_points_size=min_mix_point_size,
+                     max_points_size=max_mix_point_size,
+                     min_segments_size=min_mix_segment_size,
+                     max_segments_size=max_mix_segment_size,
+                     min_polygons_size=min_mix_polygon_size,
+                     max_polygons_size=max_mix_polygon_size,
+                     min_polygon_border_size=min_mix_polygon_border_size,
+                     max_polygon_border_size=max_mix_polygon_border_size,
                      min_polygon_holes_size=min_polygon_holes_size,
                      max_polygon_holes_size=max_polygon_holes_size,
                      min_polygon_hole_size=min_polygon_hole_size,
@@ -174,14 +174,14 @@ def test_same_coordinates(data: DataObject,
     assert is_mix(result)
     assert mix_has_valid_sizes(
             result,
-            min_points_size=min_multipoint_size,
-            max_points_size=max_multipoint_size,
-            min_segments_size=min_multisegment_size,
-            max_segments_size=max_multisegment_size,
-            min_polygons_size=min_multipolygon_size,
-            max_polygons_size=max_multipolygon_size,
-            min_polygon_border_size=min_multipolygon_border_size,
-            max_polygon_border_size=max_multipolygon_border_size,
+            min_points_size=min_mix_point_size,
+            max_points_size=max_mix_point_size,
+            min_segments_size=min_mix_segment_size,
+            max_segments_size=max_mix_segment_size,
+            min_polygons_size=min_mix_polygon_size,
+            max_polygons_size=max_mix_polygon_size,
+            min_polygon_border_size=min_mix_polygon_border_size,
+            max_polygon_border_size=max_mix_polygon_border_size,
             min_polygon_holes_size=min_polygon_holes_size,
             max_polygon_holes_size=max_polygon_holes_size,
             min_polygon_hole_size=min_polygon_hole_size,
@@ -190,10 +190,10 @@ def test_same_coordinates(data: DataObject,
                                      x_type=type_,
                                      y_type=type_)
     assert mix_has_coordinates_in_range(result,
-                                        min_x_value=min_multipolygon_value,
-                                        max_x_value=max_multipolygon_value,
-                                        min_y_value=min_multipolygon_value,
-                                        max_y_value=max_multipolygon_value)
+                                        min_x_value=min_mix_polygon_value,
+                                        max_x_value=max_mix_polygon_value,
+                                        min_y_value=min_mix_polygon_value,
+                                        max_y_value=max_mix_polygon_value)
     assert mix_segments_do_not_cross_or_overlap(result)
 
 

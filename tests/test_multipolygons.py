@@ -24,17 +24,17 @@ from tests.utils import (ScalarsLimitsType,
 @given(strategies.scalars_strategies,
        strategies.multipolygons_sizes_pairs,
        strategies.concave_contours_sizes_pairs,
-       strategies.multicontours_sizes_pairs,
+       strategies.polygon_holes_sizes_pairs,
        strategies.convex_contours_sizes_pairs)
 def test_basic(scalars: Strategy[Scalar],
                sizes_pair: SizesPair,
                border_sizes_pair: SizesPair,
-               holes_list_sizes_pair: SizesPair,
-               holes_sizes_pair: SizesPair) -> None:
+               holes_sizes_pair: SizesPair,
+               hole_sizes_pair: SizesPair) -> None:
     min_size, max_size = sizes_pair
     min_border_size, max_border_size = border_sizes_pair
-    min_holes_size, max_holes_size = holes_list_sizes_pair
-    min_hole_size, max_hole_size = holes_sizes_pair
+    min_holes_size, max_holes_size = holes_sizes_pair
+    min_hole_size, max_hole_size = hole_sizes_pair
 
     result = multipolygons(scalars,
                            min_size=min_size,
@@ -53,15 +53,15 @@ def test_basic(scalars: Strategy[Scalar],
        strategies.scalars_strategy_with_limit_and_type_pairs,
        strategies.multipolygons_sizes_pairs,
        strategies.concave_contours_sizes_pairs,
-       strategies.multicontours_sizes_pairs,
+       strategies.polygon_holes_sizes_pairs,
        strategies.convex_contours_sizes_pairs)
 def test_properties(data: DataObject,
                     coordinates_limits_type_pair: Tuple[ScalarsLimitsType,
                                                         ScalarsLimitsType],
                     sizes_pair: SizesPair,
                     border_sizes_pair: SizesPair,
-                    holes_list_sizes_pair: SizesPair,
-                    holes_sizes_pair: SizesPair) -> None:
+                    holes_sizes_pair: SizesPair,
+                    hole_sizes_pair: SizesPair) -> None:
     (x_coordinates_limits_type,
      y_coordinates_limits_type) = coordinates_limits_type_pair
     ((x_coordinates, (min_x_value, max_x_value)),
@@ -70,8 +70,8 @@ def test_properties(data: DataObject,
      y_type) = y_coordinates_limits_type
     min_size, max_size = sizes_pair
     min_border_size, max_border_size = border_sizes_pair
-    min_holes_size, max_holes_size = holes_list_sizes_pair
-    min_hole_size, max_hole_size = holes_sizes_pair
+    min_holes_size, max_holes_size = holes_sizes_pair
+    min_hole_size, max_hole_size = hole_sizes_pair
 
     strategy = multipolygons(x_coordinates, y_coordinates,
                              min_size=min_size,
@@ -122,19 +122,19 @@ def test_properties(data: DataObject,
        strategies.scalars_strategies_with_limits_and_types,
        strategies.multipolygons_sizes_pairs,
        strategies.concave_contours_sizes_pairs,
-       strategies.multicontours_sizes_pairs,
+       strategies.polygon_holes_sizes_pairs,
        strategies.convex_contours_sizes_pairs)
 def test_same_coordinates(data: DataObject,
                           coordinates_limits_type: ScalarsLimitsType,
                           sizes_pair: SizesPair,
                           border_sizes_pair: SizesPair,
-                          holes_list_sizes_pair: SizesPair,
-                          holes_sizes_pair: SizesPair) -> None:
+                          holes_sizes_pair: SizesPair,
+                          hole_sizes_pair: SizesPair) -> None:
     (scalars, (min_value, max_value)), type_ = coordinates_limits_type
     min_size, max_size = sizes_pair
     min_border_size, max_border_size = border_sizes_pair
-    min_holes_size, max_holes_size = holes_list_sizes_pair
-    min_hole_size, max_hole_size = holes_sizes_pair
+    min_holes_size, max_holes_size = holes_sizes_pair
+    min_hole_size, max_hole_size = hole_sizes_pair
 
     strategy = multipolygons(scalars,
                              min_size=min_size,
