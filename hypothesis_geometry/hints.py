@@ -1,7 +1,5 @@
-from typing import Sequence
+from .core.hints import (Multicontour,
+                         Strategy)
 
-from ground.hints import Contour as _Contour
-from hypothesis.strategies import SearchStrategy as Strategy
-
+Multicontour = Multicontour
 Strategy = Strategy
-Multicontour = Sequence[_Contour]

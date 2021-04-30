@@ -27,11 +27,11 @@ from ground.hints import (Point,
                           Segment)
 from locus import segmental
 
-from hypothesis_geometry.hints import Multicontour
 from .contracts import (angle_contains_point,
                         has_horizontal_lowermost_segment,
                         has_vertical_leftmost_segment)
 from .hints import (Chooser,
+                    Multicontour,
                     Orienteer)
 from .subdivisional import (QuadEdge,
                             to_edge_neighbours)
@@ -204,7 +204,8 @@ def to_star_contour_vertices(points: Sequence[Point],
                              context: Context) -> Sequence[Point]:
     centroid = context.multipoint_centroid(context.multipoint_cls(points))
     contour_cls, region_centroid_constructor, orienteer = (
-        context.contour_cls, context.region_centroid, context.angle_orientation)
+        context.contour_cls, context.region_centroid,
+        context.angle_orientation)
     result, prev_size = points, len(points) + 1
     while 2 < len(result) < prev_size:
         prev_size = len(result)

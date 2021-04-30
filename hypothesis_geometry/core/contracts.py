@@ -9,8 +9,8 @@ from ground.hints import (Point,
                           Scalar,
                           Segment)
 
-from hypothesis_geometry.hints import Multicontour
-from .hints import Orienteer
+from .hints import (Multicontour,
+                    Orienteer)
 
 
 def are_segments_non_crossing_non_overlapping(segments: Sequence[Segment]

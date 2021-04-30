@@ -27,8 +27,6 @@ from ground.hints import (Box,
                           Shaped)
 from hypothesis import strategies
 
-from hypothesis_geometry.hints import (Multicontour,
-                                       Strategy)
 from .constants import (MIN_CONTOUR_SIZE,
                         MinContourSize)
 from .contracts import (are_points_non_collinear,
@@ -50,7 +48,9 @@ from .factories import (constrict_convex_hull_size,
                         to_vertices_sequence)
 from .hints import (Chooser,
                     Domain,
-                    Orienteer)
+                    Multicontour,
+                    Orienteer,
+                    Strategy)
 from .utils import (cut,
                     pack,
                     pairwise,
