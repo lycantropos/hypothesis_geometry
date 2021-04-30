@@ -254,7 +254,7 @@ True
 
 ### Multipolygons
 ```python
->>> min_size, max_size = 0, 5
+>>> min_size, max_size = 2, 5
 >>> min_border_size, max_border_size = 5, 10
 >>> min_holes_size, max_holes_size = 1, 3
 >>> min_hole_size, max_hole_size = 4, 8
@@ -298,7 +298,6 @@ True
 True
 
 ```
-
 
 ### Mixes
 ```python
