@@ -116,9 +116,6 @@ def mix_has_valid_sizes(mix: Mix,
                     max_hole_size=max_polygon_hole_size))
 
 
-multicontour_has_valid_sizes = multicontour_has_valid_sizes
-
-
 def multipolygon_has_valid_sizes(multipolygon: Multipolygon,
                                  *,
                                  min_size: int,
