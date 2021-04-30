@@ -9,3 +9,5 @@ class MinContourSize(IntEnum):
 
 
 MIN_CONTOUR_SIZE = min(MinContourSize)
+MIN_MULTIPOINT_SIZE = 1
+MIN_MULTISEGMENT_SIZE = MIN_MULTIPOLYGON_SIZE = 2
