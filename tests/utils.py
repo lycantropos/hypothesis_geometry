@@ -24,8 +24,7 @@ from hypothesis_geometry.core.contracts import (
     multicontour_has_valid_sizes)
 from hypothesis_geometry.core.factories import contour_to_edges
 from hypothesis_geometry.core.utils import flatten
-from hypothesis_geometry.hints import (Mix,
-                                       Multicontour,
+from hypothesis_geometry.hints import (Multicontour,
                                        Strategy)
 
 has_valid_size = has_valid_size
@@ -38,6 +37,8 @@ SizesPair = Tuple[int, Optional[int]]
 context = get_context()
 Box = context.box_cls
 Contour = context.contour_cls
+Empty = context.empty_cls
+Mix = context.mix_cls
 Multipoint = context.multipoint_cls
 Multipolygon = context.multipolygon_cls
 Multisegment = context.multisegment_cls
@@ -85,35 +86,34 @@ def contour_has_valid_sizes(contour: Contour,
 
 def mix_has_valid_sizes(mix: Mix,
                         *,
-                        min_multipoint_size: int,
-                        max_multipoint_size: Optional[int],
-                        min_multisegment_size: int,
-                        max_multisegment_size: Optional[int],
-                        min_multipolygon_size: int,
-                        max_multipolygon_size: Optional[int],
-                        min_multipolygon_border_size: int,
-                        max_multipolygon_border_size: Optional[int],
-                        min_multipolygon_holes_size: int,
-                        max_multipolygon_holes_size: Optional[int],
-                        min_multipolygon_hole_size: int,
-                        max_multipolygon_hole_size: Optional[int]) -> bool:
-    multipoint, multisegment, multipolygon = mix
-    return (has_valid_size(multipoint.points,
-                           min_size=min_multipoint_size,
-                           max_size=max_multipoint_size)
-            and has_valid_size(multisegment.segments,
-                               min_size=min_multisegment_size,
-                               max_size=max_multisegment_size)
-            and multipolygon_has_valid_sizes(
-                    multipolygon,
-                    min_size=min_multipolygon_size,
-                    max_size=max_multipolygon_size,
-                    min_border_size=min_multipolygon_border_size,
-                    max_border_size=max_multipolygon_border_size,
-                    min_holes_size=min_multipolygon_holes_size,
-                    max_holes_size=max_multipolygon_holes_size,
-                    min_hole_size=min_multipolygon_hole_size,
-                    max_hole_size=max_multipolygon_hole_size))
+                        min_points_size: int,
+                        max_points_size: Optional[int],
+                        min_segments_size: int,
+                        max_segments_size: Optional[int],
+                        min_polygons_size: int,
+                        max_polygons_size: Optional[int],
+                        min_polygon_border_size: int,
+                        max_polygon_border_size: Optional[int],
+                        min_polygon_holes_size: int,
+                        max_polygon_holes_size: Optional[int],
+                        min_polygon_hole_size: int,
+                        max_polygon_hole_size: Optional[int]) -> bool:
+    return (has_valid_size(mix_to_points(mix),
+                           min_size=min_points_size,
+                           max_size=max_points_size)
+            and has_valid_size(mix_to_segments(mix),
+                               min_size=min_segments_size,
+                               max_size=max_segments_size)
+            and polygons_have_valid_sizes(
+                    mix_to_polygons(mix),
+                    min_size=min_polygons_size,
+                    max_size=max_polygons_size,
+                    min_border_size=min_polygon_border_size,
+                    max_border_size=max_polygon_border_size,
+                    min_holes_size=min_polygon_holes_size,
+                    max_holes_size=max_polygon_holes_size,
+                    min_hole_size=min_polygon_hole_size,
+                    max_hole_size=max_polygon_hole_size))
 
 
 multicontour_has_valid_sizes = multicontour_has_valid_sizes
@@ -129,17 +129,15 @@ def multipolygon_has_valid_sizes(multipolygon: Multipolygon,
                                  max_holes_size: Optional[int],
                                  min_hole_size: int,
                                  max_hole_size: Optional[int]) -> bool:
-    return (has_valid_size(multipolygon.polygons,
-                           min_size=min_size,
-                           max_size=max_size)
-            and all(polygon_has_valid_sizes(polygon,
-                                            min_size=min_border_size,
-                                            max_size=max_border_size,
-                                            min_holes_size=min_holes_size,
-                                            max_holes_size=max_holes_size,
-                                            min_hole_size=min_hole_size,
-                                            max_hole_size=max_hole_size)
-                    for polygon in multipolygon.polygons))
+    return polygons_have_valid_sizes(multipolygon.polygons,
+                                     min_size=min_size,
+                                     max_size=max_size,
+                                     min_border_size=min_border_size,
+                                     max_border_size=max_border_size,
+                                     min_holes_size=min_holes_size,
+                                     max_holes_size=max_holes_size,
+                                     min_hole_size=min_hole_size,
+                                     max_hole_size=max_hole_size)
 
 
 def polygon_has_valid_sizes(polygon: Polygon,
@@ -158,6 +156,29 @@ def polygon_has_valid_sizes(polygon: Polygon,
                                              max_size=max_holes_size,
                                              min_contour_size=min_hole_size,
                                              max_contour_size=max_hole_size))
+
+
+def polygons_have_valid_sizes(polygons: Sequence[Polygon],
+                              *,
+                              min_size: int,
+                              max_size: Optional[int],
+                              min_border_size: int,
+                              max_border_size: Optional[int],
+                              min_holes_size: int,
+                              max_holes_size: Optional[int],
+                              min_hole_size: int,
+                              max_hole_size: Optional[int]) -> bool:
+    return (has_valid_size(polygons,
+                           min_size=min_size,
+                           max_size=max_size)
+            and all(polygon_has_valid_sizes(polygon,
+                                            min_size=min_border_size,
+                                            max_size=max_border_size,
+                                            min_holes_size=min_holes_size,
+                                            max_holes_size=max_holes_size,
+                                            min_hole_size=min_hole_size,
+                                            max_hole_size=max_hole_size)
+                    for polygon in polygons))
 
 
 def contour_has_coordinates_in_range(contour: Contour,
@@ -180,24 +201,47 @@ def mix_has_coordinates_in_range(mix: Mix,
                                  min_x_value: Scalar,
                                  max_x_value: Optional[Scalar],
                                  min_y_value: Scalar,
-                                 max_y_value: Optional[Scalar]
-                                 ) -> bool:
-    multipoint, multisegment, multipolygon = mix
-    return (multipoint_has_coordinates_in_range(multipoint,
-                                                min_x_value=min_x_value,
-                                                max_x_value=max_x_value,
-                                                min_y_value=min_y_value,
-                                                max_y_value=max_y_value)
-            and multisegment_has_coordinates_in_range(multisegment,
-                                                      min_x_value=min_x_value,
-                                                      max_x_value=max_x_value,
-                                                      min_y_value=min_y_value,
-                                                      max_y_value=max_y_value)
-            and multipolygon_has_coordinates_in_range(multipolygon,
-                                                      min_x_value=min_x_value,
-                                                      max_x_value=max_x_value,
-                                                      min_y_value=min_y_value,
-                                                      max_y_value=max_y_value))
+                                 max_y_value: Optional[Scalar]) -> bool:
+    return (points_have_coordinates_in_range(mix_to_points(mix),
+                                             min_x_value=min_x_value,
+                                             max_x_value=max_x_value,
+                                             min_y_value=min_y_value,
+                                             max_y_value=max_y_value)
+            and segments_have_coordinates_in_range(mix_to_segments(mix),
+                                                   min_x_value=min_x_value,
+                                                   max_x_value=max_x_value,
+                                                   min_y_value=min_y_value,
+                                                   max_y_value=max_y_value)
+            and polygons_have_coordinates_in_range(mix_to_polygons(mix),
+                                                   min_x_value=min_x_value,
+                                                   max_x_value=max_x_value,
+                                                   min_y_value=min_y_value,
+                                                   max_y_value=max_y_value))
+
+
+def mix_to_segments(mix: Mix) -> Sequence[Segment]:
+    linear = mix.linear
+    return ([]
+            if is_empty(linear)
+            else ([linear]
+                  if isinstance(linear, Segment)
+                  else (linear.segments
+                        if isinstance(linear, Multisegment)
+                        else context.contour_edges(linear))))
+
+
+def mix_to_polygons(mix: Mix) -> Sequence[Polygon]:
+    shaped = mix.shaped
+    return ([]
+            if is_empty(shaped)
+            else ([shaped]
+                  if isinstance(shaped, Polygon)
+                  else shaped.polygons))
+
+
+def mix_to_points(mix: Mix) -> Sequence[Point]:
+    discrete = mix.discrete
+    return [] if is_empty(discrete) else discrete.points
 
 
 def multicontour_has_coordinates_in_range(multicontour: Multicontour,
@@ -222,12 +266,11 @@ def multipoint_has_coordinates_in_range(multipoint: Multipoint,
                                         min_y_value: Scalar,
                                         max_y_value: Optional[Scalar]
                                         ) -> bool:
-    return all(point_has_coordinates_in_range(point,
-                                              min_x_value=min_x_value,
-                                              max_x_value=max_x_value,
-                                              min_y_value=min_y_value,
-                                              max_y_value=max_y_value)
-               for point in multipoint.points)
+    return points_have_coordinates_in_range(multipoint.points,
+                                            min_x_value=min_x_value,
+                                            max_x_value=max_x_value,
+                                            min_y_value=min_y_value,
+                                            max_y_value=max_y_value)
 
 
 def multipolygon_has_coordinates_in_range(multipolygon: Multipolygon,
@@ -237,12 +280,11 @@ def multipolygon_has_coordinates_in_range(multipolygon: Multipolygon,
                                           min_y_value: Scalar,
                                           max_y_value: Optional[Scalar]
                                           ) -> bool:
-    return all(polygon_has_coordinates_in_range(polygon,
-                                                min_x_value=min_x_value,
-                                                max_x_value=max_x_value,
-                                                min_y_value=min_y_value,
-                                                max_y_value=max_y_value)
-               for polygon in multipolygon.polygons)
+    return polygons_have_coordinates_in_range(multipolygon.polygons,
+                                              min_x_value=min_x_value,
+                                              max_x_value=max_x_value,
+                                              min_y_value=min_y_value,
+                                              max_y_value=max_y_value)
 
 
 def multisegment_has_coordinates_in_range(multisegment: Multisegment,
@@ -252,12 +294,53 @@ def multisegment_has_coordinates_in_range(multisegment: Multisegment,
                                           min_y_value: Scalar,
                                           max_y_value: Optional[Scalar]
                                           ) -> bool:
+    return segments_have_coordinates_in_range(multisegment.segments,
+                                              min_x_value=min_x_value,
+                                              max_x_value=max_x_value,
+                                              min_y_value=min_y_value,
+                                              max_y_value=max_y_value)
+
+
+def points_have_coordinates_in_range(points: Iterable[Point],
+                                     *,
+                                     min_x_value: Scalar,
+                                     max_x_value: Optional[Scalar],
+                                     min_y_value: Scalar,
+                                     max_y_value: Optional[Scalar]) -> bool:
+    return all(point_has_coordinates_in_range(point,
+                                              min_x_value=min_x_value,
+                                              max_x_value=max_x_value,
+                                              min_y_value=min_y_value,
+                                              max_y_value=max_y_value)
+               for point in points)
+
+
+def polygons_have_coordinates_in_range(polygons: Iterable[Polygon],
+                                       *,
+                                       min_x_value: Scalar,
+                                       max_x_value: Optional[Scalar],
+                                       min_y_value: Scalar,
+                                       max_y_value: Optional[Scalar]) -> bool:
+    return all(polygon_has_coordinates_in_range(polygon,
+                                                min_x_value=min_x_value,
+                                                max_x_value=max_x_value,
+                                                min_y_value=min_y_value,
+                                                max_y_value=max_y_value)
+               for polygon in polygons)
+
+
+def segments_have_coordinates_in_range(segments: Iterable[Segment],
+                                       *,
+                                       min_x_value: Scalar,
+                                       max_x_value: Optional[Scalar],
+                                       min_y_value: Scalar,
+                                       max_y_value: Optional[Scalar]) -> bool:
     return all(segment_has_coordinates_in_range(segment,
                                                 min_x_value=min_x_value,
                                                 max_x_value=max_x_value,
                                                 min_y_value=min_y_value,
                                                 max_y_value=max_y_value)
-               for segment in multisegment.segments)
+               for segment in segments)
 
 
 def point_has_coordinates_in_range(point: Point,
@@ -343,16 +426,15 @@ def mix_has_coordinates_types(mix: Mix,
                               *,
                               x_type: Type[Scalar],
                               y_type: Type[Scalar]) -> bool:
-    multipoint, multisegment, multipolygon = mix
-    return (multipoint_has_coordinates_types(multipoint,
-                                             x_type=x_type,
-                                             y_type=y_type)
-            and multisegment_has_coordinates_types(multisegment,
-                                                   x_type=x_type,
-                                                   y_type=y_type)
-            and multipolygon_has_coordinates_types(multipolygon,
-                                                   x_type=x_type,
-                                                   y_type=y_type))
+    return (points_have_coordinates_types(mix_to_points(mix),
+                                          x_type=x_type,
+                                          y_type=y_type)
+            and segments_have_coordinates_types(mix_to_segments(mix),
+                                                x_type=x_type,
+                                                y_type=y_type)
+            and polygons_have_coordinates_types(mix_to_polygons(mix),
+                                                x_type=x_type,
+                                                y_type=y_type))
 
 
 def multicontour_has_coordinates_types(multicontour: Multicontour,
@@ -369,30 +451,27 @@ def multipoint_has_coordinates_types(multipoint: Multipoint,
                                      *,
                                      x_type: Type[Scalar],
                                      y_type: Type[Scalar]) -> bool:
-    return all(point_has_coordinates_types(point,
-                                           x_type=x_type,
-                                           y_type=y_type)
-               for point in multipoint.points)
+    return points_have_coordinates_types(multipoint.points,
+                                         x_type=x_type,
+                                         y_type=y_type)
 
 
 def multipolygon_has_coordinates_types(multipolygon: Multipolygon,
                                        *,
                                        x_type: Type[Scalar],
                                        y_type: Type[Scalar]) -> bool:
-    return all(polygon_has_coordinates_types(polygon,
-                                             x_type=x_type,
-                                             y_type=y_type)
-               for polygon in multipolygon.polygons)
+    return polygons_have_coordinates_types(multipolygon.polygons,
+                                           x_type=x_type,
+                                           y_type=y_type)
 
 
 def multisegment_has_coordinates_types(multisegment: Multisegment,
                                        *,
                                        x_type: Type[Scalar],
-                                       y_type: Type[Scalar]):
-    return all(segment_has_coordinates_types(segment,
-                                             x_type=x_type,
-                                             y_type=y_type)
-               for segment in multisegment.segments)
+                                       y_type: Type[Scalar]) -> bool:
+    return segments_have_coordinates_types(multisegment.segments,
+                                           x_type=x_type,
+                                           y_type=y_type)
 
 
 def point_has_coordinates_types(point: Point,
@@ -400,6 +479,16 @@ def point_has_coordinates_types(point: Point,
                                 x_type: Type[Scalar],
                                 y_type: Type[Scalar]) -> bool:
     return isinstance(point.x, x_type) and isinstance(point.y, y_type)
+
+
+def points_have_coordinates_types(points: Iterable[Point],
+                                  *,
+                                  x_type: Type[Scalar],
+                                  y_type: Type[Scalar]) -> bool:
+    return all(point_has_coordinates_types(point,
+                                           x_type=x_type,
+                                           y_type=y_type)
+               for point in points)
 
 
 def polygon_has_coordinates_types(polygon: Polygon,
@@ -414,6 +503,16 @@ def polygon_has_coordinates_types(polygon: Polygon,
                                                    y_type=y_type))
 
 
+def polygons_have_coordinates_types(polygons: Iterable[Polygon],
+                                    *,
+                                    x_type: Type[Scalar],
+                                    y_type: Type[Scalar]) -> bool:
+    return all(polygon_has_coordinates_types(polygon,
+                                             x_type=x_type,
+                                             y_type=y_type)
+               for polygon in polygons)
+
+
 def segment_has_coordinates_types(segment: Segment,
                                   *,
                                   x_type: Type[Scalar],
@@ -424,6 +523,16 @@ def segment_has_coordinates_types(segment: Segment,
             and point_has_coordinates_types(segment.end,
                                             x_type=x_type,
                                             y_type=y_type))
+
+
+def segments_have_coordinates_types(segments: Iterable[Segment],
+                                    *,
+                                    x_type: Type[Scalar],
+                                    y_type: Type[Scalar]) -> bool:
+    return all(segment_has_coordinates_types(segment,
+                                             x_type=x_type,
+                                             y_type=y_type)
+               for segment in segments)
 
 
 def is_contour_counterclockwise(contour: Contour) -> bool:
@@ -449,13 +558,8 @@ def all_unique(iterable: Iterable[Hashable]) -> bool:
 
 is_box = Box.__instancecheck__
 is_contour = Contour.__instancecheck__
-
-
-def is_mix(object_: Any) -> bool:
-    return (isinstance(object_, tuple)
-            and is_multipoint(object_[0])
-            and is_multisegment(object_[1])
-            and is_multipolygon(object_[2]))
+is_empty = Empty.__instancecheck__
+is_mix = Mix.__instancecheck__
 
 
 def is_multicontour(object_: Any) -> bool:
@@ -492,15 +596,14 @@ def contour_to_star_segments(contour: Contour) -> Sequence[Segment]:
 
 
 def mix_segments_do_not_cross_or_overlap(mix: Mix) -> bool:
-    _, multisegment, multipolygon = mix
     return segments_do_not_cross_or_overlap(
-            list(chain(multisegment.segments,
+            list(chain(mix_to_segments(mix),
                        flatten(chain(
                                contour_edges_constructor(
                                        polygon.border.vertices),
                                flatten(contour_edges_constructor(hole.vertices)
                                        for hole in polygon.holes))
-                               for polygon in multipolygon.polygons))))
+                               for polygon in mix_to_polygons(mix)))))
 
 
 def contours_do_not_cross_or_overlap(contours: Sequence[Contour]) -> bool:
