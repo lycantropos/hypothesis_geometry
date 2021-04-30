@@ -398,8 +398,6 @@ def multicontours(x_coordinates: Strategy[Scalar],
     def _to_sizes(size: int,
                   min_element_size: int,
                   limit: int) -> Strategy[List[int]]:
-        if not size:
-            return strategies.builds(list)
         max_sizes = [min_element_size] * size
         indices = cycle(range(size))
         for _ in range(limit - size * min_element_size):
