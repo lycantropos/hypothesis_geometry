@@ -37,6 +37,7 @@ from .core.base import (boxes as _boxes,
                         as _triangular_vertices_sequences,
                         vertices_sequences as _vertices_sequences)
 from .core.constants import (MIN_CONTOUR_SIZE as _MIN_CONTOUR_SIZE,
+                             MIN_MULTICONTOUR_SIZE as _MIN_MULTICONTOUR_SIZE,
                              MIN_MULTIPOINT_SIZE as _MIN_MULTIPOINT_SIZE,
                              MIN_MULTIPOLYGON_SIZE as _MIN_MULTIPOLYGON_SIZE,
                              MIN_MULTISEGMENT_SIZE as _MIN_MULTISEGMENT_SIZE,
@@ -962,7 +963,7 @@ def star_contours(x_coordinates: _Strategy[_Scalar],
 def multicontours(x_coordinates: _Strategy[_Scalar],
                   y_coordinates: _Optional[_Strategy[_Scalar]] = None,
                   *,
-                  min_size: int = 0,
+                  min_size: int = _MIN_MULTICONTOUR_SIZE,
                   max_size: _Optional[int] = None,
                   min_contour_size: int = _MIN_CONTOUR_SIZE,
                   max_contour_size: _Optional[int] = None,
@@ -1064,11 +1065,11 @@ def multicontours(x_coordinates: _Strategy[_Scalar],
     ...     for vertex in contour.vertices)
     True
     """
-    _validate_sizes(min_size, max_size, 0)
+    _validate_sizes(min_size, max_size, _MIN_MULTICONTOUR_SIZE)
     _validate_sizes(min_contour_size, max_contour_size, _MIN_CONTOUR_SIZE,
                     'min_contour_size', 'max_contour_size')
     return _multicontours(x_coordinates, y_coordinates,
-                          min_size=max(min_size, 0),
+                          min_size=max(min_size, _MIN_MULTICONTOUR_SIZE),
                           max_size=max_size,
                           min_contour_size=max(min_contour_size,
                                                _MIN_CONTOUR_SIZE),
