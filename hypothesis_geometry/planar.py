@@ -971,7 +971,7 @@ def multicontours(x_coordinates: _Strategy[_Scalar],
                   ) -> _Strategy[_Multicontour]:
     """
     Returns a strategy for multicontours.
-    Multicontour is a possibly empty sequence of non-crossing
+    Multicontour is a sequence of two or more non-crossing
     and non-overlapping contours.
 
     :param x_coordinates: strategy for vertices' x-coordinates.
@@ -1404,7 +1404,6 @@ def mixes(x_coordinates: _Strategy[_Scalar],
           context: _Optional[_Context] = None) -> _Strategy[_Mix]:
     """
     Returns a strategy for mixes.
-    Mix is a triplet of disjoint multipoint, multisegment and multipolygon.
 
     :param x_coordinates: strategy for vertices' x-coordinates.
     :param y_coordinates:
