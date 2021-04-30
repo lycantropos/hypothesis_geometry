@@ -463,8 +463,6 @@ def multipolygons(x_coordinates: Strategy[Scalar],
                                         size_upper_bound
                                         if max_size is None
                                         else min(max_size, size_upper_bound)))
-        if not size:
-            return []
         xs = sorted(xs)
         segment_cls = context.segment_cls
         result = []
@@ -506,8 +504,6 @@ def multipolygons(x_coordinates: Strategy[Scalar],
                                         size_scale
                                         if max_size is None
                                         else min(max_size, size_scale)))
-        if not size:
-            return []
         ys = sorted(ys)
         segment_cls = context.segment_cls
         result = []
