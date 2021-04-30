@@ -206,7 +206,7 @@ def test_invalid_border_sizes(scalars: Strategy[Scalar],
 
 
 @given(strategies.scalars_strategies,
-       strategies.invalid_multicontours_sizes_pairs)
+       strategies.invalid_polygon_holes_sizes_pairs)
 def test_invalid_holes_list_sizes(scalars: Strategy[Scalar],
                                   invalid_sizes_pair: SizesPair
                                   ) -> None:

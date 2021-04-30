@@ -8,7 +8,8 @@ from typing import (Optional,
 from ground.hints import Scalar
 from hypothesis import strategies
 
-from hypothesis_geometry.core.constants import (MIN_MULTIPOINT_SIZE,
+from hypothesis_geometry.core.constants import (MIN_MULTICONTOUR_SIZE,
+                                                MIN_MULTIPOINT_SIZE,
                                                 MIN_MULTIPOLYGON_SIZE,
                                                 MIN_MULTISEGMENT_SIZE,
                                                 MinContourSize)
@@ -81,7 +82,9 @@ invalid_concave_contours_sizes_pairs = to_invalid_sizes_pairs(
         MinContourSize.CONCAVE)
 invalid_convex_contours_sizes_pairs = to_invalid_sizes_pairs(
         MinContourSize.CONVEX)
-invalid_multicontours_sizes_pairs = to_invalid_sizes_pairs(0)
+invalid_multicontours_sizes_pairs = to_invalid_sizes_pairs(
+        MIN_MULTICONTOUR_SIZE)
+invalid_polygon_holes_sizes_pairs = to_invalid_sizes_pairs(0)
 invalid_multipoints_sizes_pairs = to_invalid_sizes_pairs(MIN_MULTIPOINT_SIZE)
 invalid_multipolygons_sizes_pairs = to_invalid_sizes_pairs(
         MIN_MULTIPOLYGON_SIZE)
