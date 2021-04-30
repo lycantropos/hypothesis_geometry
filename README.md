@@ -52,6 +52,8 @@ With setup
 >>> from hypothesis_geometry import planar
 >>> context = get_context()
 >>> Contour = context.contour_cls
+>>> Empty = context.empty_cls
+>>> Mix = context.mix_cls
 >>> Multipoint = context.multipoint_cls
 >>> Multipolygon = context.multipolygon_cls
 >>> Multisegment = context.multisegment_cls
@@ -68,6 +70,15 @@ With setup
 
 ```
 let's take a look at what can be generated and how.
+
+### Empty geometries
+```python
+>>> empty_geometries = planar.empty_geometries()
+>>> empty = empty_geometries.example()
+>>> isinstance(empty, Empty)
+True
+
+```
 
 ### Points
 ```python
@@ -291,74 +302,84 @@ True
 
 ### Mixes
 ```python
->>> min_multipoint_size, max_multipoint_size = 2, 3
->>> min_multisegment_size, max_multisegment_size = 1, 4
->>> min_multipolygon_size, max_multipolygon_size = 0, 5
->>> min_multipolygon_border_size, max_multipolygon_border_size = 5, 10
->>> min_multipolygon_holes_size, max_multipolygon_holes_size = 1, 4
->>> min_multipolygon_hole_size, max_multipolygon_hole_size = 3, 5
+>>> min_points_size, max_points_size = 2, 3
+>>> min_segments_size, max_segments_size = 1, 4
+>>> min_polygons_size, max_polygons_size = 0, 5
+>>> min_polygon_border_size, max_polygon_border_size = 5, 10
+>>> min_polygon_holes_size, max_polygon_holes_size = 1, 4
+>>> min_polygon_hole_size, max_polygon_hole_size = 3, 5
 >>> mixes = planar.mixes(coordinates,
-...                      min_multipoint_size=min_multipoint_size,
-...                      max_multipoint_size=max_multipoint_size,
-...                      min_multisegment_size=min_multisegment_size,
-...                      max_multisegment_size=max_multisegment_size,
-...                      min_multipolygon_size=min_multipolygon_size,
-...                      max_multipolygon_size=max_multipolygon_size,
-...                      min_multipolygon_border_size=min_multipolygon_border_size,
-...                      max_multipolygon_border_size=max_multipolygon_border_size,
-...                      min_multipolygon_holes_size=min_multipolygon_holes_size,
-...                      max_multipolygon_holes_size=max_multipolygon_holes_size,
-...                      min_multipolygon_hole_size=min_multipolygon_hole_size,
-...                      max_multipolygon_hole_size=max_multipolygon_hole_size)
+...                      min_points_size=min_points_size,
+...                      max_points_size=max_points_size,
+...                      min_segments_size=min_segments_size,
+...                      max_segments_size=max_segments_size,
+...                      min_polygons_size=min_polygons_size,
+...                      max_polygons_size=max_polygons_size,
+...                      min_polygon_border_size=min_polygon_border_size,
+...                      max_polygon_border_size=max_polygon_border_size,
+...                      min_polygon_holes_size=min_polygon_holes_size,
+...                      max_polygon_holes_size=max_polygon_holes_size,
+...                      min_polygon_hole_size=min_polygon_hole_size,
+...                      max_polygon_hole_size=max_polygon_hole_size)
 >>> mix = mixes.example()
->>> isinstance(mix, tuple)
+>>> isinstance(mix, Mix)
 True
->>> len(mix) == 3
+>>> isinstance(mix.discrete, (Empty, Multipoint))
 True
->>> multipoint, multisegment, multipolygon = mix
->>> isinstance(multipoint, Multipoint)
-True
->>> min_multipoint_size <= len(multipoint.points) <= max_multipoint_size
+>>> points = [] if isinstance(mix.discrete, Empty) else mix.discrete.points
+>>> min_points_size <= len(points) <= max_points_size
 True
 >>> all(isinstance(point.x, coordinates_type)
 ...     and isinstance(point.y, coordinates_type)
-...     for point in multipoint.points)
+...     for point in points)
 True
 >>> all(min_coordinate <= point.x <= max_coordinate
 ...     and min_coordinate <= point.y <= max_coordinate
-...     for point in multipoint.points)
+...     for point in points)
 True
->>> isinstance(multisegment, Multisegment)
+>>> isinstance(mix.linear, (Empty, Segment, Contour, Multisegment))
 True
->>> min_multisegment_size <= len(multisegment.segments) <= max_multisegment_size
+>>> segments = ([]
+...             if isinstance(mix.linear, Empty)
+...             else ([mix.linear]
+...                   if isinstance(mix.linear, Segment)
+...                   else (mix.linear.segments
+...                         if isinstance(mix.linear, Multisegment)
+...                         else context.contour_edges(mix.linear))))
+>>> min_segments_size <= len(segments) <= max_segments_size
 True
 >>> all(isinstance(segment.start.x, coordinates_type)
 ...     and isinstance(segment.start.y, coordinates_type)
 ...     and isinstance(segment.end.x, coordinates_type)
 ...     and isinstance(segment.end.y, coordinates_type)
-...     for segment in multisegment.segments)
+...     for segment in segments)
 True
 >>> all(min_coordinate <= segment.start.x <= max_coordinate
 ...     and min_coordinate <= segment.start.y <= max_coordinate
 ...     and min_coordinate <= segment.end.x <= max_coordinate
 ...     and min_coordinate <= segment.end.y <= max_coordinate
-...     for segment in multisegment.segments)
+...     for segment in segments)
 True
->>> isinstance(multipolygon, Multipolygon)
+>>> isinstance(mix.shaped, (Empty, Polygon, Multipolygon))
 True
->>> min_multipolygon_size <= len(multipolygon.polygons) <= max_multipolygon_size
+>>> polygons = ([]
+...             if isinstance(mix.shaped, Empty)
+...             else ([mix.shaped]
+...                   if isinstance(mix.shaped, Polygon)
+...                   else mix.shaped.polygons))
+>>> min_polygons_size <= len(polygons) <= max_polygons_size
 True
->>> all(min_multipolygon_border_size
+>>> all(min_polygon_border_size
 ...     <= len(polygon.border.vertices)
-...     <= max_multipolygon_border_size
-...     and (min_multipolygon_holes_size
+...     <= max_polygon_border_size
+...     and (min_polygon_holes_size
 ...          <= len(polygon.holes)
-...          <= max_multipolygon_holes_size)
-...     and all(min_multipolygon_hole_size
+...          <= max_polygon_holes_size)
+...     and all(min_polygon_hole_size
 ...             <= len(hole.vertices)
-...             <= max_multipolygon_hole_size
+...             <= max_polygon_hole_size
 ...             for hole in polygon.holes)
-...     for polygon in multipolygon.polygons)
+...     for polygon in polygons)
 True
 >>> all(all(isinstance(vertex.x, coordinates_type)
 ...         and isinstance(vertex.y, coordinates_type)
@@ -367,7 +388,7 @@ True
 ...             and isinstance(vertex.y, coordinates_type)
 ...             for hole in polygon.holes
 ...             for vertex in hole.vertices)
-...     for polygon in multipolygon.polygons)
+...     for polygon in polygons)
 True
 >>> all(all(min_coordinate <= vertex.x <= max_coordinate
 ...         and min_coordinate <= vertex.y <= max_coordinate
@@ -376,7 +397,7 @@ True
 ...             and min_coordinate <= vertex.y <= max_coordinate
 ...             for hole in polygon.holes
 ...             for vertex in hole.vertices)
-...     for polygon in multipolygon.polygons)
+...     for polygon in polygons)
 True
 
 ```
