@@ -616,32 +616,33 @@ def non_crossing_non_overlapping_segments_sequences(
     next_min_size, next_max_size = (min_size + 1, (max_size
                                                    if max_size is None
                                                    else max_size + 1))
-    result = (strategies.builds(to_vertical_multisegment,
-                                x_coordinates,
-                                strategies.lists(y_coordinates,
+    return (strategies.builds(to_vertical_multisegment, x_coordinates,
+                              strategies.lists(y_coordinates,
+                                               min_size=next_min_size,
+                                               max_size=next_max_size,
+                                               unique=True))
+            | strategies.builds(to_horizontal_multisegment,
+                                strategies.lists(x_coordinates,
                                                  min_size=next_min_size,
                                                  max_size=next_max_size,
-                                                 unique=True))
-              | strategies.builds(to_horizontal_multisegment,
-                                  strategies.lists(x_coordinates,
-                                                   min_size=next_min_size,
-                                                   max_size=next_max_size,
-                                                   unique=True),
-                                  y_coordinates))
-    if min_size >= MIN_CONTOUR_SIZE:
-        result |= (vertices_sequences(x_coordinates, y_coordinates,
-                                      min_size=min_size,
-                                      max_size=max_size,
-                                      context=context)
-                   .map(partial(contour_to_edges,
-                                segment_cls=context.segment_cls))
-                   .flatmap(partial(sub_lists,
-                                    min_size=min_size)))
-    return result | (strategies.lists(segments(x_coordinates, y_coordinates,
-                                               context=context),
-                                      min_size=min_size,
-                                      max_size=max_size)
-                     .filter(are_segments_non_crossing_non_overlapping))
+                                                 unique=True),
+                                y_coordinates)
+            | (vertices_sequences(x_coordinates, y_coordinates,
+                                  min_size=max(min_size, MIN_CONTOUR_SIZE),
+                                  max_size=(max_size
+                                            if max_size is None
+                                            else max(max_size,
+                                                     MIN_CONTOUR_SIZE)),
+                                  context=context)
+               .map(partial(contour_to_edges,
+                            segment_cls=context.segment_cls))
+               .flatmap(partial(sub_lists,
+                                min_size=min_size)))
+            | (strategies.lists(segments(x_coordinates, y_coordinates,
+                                         context=context),
+                                min_size=min_size,
+                                max_size=max_size)
+               .filter(are_segments_non_crossing_non_overlapping)))
 
 
 def points(x_coordinates: Strategy[Scalar],
