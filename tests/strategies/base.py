@@ -1,5 +1,6 @@
 from fractions import Fraction
 from functools import partial
+from itertools import repeat
 from operator import ne
 from typing import (Optional,
                     Tuple,
@@ -8,7 +9,8 @@ from typing import (Optional,
 from ground.hints import Scalar
 from hypothesis import strategies
 
-from hypothesis_geometry.core.constants import (MIN_MULTICONTOUR_SIZE,
+from hypothesis_geometry.core.constants import (MIN_MIX_COMPONENTS_COUNT,
+                                                MIN_MULTICONTOUR_SIZE,
                                                 MIN_MULTIPOINT_SIZE,
                                                 MIN_MULTIPOLYGON_SIZE,
                                                 MIN_MULTISEGMENT_SIZE,
@@ -16,6 +18,7 @@ from hypothesis_geometry.core.constants import (MIN_MULTICONTOUR_SIZE,
 from hypothesis_geometry.core.utils import sort_pair
 from hypothesis_geometry.hints import Strategy
 from tests.utils import (Limits,
+                         SizesPair,
                          identity,
                          to_pairs)
 
@@ -70,6 +73,18 @@ convex_contours_sizes_pairs = to_sizes_pairs(MinContourSize.CONVEX)
 mix_points_sizes_pairs = to_sizes_pairs(0)
 mix_polygons_sizes_pairs = to_sizes_pairs(0)
 mix_segments_sizes_pairs = to_sizes_pairs(0)
+
+
+def is_valid_mix_components_sizes_pairs_triplet(
+        sizes_pairs_triplet: Tuple[SizesPair, SizesPair, SizesPair]) -> bool:
+    return (sum(component_max_size is None or bool(component_max_size)
+                for _, component_max_size in sizes_pairs_triplet)
+            >= MIN_MIX_COMPONENTS_COUNT)
+
+
+mix_components_sizes_pairs_triplets = (
+    (strategies.tuples(*repeat(to_sizes_pairs(0), 3))
+     .filter(is_valid_mix_components_sizes_pairs_triplet)))
 multicontours_sizes_pairs = to_sizes_pairs(MIN_MULTICONTOUR_SIZE, 5)
 multipoints_sizes_pairs = to_sizes_pairs(MIN_MULTIPOINT_SIZE)
 multipolygons_sizes_pairs = to_sizes_pairs(MIN_MULTIPOLYGON_SIZE, 5)
