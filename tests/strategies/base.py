@@ -70,9 +70,6 @@ def to_invalid_sizes_pairs(min_valid_size: int
 
 concave_contours_sizes_pairs = to_sizes_pairs(MinContourSize.CONCAVE)
 convex_contours_sizes_pairs = to_sizes_pairs(MinContourSize.CONVEX)
-mix_points_sizes_pairs = to_sizes_pairs(0)
-mix_polygons_sizes_pairs = to_sizes_pairs(0)
-mix_segments_sizes_pairs = to_sizes_pairs(0)
 
 
 def is_valid_mix_components_sizes_pairs_triplet(
