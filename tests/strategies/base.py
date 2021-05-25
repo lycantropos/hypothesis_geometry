@@ -20,6 +20,7 @@ from hypothesis_geometry.hints import Strategy
 from tests.utils import (Limits,
                          SizesPair,
                          identity,
+                         pack,
                          to_pairs)
 
 data = strategies.data()
@@ -95,6 +96,10 @@ invalid_concave_contours_sizes_pairs = to_invalid_sizes_pairs(
         MinContourSize.CONCAVE)
 invalid_convex_contours_sizes_pairs = to_invalid_sizes_pairs(
         MinContourSize.CONVEX)
+invalid_mix_components_sizes_pairs_triplets = (
+    (strategies.permutations([to_sizes_pairs(0), to_invalid_sizes_pairs(0),
+                              to_invalid_sizes_pairs(0)])
+     .flatmap(pack(strategies.tuples))))
 invalid_multicontours_sizes_pairs = to_invalid_sizes_pairs(
         MIN_MULTICONTOUR_SIZE)
 invalid_polygon_holes_sizes_pairs = to_invalid_sizes_pairs(0)

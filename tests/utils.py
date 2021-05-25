@@ -29,6 +29,7 @@ from hypothesis_geometry.hints import (Multicontour,
 
 has_valid_size = has_valid_size
 Domain = TypeVar('Domain')
+Range = TypeVar('Range')
 Key = Callable[[Domain], Any]
 Limits = Tuple[Scalar, Optional[Scalar]]
 ScalarsLimitsType = Tuple[Tuple[Strategy[Scalar], Limits],
@@ -53,6 +54,15 @@ def identity(argument: Domain) -> Domain:
 
 def to_pairs(strategy: Strategy[Domain]) -> Strategy[Tuple[Domain, Domain]]:
     return strategies.tuples(strategy, strategy)
+
+
+def pack(function: Callable[..., Range]
+         ) -> Callable[[Iterable[Domain]], Range]:
+    return partial(apply, function)
+
+
+def apply(function: Callable[..., Range], args: Iterable[Domain]) -> Range:
+    return function(*args)
 
 
 def box_has_coordinates_in_range(box: Box,

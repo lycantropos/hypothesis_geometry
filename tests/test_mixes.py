@@ -195,6 +195,28 @@ def test_same_coordinates(data: DataObject,
 
 
 @given(strategies.scalars_strategies,
+       strategies.invalid_mix_components_sizes_pairs_triplets)
+def test_invalid_components_sizes(scalars: Strategy[Scalar],
+                                  invalid_components_sizes_pairs
+                                  : Tuple[SizesPair, SizesPair, SizesPair]
+                                  ) -> None:
+    points_sizes_pair, segments_sizes_pair, polygons_sizes_pair = (
+        invalid_components_sizes_pairs)
+    min_points_size, max_points_size = points_sizes_pair
+    min_segments_size, max_segments_size = segments_sizes_pair
+    min_polygons_size, max_polygons_size = polygons_sizes_pair
+
+    with pytest.raises(ValueError):
+        mixes(scalars,
+              min_points_size=min_points_size,
+              max_points_size=max_points_size,
+              min_segments_size=min_segments_size,
+              max_segments_size=max_segments_size,
+              min_polygons_size=min_polygons_size,
+              max_polygons_size=max_polygons_size)
+
+
+@given(strategies.scalars_strategies,
        strategies.invalid_mix_points_sizes_pairs)
 def test_invalid_points_sizes(scalars: Strategy[Scalar],
                               invalid_sizes_pair: SizesPair) -> None:
