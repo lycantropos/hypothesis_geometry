@@ -224,9 +224,9 @@ def mixes(x_coordinates: Strategy[Scalar],
                             polygon_to_edges(polygons_sequence[-1],
                                              segment_cls)))
             xs = xs[count - can_touch_next_geometry:]
-        return mix_cls(maybe_discrete_from_points(points_sequence),
-                       maybe_linear_from_segments(segments_sequence),
-                       maybe_shaped_from_polygons(polygons_sequence))
+        return mix_cls(unpack_points(points_sequence),
+                       unpack_segments(segments_sequence),
+                       unpack_polygons(polygons_sequence))
 
     @strategies.composite
     def ys_to_mix(draw: Callable[[Strategy[Domain]], Domain],
@@ -288,24 +288,21 @@ def mixes(x_coordinates: Strategy[Scalar],
                             polygon_to_edges(polygons_sequence[-1],
                                              segment_cls)))
             ys = ys[count - can_touch_next_geometry:]
-        return mix_cls(maybe_discrete_from_points(points_sequence),
-                       maybe_linear_from_segments(segments_sequence),
-                       maybe_shaped_from_polygons(polygons_sequence))
+        return mix_cls(unpack_points(points_sequence),
+                       unpack_segments(segments_sequence),
+                       unpack_polygons(polygons_sequence))
 
-    def maybe_discrete_from_points(points_sequence: Sequence[Point]
-                                   ) -> Maybe[Multipoint]:
+    def unpack_points(points_sequence: Sequence[Point]) -> Maybe[Multipoint]:
         return multipoint_cls(points_sequence) if points_sequence else empty
 
-    def maybe_linear_from_segments(segments_sequence: Sequence[Segment]
-                                   ) -> Maybe[Linear]:
+    def unpack_segments(segments_sequence: Sequence[Segment]) -> Maybe[Linear]:
         return ((multisegment_cls(segments_sequence)
                  if len(segments_sequence) > 1
                  else segments_sequence[0])
                 if segments_sequence
                 else empty)
 
-    def maybe_shaped_from_polygons(polygons_sequence: Sequence[Polygon]
-                                   ) -> Maybe[Shaped]:
+    def unpack_polygons(polygons_sequence: Sequence[Polygon]) -> Maybe[Shaped]:
         return ((multipolygon_cls(polygons_sequence)
                  if len(polygons_sequence) > 1
                  else polygons_sequence[0])
