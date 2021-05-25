@@ -4,6 +4,7 @@ from functools import partial
 from itertools import (cycle,
                        groupby)
 from math import atan2
+from numbers import Real
 from operator import (attrgetter,
                       itemgetter)
 from random import Random
@@ -39,10 +40,11 @@ from .triangular import (Triangulation,
                          to_boundary_edges)
 
 
-def constrict_convex_hull_size(points: Sequence[Point],
+def constrict_convex_hull_size(points: Sequence[Point[Scalar]],
                                *,
                                context: Context,
-                               max_size: Optional[int]) -> Sequence[Point]:
+                               max_size: Optional[int]
+                               ) -> Sequence[Point[Scalar]]:
     if max_size is None:
         return points
     convex_hull = context.points_convex_hull(points)
@@ -77,11 +79,11 @@ def _edge_key(context: Context, edge: QuadEdge) -> Key:
             edge.end)
 
 
-def to_multicontour(points: Sequence[Point],
+def to_multicontour(points: Sequence[Point[Scalar]],
                     sizes: Sequence[int],
                     chooser: Chooser,
-                    context: Context) -> Multicontour:
-    sorting_key_chooser = partial(chooser, [None, attrgetter('y', 'x'),
+                    context: Context) -> Multicontour[Scalar]:
+    sorting_key_chooser = partial(chooser, [attrgetter('y', 'x'),
                                             attrgetter('x', 'y')])
     current_sorting_key = sorting_key_chooser()
     points = sorted(points,
@@ -92,13 +94,15 @@ def to_multicontour(points: Sequence[Point],
                        else (has_horizontal_lowermost_segment,
                              has_vertical_leftmost_segment))
     current_predicate = next(predicates)
-    contour_cls, segment_cls = context.contour_cls, context.segment_cls
+    contour_cls, to_contour_segments = (context.contour_cls,
+                                        context.contour_segments)
     result = []
     for size in sizes:
-        contour_vertices = to_vertices_sequence(points[:size], size, context)
-        result.append(contour_cls(contour_vertices))
+        contour = contour_cls(to_vertices_sequence(points[:size], size,
+                                                   context))
+        result.append(contour)
         can_touch_next_contour = current_predicate(
-                contour_to_edges(contour_vertices, segment_cls))
+                to_contour_segments(contour))
         points = points[size - can_touch_next_contour:]
         new_sorting_key = sorting_key_chooser()
         if new_sorting_key is not current_sorting_key:
@@ -108,15 +112,15 @@ def to_multicontour(points: Sequence[Point],
     return result
 
 
-def to_polygon(points: Sequence[Point],
+def to_polygon(points: Sequence[Point[Scalar]],
                border_size: int,
                holes_sizes: List[int],
                chooser: Chooser,
-               context: Context) -> Polygon:
+               context: Context) -> Polygon[Scalar]:
     triangulation = Triangulation.delaunay(points, context)
     boundary_edges = to_boundary_edges(triangulation)
     boundary_points = {edge.start for edge in boundary_edges}
-    sorting_key_chooser = partial(chooser, [None, attrgetter('y', 'x'),
+    sorting_key_chooser = partial(chooser, [attrgetter('y', 'x'),
                                             attrgetter('x', 'y')])
     current_sorting_key = sorting_key_chooser()
     inner_points = sorted(set(points) - boundary_points,
@@ -128,16 +132,17 @@ def to_polygon(points: Sequence[Point],
                              has_vertical_leftmost_segment))
     current_predicate = next(predicates)
     holes, holes_edges = [], []
-    contour_cls, segment_cls = context.contour_cls, context.segment_cls
+    contour_cls, to_contour_segments = (context.contour_cls,
+                                        context.contour_segments)
     for hole_size in holes_sizes:
         hole_points = inner_points[:hole_size]
-        hole_vertices = to_vertices_sequence(hole_points, hole_size,
-                                             context)[::-1]
-        holes.append(contour_cls(hole_vertices))
-        hole_segments = contour_to_edges(hole_vertices, segment_cls)
-        holes_edges.extend(hole_segments)
+        hole = contour_cls(_reverse_vertices(
+                to_vertices_sequence(hole_points, hole_size, context)))
+        holes.append(hole)
+        hole_edges = to_contour_segments(hole)
+        holes_edges.extend(hole_edges)
         boundary_points.update(hole_points)
-        can_touch_next_hole = current_predicate(hole_segments)
+        can_touch_next_hole = current_predicate(hole_edges)
         inner_points = inner_points[hole_size - can_touch_next_hole:]
         next_sorting_key = sorting_key_chooser()
         if next_sorting_key is not current_sorting_key:
@@ -158,7 +163,8 @@ def to_polygon(points: Sequence[Point],
 
     def is_mouth(edge: QuadEdge,
                  cross_or_overlap_holes: Callable[[Segment], bool]
-                 = to_edges_cross_or_overlap_detector(holes_edges)) -> bool:
+                 = to_edges_cross_or_overlap_detector(holes_edges),
+                 segment_cls: Type[Segment] = context.segment_cls) -> bool:
         neighbour_end = edge.left_from_start.end
         return (neighbour_end not in boundary_points
                 and not cross_or_overlap_holes(segment_cls(edge.start,
@@ -196,12 +202,16 @@ def to_polygon(points: Sequence[Point],
     return context.polygon_cls(contour_cls(border_vertices), holes)
 
 
-def _to_segment_angle(start: Point, end: Point) -> Scalar:
+def _reverse_vertices(vertices: List[Point[Scalar]]) -> List[Point[Scalar]]:
+    return [vertices[0]] + vertices[:0:-1]
+
+
+def _to_segment_angle(start: Point, end: Point) -> Real:
     return math.atan2(end.y - start.y, end.x - start.x)
 
 
-def to_star_contour_vertices(points: Sequence[Point],
-                             context: Context) -> Sequence[Point]:
+def to_star_contour_vertices(points: Sequence[Point[Scalar]],
+                             context: Context) -> Sequence[Point[Scalar]]:
     centroid = context.multipoint_centroid(context.multipoint_cls(points))
     contour_cls, region_centroid_constructor, orienteer = (
         context.contour_cls, context.region_centroid,
@@ -228,9 +238,9 @@ def to_star_contour_vertices(points: Sequence[Point],
     return result
 
 
-def to_convex_vertices_sequence(points: Sequence[Point],
+def to_convex_vertices_sequence(points: Sequence[Point[Scalar]],
                                 random: Random,
-                                context: Context) -> Sequence[Point]:
+                                context: Context) -> Sequence[Point[Scalar]]:
     """
     Based on Valtr algorithm by Sander Verdonschot.
 
@@ -308,15 +318,16 @@ def compress_contour(vertices: MutableSequence[Point],
         index += 1
 
 
-def to_max_convex_hull(points: Sequence[Point],
-                       orienteer: Orienteer) -> Sequence[Point]:
+def to_max_convex_hull(points: Sequence[Point[Scalar]],
+                       orienteer: Orienteer) -> Sequence[Point[Scalar]]:
     points = sorted(points)
     lower = _to_sub_hull(points, orienteer)
     upper = _to_sub_hull(reversed(points), orienteer)
     return lower[:-1] + upper[:-1]
 
 
-def _to_sub_hull(points: Iterable[Point], orienteer: Orienteer) -> List[Point]:
+def _to_sub_hull(points: Iterable[Point[Scalar]],
+                 orienteer: Orienteer) -> List[Point[Scalar]]:
     result = []
     for point in points:
         while len(result) >= 2:
@@ -329,20 +340,16 @@ def _to_sub_hull(points: Iterable[Point], orienteer: Orienteer) -> List[Point]:
     return result
 
 
-def polygon_to_edges(polygon: Polygon,
-                     segment_cls: Type[Segment]) -> Sequence[Segment]:
-    return contour_to_edges(polygon.border.vertices, segment_cls)
-
-
-def contour_to_edges(vertices: Sequence[Point],
-                     segment_cls: Type[Segment]) -> Sequence[Segment]:
+def contour_vertices_to_edges(vertices: Sequence[Point[Scalar]],
+                              segment_cls: Type[Segment]
+                              ) -> Sequence[Segment[Scalar]]:
     return [segment_cls(vertices[index - 1], vertices[index])
             for index in range(len(vertices))]
 
 
-def to_vertices_sequence(points: Sequence[Point],
+def to_vertices_sequence(points: Sequence[Point[Scalar]],
                          size: int,
-                         context: Context) -> Sequence[Point]:
+                         context: Context) -> Sequence[Point[Scalar]]:
     """
     Based on chi-algorithm by M. Duckham et al.
 

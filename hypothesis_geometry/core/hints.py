@@ -4,12 +4,13 @@ from typing import (Callable,
 
 from ground.base import Orientation
 from ground.hints import (Contour,
-                          Point)
+                          Point,
+                          Scalar)
 from hypothesis.strategies import SearchStrategy as Strategy
 
 Domain = TypeVar('Domain')
 Range = TypeVar('Range')
 Chooser = Callable[[Sequence[Domain]], Domain]
-Multicontour = Sequence[Contour]
+Multicontour = Sequence[Contour[Scalar]]
 Orienteer = Callable[[Point, Point, Point], Orientation]
 Strategy = Strategy

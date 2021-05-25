@@ -4,7 +4,8 @@ from typing import (Iterable,
                     Sized)
 
 from bentley_ottmann.planar import segments_cross_or_overlap
-from ground.base import Orientation
+from ground.base import (Context,
+                         Orientation)
 from ground.hints import (Point,
                           Scalar,
                           Segment)
@@ -13,9 +14,10 @@ from .hints import (Multicontour,
                     Orienteer)
 
 
-def are_segments_non_crossing_non_overlapping(segments: Sequence[Segment]
-                                              ) -> bool:
-    return not segments_cross_or_overlap(segments)
+def are_segments_non_crossing_non_overlapping(segments: Sequence[Segment],
+                                              context: Context) -> bool:
+    return not segments_cross_or_overlap(segments,
+                                         context=context)
 
 
 def has_valid_size(sized: Sized,
@@ -69,18 +71,18 @@ def multicontour_has_valid_sizes(multicontour: Multicontour,
                     for contour in multicontour))
 
 
-def segment_to_max_x(segment: Segment) -> Scalar:
+def segment_to_max_x(segment: Segment[Scalar]) -> Scalar:
     return min(segment.start.x, segment.end.x)
 
 
-def segment_to_min_y(segment: Segment) -> Scalar:
+def segment_to_min_y(segment: Segment[Scalar]) -> Scalar:
     return min(segment.start.y, segment.end.y)
 
 
-def angle_contains_point(vertex: Point,
-                         first_ray_point: Point,
-                         second_ray_point: Point,
-                         point: Point,
+def angle_contains_point(vertex: Point[Scalar],
+                         first_ray_point: Point[Scalar],
+                         second_ray_point: Point[Scalar],
+                         point: Point[Scalar],
                          orienteer: Orienteer) -> bool:
     angle_orientation = orienteer(vertex, first_ray_point, second_ray_point)
     first_half_orientation = orienteer(vertex, first_ray_point, point)
@@ -95,13 +97,13 @@ def angle_contains_point(vertex: Point,
                             or Orientation.COUNTERCLOCKWISE))))
 
 
-def are_points_non_collinear(points: Sequence[Point],
+def are_points_non_collinear(points: Sequence[Point[Scalar]],
                              orienteer: Orienteer) -> bool:
     return any(orientation is not Orientation.COLLINEAR
                for orientation in to_contour_orientations(points, orienteer))
 
 
-def are_vertices_non_convex(vertices: Sequence[Point],
+def are_vertices_non_convex(vertices: Sequence[Point[Scalar]],
                             orienteer: Orienteer) -> bool:
     orientations = iter(to_contour_orientations(vertices, orienteer))
     base_orientation = next(orientations)
@@ -111,13 +113,13 @@ def are_vertices_non_convex(vertices: Sequence[Point],
                for orientation in orientations)
 
 
-def are_vertices_strict(vertices: Sequence[Point],
+def are_vertices_strict(vertices: Sequence[Point[Scalar]],
                         orienteer: Orienteer) -> bool:
     return all(orientation is not Orientation.COLLINEAR
                for orientation in to_contour_orientations(vertices, orienteer))
 
 
-def to_contour_orientations(vertices: Sequence[Point],
+def to_contour_orientations(vertices: Sequence[Point[Scalar]],
                             orienteer: Orienteer) -> Iterable[Orientation]:
     return (orienteer(vertices[index], vertices[index - 1],
                       vertices[(index + 1) % len(vertices)])

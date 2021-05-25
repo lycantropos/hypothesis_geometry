@@ -10,7 +10,7 @@ from typing import (Any,
                     Type,
                     TypeVar)
 
-from bentley_ottmann.planar import (edges_intersect,
+from bentley_ottmann.planar import (contour_self_intersects,
                                     segments_cross_or_overlap)
 from ground.base import (Orientation,
                          get_context)
@@ -22,7 +22,6 @@ from hypothesis_geometry.core.contracts import (
     are_vertices_strict as _are_vertices_strict,
     has_valid_size,
     multicontour_has_valid_sizes)
-from hypothesis_geometry.core.factories import contour_to_edges
 from hypothesis_geometry.core.utils import flatten
 from hypothesis_geometry.hints import (Multicontour,
                                        Strategy)
@@ -582,17 +581,16 @@ is_segment = Segment.__instancecheck__
 
 
 def is_contour_non_self_intersecting(contour: Contour) -> bool:
-    return not edges_intersect(contour)
+    return not contour_self_intersects(contour)
 
 
-contour_edges_constructor = partial(contour_to_edges,
-                                    segment_cls=Segment)
+to_contour_segments = context.contour_segments
 
 
 def is_star_contour(contour: Contour) -> bool:
     return segments_do_not_cross_or_overlap(
             list(chain(contour_to_star_segments(contour),
-                       contour_edges_constructor(contour.vertices))))
+                       to_contour_segments(contour))))
 
 
 def contour_to_star_segments(contour: Contour) -> Sequence[Segment]:
@@ -605,18 +603,15 @@ def contour_to_star_segments(contour: Contour) -> Sequence[Segment]:
 def mix_segments_do_not_cross_or_overlap(mix: Mix) -> bool:
     return segments_do_not_cross_or_overlap(
             list(chain(mix_to_segments(mix),
-                       flatten(chain(
-                               contour_edges_constructor(
-                                       polygon.border.vertices),
-                               flatten(contour_edges_constructor(hole.vertices)
-                                       for hole in polygon.holes))
+                       flatten(chain(to_contour_segments(polygon.border),
+                                     flatten(to_contour_segments(hole)
+                                             for hole in polygon.holes))
                                for polygon in mix_to_polygons(mix)))))
 
 
 def contours_do_not_cross_or_overlap(contours: Sequence[Contour]) -> bool:
     return segments_do_not_cross_or_overlap(list(flatten(
-            contour_edges_constructor(contour.vertices)
-            for contour in contours)))
+            to_contour_segments(contour) for contour in contours)))
 
 
 def segments_do_not_cross_or_overlap(segments: Sequence[Segment]) -> bool:

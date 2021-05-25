@@ -69,7 +69,7 @@ def empty_geometries(context: _Optional[_Context] = None) -> _Strategy[_Empty]:
 def points(x_coordinates: _Strategy[_Scalar],
            y_coordinates: _Optional[_Strategy[_Scalar]] = None,
            *,
-           context: _Optional[_Context] = None) -> _Strategy[_Point]:
+           context: _Optional[_Context] = None) -> _Strategy[_Point[_Scalar]]:
     """
     Returns a strategy for points.
 
@@ -134,7 +134,8 @@ def multipoints(x_coordinates: _Strategy[_Scalar],
                 *,
                 min_size: int = _MIN_MULTIPOINT_SIZE,
                 max_size: _Optional[int] = None,
-                context: _Optional[_Context] = None) -> _Strategy[_Multipoint]:
+                context: _Optional[_Context] = None
+                ) -> _Strategy[_Multipoint[_Scalar]]:
     """
     Returns a strategy for multipoints.
 
@@ -218,7 +219,8 @@ def multipoints(x_coordinates: _Strategy[_Scalar],
 def segments(x_coordinates: _Strategy[_Scalar],
              y_coordinates: _Optional[_Strategy[_Scalar]] = None,
              *,
-             context: _Optional[_Context] = None) -> _Strategy[_Segment]:
+             context: _Optional[_Context] = None
+             ) -> _Strategy[_Segment[_Scalar]]:
     """
     Returns a strategy for segments.
 
@@ -292,7 +294,7 @@ def multisegments(x_coordinates: _Strategy[_Scalar],
                   min_size: int = _MIN_MULTISEGMENT_SIZE,
                   max_size: _Optional[int] = None,
                   context: _Optional[_Context] = None
-                  ) -> _Strategy[_Multisegment]:
+                  ) -> _Strategy[_Multisegment[_Scalar]]:
     """
     Returns a strategy for multisegments.
 
@@ -386,7 +388,8 @@ def contours(x_coordinates: _Strategy[_Scalar],
              *,
              min_size: int = _MIN_CONTOUR_SIZE,
              max_size: _Optional[int] = None,
-             context: _Optional[_Context] = None) -> _Strategy[_Contour]:
+             context: _Optional[_Context] = None
+             ) -> _Strategy[_Contour[_Scalar]]:
     """
     Returns a strategy for contours.
 
@@ -474,7 +477,7 @@ def convex_contours(x_coordinates: _Strategy[_Scalar],
                     min_size: int = _MinContourSize.CONVEX,
                     max_size: _Optional[int] = None,
                     context: _Optional[_Context] = None
-                    ) -> _Strategy[_Contour]:
+                    ) -> _Strategy[_Contour[_Scalar]]:
     """
     Returns a strategy for convex contours.
     Convex contour is a contour such that the line segment
@@ -566,7 +569,7 @@ def concave_contours(x_coordinates: _Strategy[_Scalar],
                      min_size: int = _MinContourSize.CONCAVE,
                      max_size: _Optional[int] = None,
                      context: _Optional[_Context] = None
-                     ) -> _Strategy[_Contour]:
+                     ) -> _Strategy[_Contour[_Scalar]]:
     """
     Returns a strategy for concave contours.
     Concave contour is a contour that is not convex.
@@ -654,7 +657,7 @@ def triangular_contours(x_coordinates: _Strategy[_Scalar],
                         y_coordinates: _Optional[_Strategy[_Scalar]]
                         = None,
                         context: _Optional[_Context] = None
-                        ) -> _Strategy[_Contour]:
+                        ) -> _Strategy[_Contour[_Scalar]]:
     """
     Returns a strategy for triangular contours.
     Triangular contour is a contour formed by 3 points.
@@ -730,7 +733,7 @@ def rectangular_contours(x_coordinates: _Strategy[_Scalar],
                          y_coordinates: _Optional[_Strategy[_Scalar]]
                          = None,
                          context: _Optional[_Context] = None
-                         ) -> _Strategy[_Contour]:
+                         ) -> _Strategy[_Contour[_Scalar]]:
     """
     Returns a strategy for axis-aligned rectangular contours.
     Rectangular contour is a contour formed by 4 points.
@@ -804,7 +807,7 @@ def rectangular_contours(x_coordinates: _Strategy[_Scalar],
 
 def boxes(x_coordinates: _Strategy[_Scalar],
           y_coordinates: _Optional[_Strategy[_Scalar]] = None,
-          context: _Optional[_Context] = None) -> _Strategy[_Box]:
+          context: _Optional[_Context] = None) -> _Strategy[_Box[_Scalar]]:
     """
     Returns a strategy for boxes.
 
@@ -878,7 +881,8 @@ def star_contours(x_coordinates: _Strategy[_Scalar],
                   *,
                   min_size: int = _MIN_CONTOUR_SIZE,
                   max_size: _Optional[int] = None,
-                  context: _Optional[_Context] = None) -> _Strategy[_Contour]:
+                  context: _Optional[_Context] = None
+                  ) -> _Strategy[_Contour[_Scalar]]:
     """
     Returns a strategy for star contours.
     Star contour is a contour such that every vertex is visible from centroid,
@@ -970,7 +974,7 @@ def multicontours(x_coordinates: _Strategy[_Scalar],
                   min_contour_size: int = _MIN_CONTOUR_SIZE,
                   max_contour_size: _Optional[int] = None,
                   context: _Optional[_Context] = None
-                  ) -> _Strategy[_Multicontour]:
+                  ) -> _Strategy[_Multicontour[_Scalar]]:
     """
     Returns a strategy for multicontours.
     Multicontour is a sequence of two or more non-crossing
@@ -1090,7 +1094,8 @@ def polygons(x_coordinates: _Strategy[_Scalar],
              max_holes_size: _Optional[int] = None,
              min_hole_size: int = _MIN_CONTOUR_SIZE,
              max_hole_size: _Optional[int] = None,
-             context: _Optional[_Context] = None) -> _Strategy[_Polygon]:
+             context: _Optional[_Context] = None
+             ) -> _Strategy[_Polygon[_Scalar]]:
     """
     Returns a strategy for polygons.
 
@@ -1235,7 +1240,7 @@ def multipolygons(x_coordinates: _Strategy[_Scalar],
                   min_hole_size: int = _MIN_CONTOUR_SIZE,
                   max_hole_size: _Optional[int] = None,
                   context: _Optional[_Context] = None
-                  ) -> _Strategy[_Multipolygon]:
+                  ) -> _Strategy[_Multipolygon[_Scalar]]:
     """
     Returns a strategy for multipolygons.
 
@@ -1403,7 +1408,7 @@ def mixes(x_coordinates: _Strategy[_Scalar],
           max_polygon_holes_size: _Optional[int] = None,
           min_polygon_hole_size: int = _MIN_CONTOUR_SIZE,
           max_polygon_hole_size: _Optional[int] = None,
-          context: _Optional[_Context] = None) -> _Strategy[_Mix]:
+          context: _Optional[_Context] = None) -> _Strategy[_Mix[_Scalar]]:
     """
     Returns a strategy for mixes.
 
@@ -1494,7 +1499,7 @@ def mixes(x_coordinates: _Strategy[_Scalar],
     ...                   if isinstance(mix.linear, Segment)
     ...                   else (mix.linear.segments
     ...                         if isinstance(mix.linear, Multisegment)
-    ...                         else context.contour_edges(mix.linear))))
+    ...                         else context.contour_segments(mix.linear))))
     >>> min_segments_size <= len(segments) <= max_segments_size
     True
     >>> all(isinstance(segment.start.x, coordinates_type)
@@ -1603,7 +1608,7 @@ def mixes(x_coordinates: _Strategy[_Scalar],
     ...                   if isinstance(mix.linear, Segment)
     ...                   else (mix.linear.segments
     ...                         if isinstance(mix.linear, Multisegment)
-    ...                         else context.contour_edges(mix.linear))))
+    ...                         else context.contour_segments(mix.linear))))
     >>> min_segments_size <= len(segments) <= max_segments_size
     True
     >>> all(isinstance(segment.start.x, coordinates_type)

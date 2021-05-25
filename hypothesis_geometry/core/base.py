@@ -38,8 +38,7 @@ from .contracts import (are_points_non_collinear,
                         has_vertical_leftmost_segment,
                         multicontour_has_valid_sizes)
 from .factories import (constrict_convex_hull_size,
-                        contour_to_edges,
-                        polygon_to_edges,
+                        contour_vertices_to_edges,
                         to_convex_vertices_sequence,
                         to_max_convex_hull,
                         to_multicontour,
@@ -60,7 +59,7 @@ from .utils import (cut,
 def boxes(x_coordinates: Strategy[Scalar],
           y_coordinates: Optional[Strategy[Scalar]],
           *,
-          context: Context) -> Strategy[Box]:
+          context: Context) -> Strategy[Box[Scalar]]:
     return (strategies.builds(add,
                               strategies.lists(x_coordinates,
                                                min_size=2,
@@ -87,7 +86,8 @@ def concave_vertices_sequences(x_coordinates: Strategy[Scalar],
                                *,
                                min_size: int,
                                max_size: Optional[int],
-                               context: Context) -> Strategy[Sequence[Point]]:
+                               context: Context
+                               ) -> Strategy[Sequence[Point[Scalar]]]:
     return (_vertices_sequences(x_coordinates, y_coordinates,
                                 min_size=min_size,
                                 max_size=max_size,
@@ -101,7 +101,8 @@ def convex_vertices_sequences(x_coordinates: Strategy[Scalar],
                               *,
                               min_size: int,
                               max_size: Optional[int],
-                              context: Context) -> Strategy[Sequence[Point]]:
+                              context: Context
+                              ) -> Strategy[Sequence[Point[Scalar]]]:
     if max_size is not None and max_size < MinContourSize.CONCAVE:
         return triangular_vertices_sequences(x_coordinates, y_coordinates,
                                              context=context)
@@ -147,7 +148,7 @@ def mixes(x_coordinates: Strategy[Scalar],
           max_polygon_holes_size: Optional[int],
           min_polygon_hole_size: int,
           max_polygon_hole_size: Optional[int],
-          context: Context) -> Strategy[Mix]:
+          context: Context) -> Strategy[Mix[Scalar]]:
     if y_coordinates is None:
         y_coordinates = x_coordinates
     min_polygon_vertices_count = (min_polygon_border_size
@@ -206,7 +207,7 @@ def mixes(x_coordinates: Strategy[Scalar],
                                 segments_endpoints_counts),
                             zip(repeat(draw_polygon),
                                 polygons_vertices_counts)))))
-        segment_cls = context.segment_cls
+        to_contour_segments = context.contour_segments
         for index, (drawer, count) in enumerate(drawers_with_points_counts):
             drawer(count)
             can_touch_next_geometry = (
@@ -221,8 +222,7 @@ def mixes(x_coordinates: Strategy[Scalar],
                          is not draw_points)
                     and
                     not has_vertical_leftmost_segment(
-                            polygon_to_edges(polygons_sequence[-1],
-                                             segment_cls)))
+                            to_contour_segments(polygons_sequence[-1].border)))
             xs = xs[count - can_touch_next_geometry:]
         return mix_cls(unpack_points(points_sequence),
                        unpack_segments(segments_sequence),
@@ -270,7 +270,7 @@ def mixes(x_coordinates: Strategy[Scalar],
                                 segments_endpoints_counts),
                             zip(repeat(draw_polygon),
                                 polygons_vertices_counts)))))
-        segment_cls = context.segment_cls
+        to_contour_segments = context.contour_segments
         for index, (drawer, count) in enumerate(drawers_with_points_counts):
             drawer(count)
             can_touch_next_geometry = (
@@ -285,8 +285,7 @@ def mixes(x_coordinates: Strategy[Scalar],
                          is not draw_points)
                     and
                     not has_horizontal_lowermost_segment(
-                            polygon_to_edges(polygons_sequence[-1],
-                                             segment_cls)))
+                            to_contour_segments(polygons_sequence[-1].border)))
             ys = ys[count - can_touch_next_geometry:]
         return mix_cls(unpack_points(points_sequence),
                        unpack_segments(segments_sequence),
@@ -378,7 +377,7 @@ def multicontours(x_coordinates: Strategy[Scalar],
                   max_size: Optional[int],
                   min_contour_size: int,
                   max_contour_size: Optional[int],
-                  context: Context) -> Strategy[Multicontour]:
+                  context: Context) -> Strategy[Multicontour[Scalar]]:
     def to_multicontours(vertices: List[Point]) -> Strategy[Multicontour]:
         return strategies.builds(partial(to_multicontour,
                                          context=context),
@@ -426,7 +425,7 @@ def multipoints(x_coordinates: Strategy[Scalar],
                 *,
                 min_size: int,
                 max_size: Optional[int],
-                context: Context) -> Strategy[Multipoint]:
+                context: Context) -> Strategy[Multipoint[Scalar]]:
     return (unique_points_sequences(x_coordinates, y_coordinates,
                                     min_size=min_size,
                                     max_size=max_size,
@@ -459,7 +458,7 @@ def multipolygons(x_coordinates: Strategy[Scalar],
                                         if max_size is None
                                         else min(max_size, size_upper_bound)))
         xs = sorted(xs)
-        segment_cls = context.segment_cls
+        to_contour_segments = context.contour_segments
         result = []
         start, coordinates_count = 0, len(xs)
         for index in range(size - 1):
@@ -478,7 +477,7 @@ def multipolygons(x_coordinates: Strategy[Scalar],
                                     context=context))
             result.append(polygon)
             can_touch_next_polygon = not has_vertical_leftmost_segment(
-                    polygon_to_edges(polygon, segment_cls))
+                    to_contour_segments(polygon.border))
             start += polygon_points_count - can_touch_next_polygon
         result.append(draw(polygons(strategies.sampled_from(xs[start:]),
                                     y_coordinates,
@@ -493,14 +492,14 @@ def multipolygons(x_coordinates: Strategy[Scalar],
 
     @strategies.composite
     def ys_to_polygons_sequence(draw: Callable[[Strategy[Domain]], Domain],
-                                ys: List[Scalar]) -> Sequence[Polygon]:
+                                ys: List[Scalar]) -> Sequence[Polygon[Scalar]]:
         size_scale = len(ys) // min_polygon_points_count
         size = draw(strategies.integers(min_size,
                                         size_scale
                                         if max_size is None
                                         else min(max_size, size_scale)))
         ys = sorted(ys)
-        segment_cls = context.segment_cls
+        to_contour_segments = context.contour_segments
         result = []
         start, coordinates_count = 0, len(ys)
         for index in range(size - 1):
@@ -519,7 +518,7 @@ def multipolygons(x_coordinates: Strategy[Scalar],
                                     context=context))
             result.append(polygon)
             can_touch_next_polygon = not has_horizontal_lowermost_segment(
-                    polygon_to_edges(polygon, segment_cls))
+                    to_contour_segments(polygon.border))
             start += polygon_points_count - can_touch_next_polygon
         result.append(draw(polygons(x_coordinates,
                                     strategies.sampled_from(ys[start:]),
@@ -551,10 +550,11 @@ def multipolygons(x_coordinates: Strategy[Scalar],
                                               unique=True)
                              .flatmap(ys_to_polygons_sequence)))
     if not min_holes_size:
-        def multicontour_to_polygons_sequence(multicontour: Multicontour,
+        def multicontour_to_polygons_sequence(multicontour
+                                              : Multicontour[Scalar],
                                               polygon_cls: Type[Polygon]
                                               = context.polygon_cls
-                                              ) -> Multipolygon:
+                                              ) -> Sequence[Polygon[Scalar]]:
             return [polygon_cls(contour, []) for contour in multicontour]
 
         polygons_sequences = ((multicontours(x_coordinates, y_coordinates,
@@ -573,7 +573,7 @@ def multisegments(x_coordinates: Strategy[Scalar],
                   *,
                   min_size: int,
                   max_size: Optional[int],
-                  context: Context) -> Strategy[Multisegment]:
+                  context: Context) -> Strategy[Multisegment[Scalar]]:
     return (non_crossing_non_overlapping_segments_sequences(
             x_coordinates,
             y_coordinates,
@@ -589,7 +589,7 @@ def non_crossing_non_overlapping_segments_sequences(
         *,
         min_size: int,
         max_size: Optional[int],
-        context: Context) -> Strategy[Sequence[Segment]]:
+        context: Context) -> Strategy[Sequence[Segment[Scalar]]]:
     if y_coordinates is None:
         y_coordinates = x_coordinates
     if max_size is not None and max_size < 2:
@@ -632,7 +632,7 @@ def non_crossing_non_overlapping_segments_sequences(
                                                 else max(max_size,
                                                          MIN_CONTOUR_SIZE)),
                                       context=context)
-                   .map(partial(contour_to_edges,
+                   .map(partial(contour_vertices_to_edges,
                                 segment_cls=context.segment_cls))
                    .flatmap(partial(sub_lists,
                                     min_size=min_size)))
@@ -641,13 +641,14 @@ def non_crossing_non_overlapping_segments_sequences(
                                          context=context),
                                 min_size=min_size,
                                 max_size=max_size)
-               .filter(are_segments_non_crossing_non_overlapping)))
+               .filter(partial(are_segments_non_crossing_non_overlapping,
+                               context=context))))
 
 
 def points(x_coordinates: Strategy[Scalar],
            y_coordinates: Optional[Strategy[Scalar]],
            *,
-           context: Context) -> Strategy[Point]:
+           context: Context) -> Strategy[Point[Scalar]]:
     return strategies.builds(context.point_cls,
                              x_coordinates,
                              x_coordinates
@@ -664,8 +665,9 @@ def polygons(x_coordinates: Strategy[Scalar],
              max_holes_size: Optional[int],
              min_hole_size: int,
              max_hole_size: Optional[int],
-             context: Context) -> Strategy[Polygon]:
-    def to_polygons(points_sequence: Sequence[Point]) -> Strategy[Polygon]:
+             context: Context) -> Strategy[Polygon[Scalar]]:
+    def to_polygons(points_sequence: Sequence[Point[Scalar]]
+                    ) -> Strategy[Polygon[Scalar]]:
         max_border_points_count = len(points_sequence) - min_inner_points_count
         min_border_size = max(min_size,
                               len(context.points_convex_hull(points_sequence)))
@@ -758,7 +760,7 @@ def rectangular_vertices_sequences(x_coordinates: Strategy[Scalar],
                                    y_coordinates: Strategy[Scalar],
                                    *,
                                    context: Context
-                                   ) -> Strategy[Sequence[Point]]:
+                                   ) -> Strategy[Sequence[Point[Scalar]]]:
     def to_vertices(box: Box,
                     point_cls: Type[Point] = context.point_cls
                     ) -> Sequence[Point]:
@@ -774,7 +776,7 @@ def rectangular_vertices_sequences(x_coordinates: Strategy[Scalar],
 def segments(x_coordinates: Strategy[Scalar],
              y_coordinates: Optional[Strategy[Scalar]],
              *,
-             context: Context) -> Strategy[Segment]:
+             context: Context) -> Strategy[Segment[Scalar]]:
     def non_degenerate_endpoints(endpoints: Tuple[Point, Point]) -> bool:
         start, end = endpoints
         return start != end
@@ -791,7 +793,8 @@ def star_vertices_sequences(x_coordinates: Strategy[Scalar],
                             *,
                             min_size: int,
                             max_size: Optional[int],
-                            context: Context) -> Strategy[Sequence[Point]]:
+                            context: Context
+                            ) -> Strategy[Sequence[Point[Scalar]]]:
     return (unique_points_sequences(x_coordinates, y_coordinates,
                                     min_size=min_size,
                                     max_size=max_size,
@@ -817,7 +820,7 @@ def triangular_vertices_sequences(x_coordinates: Strategy[Scalar],
                                   y_coordinates: Optional[Strategy[Scalar]],
                                   *,
                                   context: Context
-                                  ) -> Strategy[Sequence[Point]]:
+                                  ) -> Strategy[Sequence[Point[Scalar]]]:
     def to_counterclockwise_vertices(vertices_triplet
                                      : Tuple[Point, Point, Point],
                                      orienteer: Orienteer
@@ -841,7 +844,8 @@ def unique_points_sequences(x_coordinates: Strategy[Scalar],
                             *,
                             min_size: int,
                             max_size: Optional[int],
-                            context: Context) -> Strategy[Sequence[Point]]:
+                            context: Context
+                            ) -> Strategy[Sequence[Point[Scalar]]]:
     return strategies.lists(points(x_coordinates, y_coordinates,
                                    context=context),
                             unique=True,
@@ -854,7 +858,7 @@ def vertices_sequences(x_coordinates: Strategy[Scalar],
                        *,
                        min_size: int,
                        max_size: Optional[int],
-                       context: Context) -> Strategy[Sequence[Point]]:
+                       context: Context) -> Strategy[Sequence[Point[Scalar]]]:
     return (convex_vertices_sequences(x_coordinates, y_coordinates,
                                       min_size=min_size,
                                       max_size=max_size,
@@ -870,7 +874,7 @@ def _vertices_sequences(x_coordinates: Strategy[Scalar],
                         *,
                         min_size: int,
                         max_size: Optional[int],
-                        context: Context) -> Strategy[Sequence[Point]]:
+                        context: Context) -> Strategy[Sequence[Point[Scalar]]]:
     def to_points_with_sizes(points_sequence: Sequence[Point]
                              ) -> Strategy[Tuple[Sequence[Point], int]]:
         sizes = strategies.integers(min_size,
