@@ -97,8 +97,8 @@ invalid_concave_contours_sizes_pairs = to_invalid_sizes_pairs(
 invalid_convex_contours_sizes_pairs = to_invalid_sizes_pairs(
         MinContourSize.CONVEX)
 invalid_mix_components_sizes_pairs_triplets = (
-    (strategies.permutations([to_sizes_pairs(0), to_invalid_sizes_pairs(0),
-                              to_invalid_sizes_pairs(0)])
+    (strategies.permutations([to_sizes_pairs(0), strategies.just((0, 0)),
+                              strategies.just((0, 0))])
      .flatmap(pack(strategies.tuples))))
 invalid_multicontours_sizes_pairs = to_invalid_sizes_pairs(
         MIN_MULTICONTOUR_SIZE)
