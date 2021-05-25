@@ -1672,10 +1672,10 @@ def mixes(x_coordinates: _Strategy[_Scalar],
     _validate_sizes(min_polygon_hole_size, max_polygon_hole_size,
                     _MIN_CONTOUR_SIZE, 'min_polygon_hole_size',
                     'max_polygon_hole_size')
-    if ((max_points_size is None or bool(max_points_size))
-            + (max_segments_size is None or bool(max_segments_size))
-            + (max_polygons_size is None or bool(max_polygons_size))
-            < _MIN_MIX_COMPONENTS_COUNT):
+    has_discrete = max_points_size is None or bool(max_points_size)
+    has_linear = max_segments_size is None or bool(max_segments_size)
+    has_shaped = max_polygons_size is None or bool(max_polygons_size)
+    if has_discrete + has_linear + has_shaped < _MIN_MIX_COMPONENTS_COUNT:
         raise ValueError('Mix should have at least {min_count} components.'
                          .format(min_count=_MIN_MIX_COMPONENTS_COUNT))
     min_points_size = max(min_points_size, 0)
@@ -1686,27 +1686,70 @@ def mixes(x_coordinates: _Strategy[_Scalar],
     min_polygon_hole_size = max(min_polygon_hole_size, _MIN_CONTOUR_SIZE)
     if context is None:
         context = _get_context()
-    return (_mixes(x_coordinates, y_coordinates,
-                   min_points_size=min_points_size,
-                   max_points_size=max_points_size,
-                   min_segments_size=min_segments_size,
-                   max_segments_size=max_segments_size,
-                   min_polygons_size=min_polygons_size,
-                   max_polygons_size=max_polygons_size,
-                   min_polygon_border_size=min_polygon_border_size,
-                   max_polygon_border_size=max_polygon_border_size,
-                   min_polygon_holes_size=min_polygon_holes_size,
-                   max_polygon_holes_size=max_polygon_holes_size,
-                   min_polygon_hole_size=min_polygon_hole_size,
-                   max_polygon_hole_size=max_polygon_hole_size,
-                   context=context)
-            if min_points_size and min_polygons_size and min_segments_size
-            else (_mixes(x_coordinates, y_coordinates,
+    return (((_mixes(x_coordinates, y_coordinates,
+                     min_points_size=max(min_points_size, 1),
+                     max_points_size=max_points_size,
+                     min_segments_size=max(min_segments_size, 1),
+                     max_segments_size=max_segments_size,
+                     min_polygons_size=min_polygons_size,
+                     max_polygons_size=max_polygons_size,
+                     min_polygon_border_size=min_polygon_border_size,
+                     max_polygon_border_size=max_polygon_border_size,
+                     min_polygon_holes_size=min_polygon_holes_size,
+                     max_polygon_holes_size=max_polygon_holes_size,
+                     min_polygon_hole_size=min_polygon_hole_size,
+                     max_polygon_hole_size=max_polygon_hole_size,
+                     context=context)
+              | _mixes(x_coordinates, y_coordinates,
+                       min_points_size=max(min_points_size, 1),
+                       max_points_size=max_points_size,
+                       min_segments_size=min_segments_size,
+                       max_segments_size=max_segments_size,
+                       min_polygons_size=max(min_polygons_size, 1),
+                       max_polygons_size=max_polygons_size,
+                       min_polygon_border_size=min_polygon_border_size,
+                       max_polygon_border_size=max_polygon_border_size,
+                       min_polygon_holes_size=min_polygon_holes_size,
+                       max_polygon_holes_size=max_polygon_holes_size,
+                       min_polygon_hole_size=min_polygon_hole_size,
+                       max_polygon_hole_size=max_polygon_hole_size,
+                       context=context)
+              | _mixes(x_coordinates, y_coordinates,
+                       min_points_size=min_points_size,
+                       max_points_size=max_points_size,
+                       min_segments_size=max(min_segments_size, 1),
+                       max_segments_size=max_segments_size,
+                       min_polygons_size=max(min_polygons_size, 1),
+                       max_polygons_size=max_polygons_size,
+                       min_polygon_border_size=min_polygon_border_size,
+                       max_polygon_border_size=max_polygon_border_size,
+                       min_polygon_holes_size=min_polygon_holes_size,
+                       max_polygon_holes_size=max_polygon_holes_size,
+                       min_polygon_hole_size=min_polygon_hole_size,
+                       max_polygon_hole_size=max_polygon_hole_size,
+                       context=context)
+              if has_shaped
+              else _mixes(x_coordinates, y_coordinates,
+                          min_points_size=max(min_points_size, 1),
+                          max_points_size=max_points_size,
+                          min_segments_size=max(min_segments_size, 1),
+                          max_segments_size=max_segments_size,
+                          min_polygons_size=min_polygons_size,
+                          max_polygons_size=max_polygons_size,
+                          min_polygon_border_size=min_polygon_border_size,
+                          max_polygon_border_size=max_polygon_border_size,
+                          min_polygon_holes_size=min_polygon_holes_size,
+                          max_polygon_holes_size=max_polygon_holes_size,
+                          min_polygon_hole_size=min_polygon_hole_size,
+                          max_polygon_hole_size=max_polygon_hole_size,
+                          context=context))
+             if has_linear
+             else _mixes(x_coordinates, y_coordinates,
                          min_points_size=max(min_points_size, 1),
                          max_points_size=max_points_size,
-                         min_segments_size=max(min_segments_size, 1),
+                         min_segments_size=min_segments_size,
                          max_segments_size=max_segments_size,
-                         min_polygons_size=min_polygons_size,
+                         min_polygons_size=max(min_polygons_size, 1),
                          max_polygons_size=max_polygons_size,
                          min_polygon_border_size=min_polygon_border_size,
                          max_polygon_border_size=max_polygon_border_size,
@@ -1714,35 +1757,22 @@ def mixes(x_coordinates: _Strategy[_Scalar],
                          max_polygon_holes_size=max_polygon_holes_size,
                          min_polygon_hole_size=min_polygon_hole_size,
                          max_polygon_hole_size=max_polygon_hole_size,
-                         context=context)
-                  | _mixes(x_coordinates, y_coordinates,
-                           min_points_size=max(min_points_size, 1),
-                           max_points_size=max_points_size,
-                           min_segments_size=min_segments_size,
-                           max_segments_size=max_segments_size,
-                           min_polygons_size=max(min_polygons_size, 1),
-                           max_polygons_size=max_polygons_size,
-                           min_polygon_border_size=min_polygon_border_size,
-                           max_polygon_border_size=max_polygon_border_size,
-                           min_polygon_holes_size=min_polygon_holes_size,
-                           max_polygon_holes_size=max_polygon_holes_size,
-                           min_polygon_hole_size=min_polygon_hole_size,
-                           max_polygon_hole_size=max_polygon_hole_size,
-                           context=context)
-                  | _mixes(x_coordinates, y_coordinates,
-                           min_points_size=min_points_size,
-                           max_points_size=max_points_size,
-                           min_segments_size=max(min_segments_size, 1),
-                           max_segments_size=max_segments_size,
-                           min_polygons_size=max(min_polygons_size, 1),
-                           max_polygons_size=max_polygons_size,
-                           min_polygon_border_size=min_polygon_border_size,
-                           max_polygon_border_size=max_polygon_border_size,
-                           min_polygon_holes_size=min_polygon_holes_size,
-                           max_polygon_holes_size=max_polygon_holes_size,
-                           min_polygon_hole_size=min_polygon_hole_size,
-                           max_polygon_hole_size=max_polygon_hole_size,
-                           context=context)))
+                         context=context))
+            if has_discrete
+            else _mixes(x_coordinates, y_coordinates,
+                        min_points_size=min_points_size,
+                        max_points_size=max_points_size,
+                        min_segments_size=max(min_segments_size, 1),
+                        max_segments_size=max_segments_size,
+                        min_polygons_size=max(min_polygons_size, 1),
+                        max_polygons_size=max_polygons_size,
+                        min_polygon_border_size=min_polygon_border_size,
+                        max_polygon_border_size=max_polygon_border_size,
+                        min_polygon_holes_size=min_polygon_holes_size,
+                        max_polygon_holes_size=max_polygon_holes_size,
+                        min_polygon_hole_size=min_polygon_hole_size,
+                        max_polygon_hole_size=max_polygon_hole_size,
+                        context=context))
 
 
 def _validate_sizes(min_size: int, max_size: _Optional[int],
