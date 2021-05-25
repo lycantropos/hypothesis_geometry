@@ -25,13 +25,13 @@ from tests.utils import (ScalarsLimitsType,
 @given(strategies.scalars_strategies,
        strategies.multicontours_sizes_pairs,
        strategies.convex_contours_sizes_pairs)
-def test_basic(scalars: Strategy[Scalar],
+def test_basic(coordinates: Strategy[Scalar],
                sizes_pair: SizesPair,
                contours_sizes_pair: SizesPair) -> None:
     min_size, max_size = sizes_pair
     min_contour_size, max_contour_size = contours_sizes_pair
 
-    result = multicontours(scalars,
+    result = multicontours(coordinates,
                            min_size=min_size,
                            max_size=max_size,
                            min_contour_size=min_contour_size,
@@ -96,11 +96,11 @@ def test_same_coordinates(data: DataObject,
                           coordinates_limits_type: ScalarsLimitsType,
                           sizes_pair: SizesPair,
                           contours_sizes_pair: SizesPair) -> None:
-    (scalars, (min_value, max_value)), type_ = coordinates_limits_type
+    (coordinates, (min_value, max_value)), type_ = coordinates_limits_type
     min_size, max_size = sizes_pair
     min_contour_size, max_contour_size = contours_sizes_pair
 
-    strategy = multicontours(scalars,
+    strategy = multicontours(coordinates,
                              min_size=min_size,
                              max_size=max_size,
                              min_contour_size=min_contour_size,
@@ -135,37 +135,37 @@ def test_same_coordinates(data: DataObject,
 
 @given(strategies.scalars_strategies,
        strategies.invalid_multicontours_sizes_pairs)
-def test_invalid_sizes(scalars: Strategy[Scalar],
+def test_invalid_sizes(coordinates: Strategy[Scalar],
                        invalid_sizes_pair: SizesPair) -> None:
     min_size, max_size = invalid_sizes_pair
 
     with pytest.raises(ValueError):
-        multicontours(scalars,
+        multicontours(coordinates,
                       min_size=min_size,
                       max_size=max_size)
 
 
 @given(strategies.scalars_strategies,
        strategies.invalid_convex_contours_sizes_pairs)
-def test_invalid_contours_sizes(scalars: Strategy[Scalar],
+def test_invalid_contours_sizes(coordinates: Strategy[Scalar],
                                 invalid_contours_sizes_pair: SizesPair
                                 ) -> None:
     min_contour_size, max_contour_size = invalid_contours_sizes_pair
 
     with pytest.raises(ValueError):
-        multicontours(scalars,
+        multicontours(coordinates,
                       min_contour_size=min_contour_size,
                       max_contour_size=max_contour_size)
 
 
 @given(strategies.scalars_strategies,
        strategies.non_valid_convex_contours_sizes_pairs)
-def test_non_valid_contours_sizes(scalars: Strategy[Scalar],
+def test_non_valid_contours_sizes(coordinates: Strategy[Scalar],
                                   non_valid_sizes_pair: SizesPair) -> None:
     min_size, max_size = non_valid_sizes_pair
 
     with pytest.warns(HypothesisWarning) as warnings:
-        multicontours(scalars,
+        multicontours(coordinates,
                       min_contour_size=min_size,
                       max_contour_size=max_size)
 

@@ -19,8 +19,8 @@ from tests.utils import (ScalarsLimitsType,
 
 
 @given(strategies.scalars_strategies)
-def test_basic(scalars: Strategy[Scalar]) -> None:
-    result = triangular_contours(scalars)
+def test_basic(coordinates: Strategy[Scalar]) -> None:
+    result = triangular_contours(coordinates)
 
     assert isinstance(result, Strategy)
 
@@ -65,9 +65,9 @@ def test_properties(data: DataObject,
 def test_same_coordinates(data: DataObject,
                           coordinates_limits_type: ScalarsLimitsType
                           ) -> None:
-    (scalars, (min_value, max_value)), type_ = coordinates_limits_type
+    (coordinates, (min_value, max_value)), type_ = coordinates_limits_type
 
-    strategy = triangular_contours(scalars)
+    strategy = triangular_contours(coordinates)
 
     result = data.draw(strategy)
 

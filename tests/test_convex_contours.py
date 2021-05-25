@@ -23,11 +23,11 @@ from tests.utils import (ScalarsLimitsType,
 
 @given(strategies.scalars_strategies,
        strategies.convex_contours_sizes_pairs)
-def test_basic(scalars: Strategy[Scalar],
+def test_basic(coordinates: Strategy[Scalar],
                sizes_pair: SizesPair) -> None:
     min_size, max_size = sizes_pair
 
-    result = convex_contours(scalars,
+    result = convex_contours(coordinates,
                              min_size=min_size,
                              max_size=max_size)
 
@@ -79,10 +79,10 @@ def test_properties(data: DataObject,
 def test_same_coordinates(data: DataObject,
                           coordinates_limits_type: ScalarsLimitsType,
                           sizes_pair: SizesPair) -> None:
-    (scalars, (min_value, max_value)), type_ = coordinates_limits_type
+    (coordinates, (min_value, max_value)), type_ = coordinates_limits_type
     min_size, max_size = sizes_pair
 
-    strategy = convex_contours(scalars,
+    strategy = convex_contours(coordinates,
                                min_size=min_size,
                                max_size=max_size)
 
@@ -108,24 +108,24 @@ def test_same_coordinates(data: DataObject,
 
 @given(strategies.scalars_strategies,
        strategies.invalid_convex_contours_sizes_pairs)
-def test_invalid_sizes(scalars: Strategy[Scalar],
+def test_invalid_sizes(coordinates: Strategy[Scalar],
                        invalid_sizes_pair: SizesPair) -> None:
     min_size, max_size = invalid_sizes_pair
 
     with pytest.raises(ValueError):
-        convex_contours(scalars,
+        convex_contours(coordinates,
                         min_size=min_size,
                         max_size=max_size)
 
 
 @given(strategies.scalars_strategies,
        strategies.non_valid_convex_contours_sizes_pairs)
-def test_non_valid_sizes(scalars: Strategy[Scalar],
+def test_non_valid_sizes(coordinates: Strategy[Scalar],
                          non_valid_sizes_pair: SizesPair) -> None:
     min_size, max_size = non_valid_sizes_pair
 
     with pytest.warns(HypothesisWarning) as warnings:
-        convex_contours(scalars,
+        convex_contours(coordinates,
                         min_size=min_size,
                         max_size=max_size)
 

@@ -125,11 +125,11 @@ def to_coordinates_strategies_with_limits_and_types(
                                  max_value=max_value),
                 limits)
 
-    def to_limits(scalars: Strategy[Scalar]) -> Strategy[Limits]:
-        result = (strategies.tuples(scalars, scalars)
+    def to_limits(coordinates: Strategy[Scalar]) -> Strategy[Limits]:
+        result = (strategies.tuples(coordinates, coordinates)
                   .filter(are_pair_coordinates_sparse)
                   .map(sort_pair))
-        return (strategies.tuples(scalars, strategies.none()) | result
+        return (strategies.tuples(coordinates, strategies.none()) | result
                 if type_ is not float
                 else result)
 

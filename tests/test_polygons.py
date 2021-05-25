@@ -25,7 +25,7 @@ from tests.utils import (ScalarsLimitsType,
        strategies.concave_contours_sizes_pairs,
        strategies.polygon_holes_sizes_pairs,
        strategies.convex_contours_sizes_pairs)
-def test_basic(scalars: Strategy[Scalar],
+def test_basic(coordinates: Strategy[Scalar],
                sizes_pair: SizesPair,
                holes_sizes_pair: SizesPair,
                hole_sizes_pair: SizesPair) -> None:
@@ -33,7 +33,7 @@ def test_basic(scalars: Strategy[Scalar],
     min_holes_size, max_holes_size = holes_sizes_pair
     min_hole_size, max_hole_size = hole_sizes_pair
 
-    result = polygons(scalars,
+    result = polygons(coordinates,
                       min_size=min_size,
                       max_size=max_size,
                       min_holes_size=min_holes_size,
@@ -109,12 +109,12 @@ def test_same_coordinates(data: DataObject,
                           sizes_pair: SizesPair,
                           holes_sizes_pair: SizesPair,
                           hole_sizes_pair: SizesPair) -> None:
-    (scalars, (min_value, max_value)), type_ = coordinates_limits_type
+    (coordinates, (min_value, max_value)), type_ = coordinates_limits_type
     min_size, max_size = sizes_pair
     min_holes_size, max_holes_size = holes_sizes_pair
     min_hole_size, max_hole_size = hole_sizes_pair
 
-    strategy = polygons(scalars,
+    strategy = polygons(coordinates,
                         min_size=min_size,
                         max_size=max_size,
                         min_holes_size=min_holes_size,
@@ -151,50 +151,50 @@ def test_same_coordinates(data: DataObject,
 
 @given(strategies.scalars_strategies,
        strategies.invalid_convex_contours_sizes_pairs)
-def test_invalid_border_sizes(scalars: Strategy[Scalar],
+def test_invalid_border_sizes(coordinates: Strategy[Scalar],
                               invalid_sizes_pair: SizesPair) -> None:
     min_size, max_size = invalid_sizes_pair
 
     with pytest.raises(ValueError):
-        polygons(scalars,
+        polygons(coordinates,
                  min_size=min_size,
                  max_size=max_size)
 
 
 @given(strategies.scalars_strategies,
        strategies.invalid_polygon_holes_sizes_pairs)
-def test_invalid_holes_list_sizes(scalars: Strategy[Scalar],
+def test_invalid_holes_list_sizes(coordinates: Strategy[Scalar],
                                   invalid_sizes_pair: SizesPair
                                   ) -> None:
     min_holes_size, max_holes_size = invalid_sizes_pair
 
     with pytest.raises(ValueError):
-        polygons(scalars,
+        polygons(coordinates,
                  min_holes_size=min_holes_size,
                  max_holes_size=max_holes_size)
 
 
 @given(strategies.scalars_strategies,
        strategies.invalid_convex_contours_sizes_pairs)
-def test_invalid_holes_sizes(scalars: Strategy[Scalar],
+def test_invalid_holes_sizes(coordinates: Strategy[Scalar],
                              invalid_sizes_pair: SizesPair
                              ) -> None:
     min_hole_size, max_hole_size = invalid_sizes_pair
 
     with pytest.raises(ValueError):
-        polygons(scalars,
+        polygons(coordinates,
                  min_hole_size=min_hole_size,
                  max_hole_size=max_hole_size)
 
 
 @given(strategies.scalars_strategies,
        strategies.non_valid_convex_contours_sizes_pairs)
-def test_non_valid_border_sizes(scalars: Strategy[Scalar],
+def test_non_valid_border_sizes(coordinates: Strategy[Scalar],
                                 non_valid_sizes_pair: SizesPair) -> None:
     min_size, max_size = non_valid_sizes_pair
 
     with pytest.warns(HypothesisWarning) as warnings:
-        polygons(scalars,
+        polygons(coordinates,
                  min_size=min_size,
                  max_size=max_size)
 
@@ -203,12 +203,12 @@ def test_non_valid_border_sizes(scalars: Strategy[Scalar],
 
 @given(strategies.scalars_strategies,
        strategies.non_valid_convex_contours_sizes_pairs)
-def test_non_valid_holes_sizes(scalars: Strategy[Scalar],
+def test_non_valid_holes_sizes(coordinates: Strategy[Scalar],
                                non_valid_sizes_pair: SizesPair) -> None:
     min_size, max_size = non_valid_sizes_pair
 
     with pytest.warns(HypothesisWarning) as warnings:
-        polygons(scalars,
+        polygons(coordinates,
                  min_hole_size=min_size,
                  max_hole_size=max_size)
 
