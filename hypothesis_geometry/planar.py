@@ -1780,7 +1780,8 @@ def mixes(x_coordinates: _Strategy[_Scalar],
                         context=context))
 
 
-def _validate_sizes(min_size: int, max_size: _Optional[int],
+def _validate_sizes(min_size: int,
+                    max_size: _Optional[int],
                     min_expected_size: int,
                     min_size_name: str = 'min_size',
                     max_size_name: str = 'max_size') -> None:
