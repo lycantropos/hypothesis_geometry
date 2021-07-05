@@ -10,9 +10,9 @@ from typing import (Callable,
 
 from decision.partition import coin_change
 from ground.base import (Context,
+                         Location,
                          Orientation)
-from ground.hints import (Point,
-                          Scalar)
+from ground.hints import Point
 from reprit.base import generate_repr
 
 from .subdivisional import QuadEdge
@@ -64,8 +64,9 @@ class Triangulation:
         edge.delete()
 
     @property
-    def _incircle_test(self) -> Callable[[Point, Point, Point, Point], Scalar]:
-        return self.context.point_point_point_incircle_test
+    def _locate_point_in_circle(self) -> Callable[[Point, Point, Point, Point],
+                                                  Location]:
+        return self.context.locate_point_in_point_point_point_circle
 
     def _connect(self, base_edge: QuadEdge) -> None:
         while True:
@@ -78,10 +79,11 @@ class Triangulation:
                 right_candidate.connect(base_edge.opposite)
                 if (left_candidate is None
                     or right_candidate is not None
-                    and self._incircle_test(left_candidate.end,
-                                            base_edge.end,
-                                            base_edge.start,
-                                            right_candidate.end) > 0)
+                    and (self._locate_point_in_circle(left_candidate.end,
+                                                      base_edge.end,
+                                                      base_edge.start,
+                                                      right_candidate.end)
+                         is Location.INTERIOR))
                 else base_edge.opposite.connect(left_candidate.opposite))
 
     @classmethod
@@ -96,8 +98,10 @@ class Triangulation:
         if (base_edge.orientation_of(result.end)
                 is not Orientation.CLOCKWISE):
             return None
-        while (self._incircle_test(base_edge.end, base_edge.start, result.end,
-                                   result.left_from_start.end) > 0
+        while (self._locate_point_in_circle(base_edge.end, base_edge.start,
+                                            result.end,
+                                            result.left_from_start.end)
+               is Location.INTERIOR
                and (base_edge.orientation_of(result.left_from_start.end)
                     is Orientation.CLOCKWISE)):
             next_candidate = result.left_from_start
@@ -110,9 +114,10 @@ class Triangulation:
         if (base_edge.orientation_of(result.end)
                 is not Orientation.CLOCKWISE):
             return None
-        while (self._incircle_test(base_edge.end, base_edge.start,
-                                   result.end,
-                                   result.right_from_start.end) > 0
+        while (self._locate_point_in_circle(base_edge.end, base_edge.start,
+                                            result.end,
+                                            result.right_from_start.end)
+               is Location.INTERIOR
                and (base_edge.orientation_of(result.right_from_start.end)
                     is Orientation.CLOCKWISE)):
             next_candidate = result.right_from_start
