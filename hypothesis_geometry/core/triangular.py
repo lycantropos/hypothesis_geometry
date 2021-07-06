@@ -79,10 +79,10 @@ class Triangulation:
                 right_candidate.connect(base_edge.opposite)
                 if (left_candidate is None
                     or right_candidate is not None
-                    and (self._locate_point_in_circle(left_candidate.end,
+                    and (self._locate_point_in_circle(right_candidate.end,
+                                                      left_candidate.end,
                                                       base_edge.end,
-                                                      base_edge.start,
-                                                      right_candidate.end)
+                                                      base_edge.start)
                          is Location.INTERIOR))
                 else base_edge.opposite.connect(left_candidate.opposite))
 
@@ -98,9 +98,9 @@ class Triangulation:
         if (base_edge.orientation_of(result.end)
                 is not Orientation.CLOCKWISE):
             return None
-        while (self._locate_point_in_circle(base_edge.end, base_edge.start,
-                                            result.end,
-                                            result.left_from_start.end)
+        while (self._locate_point_in_circle(result.left_from_start.end,
+                                            base_edge.end, base_edge.start,
+                                            result.end)
                is Location.INTERIOR
                and (base_edge.orientation_of(result.left_from_start.end)
                     is Orientation.CLOCKWISE)):
@@ -114,9 +114,9 @@ class Triangulation:
         if (base_edge.orientation_of(result.end)
                 is not Orientation.CLOCKWISE):
             return None
-        while (self._locate_point_in_circle(base_edge.end, base_edge.start,
-                                            result.end,
-                                            result.right_from_start.end)
+        while (self._locate_point_in_circle(result.right_from_start.end,
+                                            base_edge.end, base_edge.start,
+                                            result.end)
                is Location.INTERIOR
                and (base_edge.orientation_of(result.right_from_start.end)
                     is Orientation.CLOCKWISE)):
