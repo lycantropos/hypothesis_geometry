@@ -1,3 +1,4 @@
+import numbers
 from fractions import Fraction
 from functools import partial
 from itertools import repeat
@@ -25,6 +26,7 @@ from tests.utils import (Limits,
 
 data = strategies.data()
 
+MAX_SIZE = 10
 MAX_VALUE = 10 ** 15
 MIN_VALUE = -MAX_VALUE
 scalars_strategies_factories = {float: partial(strategies.floats,
@@ -37,11 +39,13 @@ scalars_strategies_factories = {float: partial(strategies.floats,
 scalars_types = strategies.sampled_from(list(scalars_strategies_factories
                                              .keys()))
 scalars_strategies = strategies.sampled_from(
-        [factory() for factory in scalars_strategies_factories.values()])
+        [factory() for factory in scalars_strategies_factories.values()]
+)
 
 
-def to_sizes_pairs(min_size: int, max_size: int = 10
+def to_sizes_pairs(min_size: int, max_size: int = MAX_SIZE
                    ) -> Strategy[Tuple[int, Optional[int]]]:
+    assert max_size <= MAX_SIZE
     sizes = strategies.integers(min_size, max_size)
     return (strategies.tuples(sizes, strategies.none())
             | strategies.tuples(sizes, sizes).map(sort_pair))
@@ -82,40 +86,49 @@ def is_valid_mix_components_sizes_pairs_triplet(
 
 mix_components_sizes_pairs_triplets = (
     (strategies.tuples(*repeat(to_sizes_pairs(0), 3))
-     .filter(is_valid_mix_components_sizes_pairs_triplet)))
+     .filter(is_valid_mix_components_sizes_pairs_triplet))
+)
 multicontours_sizes_pairs = to_sizes_pairs(MIN_MULTICONTOUR_SIZE, 5)
 multipoints_sizes_pairs = to_sizes_pairs(MIN_MULTIPOINT_SIZE)
 multipolygons_sizes_pairs = to_sizes_pairs(MIN_MULTIPOLYGON_SIZE, 5)
 multisegments_sizes_pairs = to_sizes_pairs(MIN_MULTISEGMENT_SIZE)
 polygon_holes_sizes_pairs = to_sizes_pairs(0, 5)
 non_valid_concave_contours_sizes_pairs = to_non_valid_sizes_pairs(
-        MinContourSize.CONCAVE)
+        MinContourSize.CONCAVE
+)
 non_valid_convex_contours_sizes_pairs = to_non_valid_sizes_pairs(
-        MinContourSize.CONVEX)
+        MinContourSize.CONVEX
+)
 invalid_concave_contours_sizes_pairs = to_invalid_sizes_pairs(
-        MinContourSize.CONCAVE)
+        MinContourSize.CONCAVE
+)
 invalid_convex_contours_sizes_pairs = to_invalid_sizes_pairs(
-        MinContourSize.CONVEX)
+        MinContourSize.CONVEX
+)
 invalid_mix_components_sizes_pairs_triplets = (
     (strategies.permutations([to_sizes_pairs(0), strategies.just((0, 0)),
                               strategies.just((0, 0))])
-     .flatmap(pack(strategies.tuples))))
+     .flatmap(pack(strategies.tuples)))
+)
 invalid_multicontours_sizes_pairs = to_invalid_sizes_pairs(
-        MIN_MULTICONTOUR_SIZE)
+        MIN_MULTICONTOUR_SIZE
+)
 invalid_polygon_holes_sizes_pairs = to_invalid_sizes_pairs(0)
 invalid_multipoints_sizes_pairs = to_invalid_sizes_pairs(MIN_MULTIPOINT_SIZE)
 invalid_multipolygons_sizes_pairs = to_invalid_sizes_pairs(
-        MIN_MULTIPOLYGON_SIZE)
+        MIN_MULTIPOLYGON_SIZE
+)
 invalid_mix_points_sizes_pairs = to_invalid_sizes_pairs(0)
 invalid_mix_polygons_sizes_pairs = to_invalid_sizes_pairs(0)
 invalid_mix_segments_sizes_pairs = to_invalid_sizes_pairs(0)
 invalid_multisegments_sizes_pairs = to_invalid_sizes_pairs(
-        MIN_MULTISEGMENT_SIZE)
+        MIN_MULTISEGMENT_SIZE
+)
 
 
 def to_coordinates_strategies_with_limits_and_types(
-        type_: Type[Scalar]) -> Strategy[Tuple[Tuple[Strategy[Scalar], Limits],
-                                               Type[Scalar]]]:
+        type_: Type[Scalar]
+) -> Strategy[Tuple[Tuple[Strategy[Scalar], Limits], Type[Scalar]]]:
     strategy_factory = scalars_strategies_factories[type_]
 
     def to_strategy_with_limits(limits: Limits
@@ -126,9 +139,11 @@ def to_coordinates_strategies_with_limits_and_types(
                 limits)
 
     def to_limits(coordinates: Strategy[Scalar]) -> Strategy[Limits]:
-        result = (strategies.tuples(coordinates, coordinates)
-                  .filter(are_pair_coordinates_sparse)
-                  .map(sort_pair))
+        result = strategies.tuples(coordinates, coordinates)
+        result = result.filter(are_pair_coordinates_sparse
+                               if issubclass(type_, numbers.Integral)
+                               else pack(ne))
+        result = result.map(sort_pair)
         return (strategies.tuples(coordinates, strategies.none()) | result
                 if type_ is not float
                 else result)
@@ -140,12 +155,15 @@ def to_coordinates_strategies_with_limits_and_types(
 
 def are_pair_coordinates_sparse(pair: Tuple[Scalar, Scalar]) -> bool:
     first, second = pair
-    return abs(first - second) >= 10
+    return abs(first - second) >= 300
 
 
 scalars_strategies_with_limits_and_types_strategies = (
-    scalars_types.map(to_coordinates_strategies_with_limits_and_types))
+    scalars_types.map(to_coordinates_strategies_with_limits_and_types)
+)
 scalars_strategies_with_limits_and_types = (
-    scalars_strategies_with_limits_and_types_strategies.flatmap(identity))
+    scalars_strategies_with_limits_and_types_strategies.flatmap(identity)
+)
 scalars_strategy_with_limit_and_type_pairs = (
-    scalars_strategies_with_limits_and_types_strategies.flatmap(to_pairs))
+    scalars_strategies_with_limits_and_types_strategies.flatmap(to_pairs)
+)

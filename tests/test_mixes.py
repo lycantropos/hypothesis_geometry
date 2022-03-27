@@ -12,6 +12,7 @@ from tests import strategies
 from tests.utils import (ScalarsLimitsType,
                          SizesPair,
                          is_mix,
+                         mix_discrete_component_is_disjoint_with_others,
                          mix_has_coordinates_in_range,
                          mix_has_coordinates_types,
                          mix_has_valid_sizes,
@@ -125,6 +126,7 @@ def test_properties(data: DataObject,
                                         max_x_value=max_x_value,
                                         min_y_value=min_y_value,
                                         max_y_value=max_y_value)
+    assert mix_discrete_component_is_disjoint_with_others(result)
     assert mix_segments_do_not_cross_or_overlap(result)
 
 
@@ -141,10 +143,10 @@ def test_same_coordinates(data: DataObject,
                           polygons_border_sizes_pair: SizesPair,
                           polygon_holes_sizes_pair: SizesPair,
                           polygon_hole_sizes_pair: SizesPair) -> None:
-    ((coordinates, (min_mix_polygon_value, max_mix_polygon_value)),
-     type_) = coordinates_limits_type
+    (coordinates, (min_value, max_value)), type_ = coordinates_limits_type
     points_sizes_pair, segments_sizes_pair, polygons_sizes_pair = (
-        components_sizes_pair)
+        components_sizes_pair
+    )
     min_points_size, max_points_size = points_sizes_pair
     min_segments_size, max_segments_size = segments_sizes_pair
     min_polygons_size, max_polygons_size = polygons_sizes_pair
@@ -183,15 +185,17 @@ def test_same_coordinates(data: DataObject,
             min_polygon_holes_size=min_polygon_holes_size,
             max_polygon_holes_size=max_polygon_holes_size,
             min_polygon_hole_size=min_polygon_hole_size,
-            max_polygon_hole_size=max_polygon_hole_size)
+            max_polygon_hole_size=max_polygon_hole_size
+    )
     assert mix_has_coordinates_types(result,
                                      x_type=type_,
                                      y_type=type_)
     assert mix_has_coordinates_in_range(result,
-                                        min_x_value=min_mix_polygon_value,
-                                        max_x_value=max_mix_polygon_value,
-                                        min_y_value=min_mix_polygon_value,
-                                        max_y_value=max_mix_polygon_value)
+                                        min_x_value=min_value,
+                                        max_x_value=max_value,
+                                        min_y_value=min_value,
+                                        max_y_value=max_value)
+    assert mix_discrete_component_is_disjoint_with_others(result)
     assert mix_segments_do_not_cross_or_overlap(result)
 
 
