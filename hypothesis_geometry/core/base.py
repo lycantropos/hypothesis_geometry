@@ -168,17 +168,22 @@ def mixes(x_coordinates: Strategy[Scalar],
     @strategies.composite
     def xs_to_mix(draw: Callable[[Strategy[Domain]], Domain],
                   xs: List[Scalar]) -> Mix:
-        (points_counts, segments_endpoints_counts,
-         polygons_vertices_counts) = to_points_counts(draw, len(xs))
+        (
+            points_counts, segments_endpoints_counts, polygons_vertices_counts
+        ) = to_points_counts(draw, len(xs))
         xs = sorted(xs)
         points_sequence, segments_sequence, polygons_sequence = [], [], []
 
         def draw_points(points_count: int) -> None:
-            points_sequence.extend(draw(unique_points_sequences(
-                    strategies.sampled_from(xs[:points_count]), y_coordinates,
-                    min_size=points_count,
-                    max_size=points_count,
-                    context=context)))
+            points_sequence.extend(draw(
+                    unique_points_sequences(
+                            strategies.sampled_from(xs[:points_count]),
+                            y_coordinates,
+                            min_size=points_count,
+                            max_size=points_count,
+                            context=context
+                    )
+            ))
 
         def draw_segments(points_count: int) -> None:
             size = points_count // 2
@@ -188,41 +193,54 @@ def mixes(x_coordinates: Strategy[Scalar],
                             y_coordinates,
                             min_size=size,
                             max_size=size,
-                            context=context)))
+                            context=context
+                    )
+            ))
 
         def draw_polygon(points_count: int) -> None:
-            polygons_sequence.append(draw(polygons(
-                    strategies.sampled_from(xs[:points_count]), y_coordinates,
-                    min_size=min_polygon_border_size,
-                    max_size=max_polygon_border_size,
-                    min_holes_size=min_polygon_holes_size,
-                    max_holes_size=max_polygon_holes_size,
-                    min_hole_size=min_polygon_hole_size,
-                    max_hole_size=max_polygon_hole_size,
-                    context=context)))
+            polygons_sequence.append(draw(
+                    polygons(strategies.sampled_from(xs[:points_count]),
+                             y_coordinates,
+                             min_size=min_polygon_border_size,
+                             max_size=max_polygon_border_size,
+                             min_holes_size=min_polygon_holes_size,
+                             max_holes_size=max_polygon_holes_size,
+                             min_hole_size=min_polygon_hole_size,
+                             max_hole_size=max_polygon_hole_size,
+                             context=context)
+            ))
 
         drawers_with_points_counts = draw(strategies.permutations(
                 tuple(chain(zip(repeat(draw_points), points_counts),
                             zip(repeat(draw_segments),
                                 segments_endpoints_counts),
                             zip(repeat(draw_polygon),
-                                polygons_vertices_counts)))))
+                                polygons_vertices_counts)))
+        ))
         to_contour_segments = context.contour_segments
         for index, (drawer, count) in enumerate(drawers_with_points_counts):
             drawer(count)
             can_touch_next_geometry = (
-                    drawer is draw_segments
-                    and index < len(drawers_with_points_counts) - 1
-                    and (drawers_with_points_counts[index + 1]
-                         is not draw_points)
-                    and not has_vertical_leftmost_segment(segments_sequence)
-                    or drawer is draw_polygon
-                    and index < len(drawers_with_points_counts) - 1
-                    and (drawers_with_points_counts[index + 1]
-                         is not draw_points)
-                    and
-                    not has_vertical_leftmost_segment(
-                            to_contour_segments(polygons_sequence[-1].border)))
+                    (index < len(drawers_with_points_counts) - 1
+                     and (drawers_with_points_counts[index + 1][0]
+                          is not draw_points))
+                    and (drawer is draw_segments
+                         and index < len(drawers_with_points_counts) - 1
+                         and (drawers_with_points_counts[index + 1]
+                              is not draw_points)
+                         and
+                         not has_vertical_leftmost_segment(segments_sequence)
+                         or drawer is draw_polygon
+                         and index < len(drawers_with_points_counts) - 1
+                         and (drawers_with_points_counts[index + 1]
+                              is not draw_points)
+                         and
+                         not has_vertical_leftmost_segment(
+                                 to_contour_segments(
+                                         polygons_sequence[-1].border
+                                 )
+                         ))
+            )
             xs = xs[count - can_touch_next_geometry:]
         return mix_cls(unpack_points(points_sequence),
                        unpack_segments(segments_sequence),
@@ -231,17 +249,22 @@ def mixes(x_coordinates: Strategy[Scalar],
     @strategies.composite
     def ys_to_mix(draw: Callable[[Strategy[Domain]], Domain],
                   ys: List[Scalar]) -> Mix:
-        (points_counts, segments_endpoints_counts,
-         polygons_vertices_counts) = to_points_counts(draw, len(ys))
+        (
+            points_counts, segments_endpoints_counts, polygons_vertices_counts
+        ) = to_points_counts(draw, len(ys))
         ys = sorted(ys)
         points_sequence, segments_sequence, polygons_sequence = [], [], []
 
         def draw_points(points_count: int) -> None:
-            points_sequence.extend(draw(unique_points_sequences(
-                    x_coordinates, strategies.sampled_from(ys[:points_count]),
-                    min_size=points_count,
-                    max_size=points_count,
-                    context=context)))
+            points_sequence.extend(draw(
+                    unique_points_sequences(
+                            x_coordinates,
+                            strategies.sampled_from(ys[:points_count]),
+                            min_size=points_count,
+                            max_size=points_count,
+                            context=context
+                    )
+            ))
 
         def draw_segments(points_count: int) -> None:
             size = points_count // 2
@@ -251,41 +274,58 @@ def mixes(x_coordinates: Strategy[Scalar],
                             strategies.sampled_from(ys[:points_count]),
                             min_size=size,
                             max_size=size,
-                            context=context)))
+                            context=context
+                    )
+            ))
 
         def draw_polygon(points_count: int) -> None:
-            polygons_sequence.append(draw(polygons(
-                    x_coordinates, strategies.sampled_from(ys[:points_count]),
-                    min_size=min_polygon_border_size,
-                    max_size=max_polygon_border_size,
-                    min_holes_size=min_polygon_holes_size,
-                    max_holes_size=max_polygon_holes_size,
-                    min_hole_size=min_polygon_hole_size,
-                    max_hole_size=max_polygon_hole_size,
-                    context=context)))
+            polygons_sequence.append(draw(
+                    polygons(x_coordinates,
+                             strategies.sampled_from(ys[:points_count]),
+                             min_size=min_polygon_border_size,
+                             max_size=max_polygon_border_size,
+                             min_holes_size=min_polygon_holes_size,
+                             max_holes_size=max_polygon_holes_size,
+                             min_hole_size=min_polygon_hole_size,
+                             max_hole_size=max_polygon_hole_size,
+                             context=context)
+            ))
 
-        drawers_with_points_counts = draw(strategies.permutations(
-                tuple(chain(zip(repeat(draw_points), points_counts),
-                            zip(repeat(draw_segments),
-                                segments_endpoints_counts),
-                            zip(repeat(draw_polygon),
-                                polygons_vertices_counts)))))
+        drawers_with_points_counts = draw(
+                strategies.permutations(
+                        tuple(chain(zip(repeat(draw_points), points_counts),
+                                    zip(repeat(draw_segments),
+                                        segments_endpoints_counts),
+                                    zip(repeat(draw_polygon),
+                                        polygons_vertices_counts)))
+                )
+        )
         to_contour_segments = context.contour_segments
         for index, (drawer, count) in enumerate(drawers_with_points_counts):
             drawer(count)
             can_touch_next_geometry = (
-                    drawer is draw_segments
-                    and index < len(drawers_with_points_counts) - 1
-                    and (drawers_with_points_counts[index + 1]
-                         is not draw_points)
-                    and not has_horizontal_lowermost_segment(segments_sequence)
-                    or drawer is draw_polygon
-                    and index < len(drawers_with_points_counts) - 1
-                    and (drawers_with_points_counts[index + 1]
-                         is not draw_points)
-                    and
-                    not has_horizontal_lowermost_segment(
-                            to_contour_segments(polygons_sequence[-1].border)))
+                    (index < len(drawers_with_points_counts) - 1
+                     and (drawers_with_points_counts[index + 1][0]
+                          is not draw_points))
+                    and (drawer is draw_segments
+                         and index < len(drawers_with_points_counts) - 1
+                         and (drawers_with_points_counts[index + 1]
+                              is not draw_points)
+                         and
+                         not has_horizontal_lowermost_segment(
+                                 segments_sequence
+                         )
+                         or drawer is draw_polygon
+                         and index < len(drawers_with_points_counts) - 1
+                         and (drawers_with_points_counts[index + 1]
+                              is not draw_points)
+                         and
+                         not has_horizontal_lowermost_segment(
+                                 to_contour_segments(
+                                         polygons_sequence[-1].border
+                                 )
+                         ))
+            )
             ys = ys[count - can_touch_next_geometry:]
         return mix_cls(unpack_points(points_sequence),
                        unpack_segments(segments_sequence),
