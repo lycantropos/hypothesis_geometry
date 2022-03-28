@@ -8,13 +8,13 @@ RUN pip install --upgrade pip setuptools
 WORKDIR /opt/hypothesis_geometry
 
 COPY requirements.txt .
-RUN pip install --force-reinstall -r requirements.txt
+RUN pip install -r requirements.txt
 
 COPY requirements-tests.txt .
-RUN pip install --force-reinstall -r requirements-tests.txt
+RUN pip install -r requirements-tests.txt
 
 COPY README.md .
 COPY pytest.ini .
 COPY setup.py .
-COPY hypothesis_geometry hypothesis_geometry/
-COPY tests/ tests/
+COPY hypothesis_geometry hypothesis_geometry
+COPY tests tests
