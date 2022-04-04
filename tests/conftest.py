@@ -3,7 +3,8 @@ import platform
 from datetime import timedelta
 
 import pytest
-from hypothesis import settings
+from hypothesis import (HealthCheck,
+                        settings)
 
 is_pypy = platform.python_implementation() == 'PyPy'
 on_ci = bool(os.getenv('CI', False))
@@ -15,7 +16,9 @@ settings.register_profile('default',
                           max_examples=(-(-settings.default.max_examples
                                           // (100 if is_pypy else 10))
                                         if on_ci
-                                        else settings.default.max_examples))
+                                        else settings.default.max_examples),
+                          suppress_health_check=[HealthCheck.filter_too_much,
+                                                 HealthCheck.too_slow])
 
 
 @pytest.hookimpl(trylast=True)
