@@ -233,7 +233,7 @@ def mix_to_segments(mix: Mix) -> Sequence[Segment]:
                   if isinstance(linear, Segment)
                   else (linear.segments
                         if isinstance(linear, Multisegment)
-                        else context.contour_edges(linear))))
+                        else context.contour_segments(linear))))
 
 
 def mix_to_polygons(mix: Mix) -> Sequence[Polygon]:
