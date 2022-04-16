@@ -12,7 +12,6 @@ from tests import strategies
 from tests.utils import (ScalarsLimitsType,
                          SizesPair,
                          is_mix,
-                         mix_discrete_component_is_disjoint_with_others,
                          mix_has_coordinates_in_range,
                          mix_has_coordinates_types,
                          mix_has_valid_sizes,
@@ -126,7 +125,6 @@ def test_properties(data: DataObject,
                                         max_x_value=max_x_value,
                                         min_y_value=min_y_value,
                                         max_y_value=max_y_value)
-    assert mix_discrete_component_is_disjoint_with_others(result)
     assert mix_segments_do_not_cross_or_overlap(result)
 
 
@@ -195,7 +193,6 @@ def test_same_coordinates(data: DataObject,
                                         max_x_value=max_value,
                                         min_y_value=min_value,
                                         max_y_value=max_value)
-    assert mix_discrete_component_is_disjoint_with_others(result)
     assert mix_segments_do_not_cross_or_overlap(result)
 
 

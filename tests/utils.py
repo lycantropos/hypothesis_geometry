@@ -12,13 +12,10 @@ from typing import (Any,
 
 from bentley_ottmann.planar import (contour_self_intersects,
                                     segments_cross_or_overlap)
-from ground.base import (Location,
-                         Orientation,
+from ground.base import (Orientation,
                          get_context)
 from ground.hints import Scalar
 from hypothesis import strategies
-from orient.planar import (point_in_polygon,
-                           point_in_segment)
 
 from hypothesis_geometry.core.contracts import (
     are_vertices_non_convex as _are_vertices_non_convex,
@@ -601,16 +598,6 @@ def contour_to_star_segments(contour: Contour) -> Sequence[Segment]:
     return [Segment(centroid, vertex)
             for vertex in contour.vertices
             if vertex != centroid]
-
-
-def mix_discrete_component_is_disjoint_with_others(mix: Mix) -> bool:
-    points = mix_to_points(mix)
-    return (all(point_in_segment(point, segment) is Location.EXTERIOR
-                for point in points
-                for segment in mix_to_segments(mix))
-            and all(point_in_polygon(point, polygon) is Location.EXTERIOR
-                    for point in points
-                    for polygon in mix_to_polygons(mix)))
 
 
 def mix_segments_do_not_cross_or_overlap(mix: Mix) -> bool:
