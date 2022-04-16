@@ -20,7 +20,7 @@ python -m pip install --upgrade pip setuptools
 
 ### User
 
-Download and install the latest stable version from `PyPI` repository:
+Download and install the latest stable version from `PyPI` repository
 ```bash
 python -m pip install --upgrade hypothesis_geometry
 ```
@@ -35,7 +35,7 @@ cd hypothesis_geometry
 
 Install dependencies
 ```bash
-python -m pip install --force-reinstall -r requirements.txt
+python -m pip install -r requirements.txt
 ```
 
 Install
@@ -45,6 +45,7 @@ python setup.py install
 
 Usage
 -----
+
 With setup
 ```python
 >>> from ground.base import get_context
@@ -466,7 +467,7 @@ This will set version to `major.minor.patch`.
 
 Install dependencies
 ```bash
-python -m pip install --force-reinstall -r requirements-tests.txt
+python -m pip install -r requirements-tests.txt
 ```
 
 Plain
@@ -484,7 +485,7 @@ Inside `Docker` container:
   docker-compose --file docker-compose.pypy.yml up
   ```
 
-`Bash` script (e.g. can be used in `Git` hooks):
+`Bash` script:
 - with `CPython`
   ```bash
   ./run-tests.sh
@@ -499,7 +500,7 @@ Inside `Docker` container:
   ./run-tests.sh pypy
   ```
 
-`PowerShell` script (e.g. can be used in `Git` hooks):
+`PowerShell` script:
 - with `CPython`
   ```powershell
   .\run-tests.ps1
