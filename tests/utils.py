@@ -12,7 +12,8 @@ from typing import (Any,
 
 from bentley_ottmann.planar import (contour_self_intersects,
                                     segments_cross_or_overlap)
-from ground.base import (Orientation,
+from ground.base import (Location,
+                         Orientation,
                          get_context)
 from ground.hints import Scalar
 from hypothesis import strategies
@@ -598,6 +599,43 @@ def contour_to_star_segments(contour: Contour) -> Sequence[Segment]:
     return [Segment(centroid, vertex)
             for vertex in contour.vertices
             if vertex != centroid]
+
+
+def mix_discrete_component_is_disjoint_with_others(mix: Mix) -> bool:
+    points = mix_to_points(mix)
+    return not (any(context.segment_contains_point(segment, point)
+                    for point in points
+                    for segment in mix_to_segments(mix))
+                or any(polygon_contains_point(polygon, point)
+                       for point in points
+                       for polygon in mix_to_polygons(mix)))
+
+
+def polygon_contains_point(polygon: Polygon, point: Point) -> bool:
+    location_without_holes = point_in_region(point, polygon.border)
+    if location_without_holes is Location.INTERIOR:
+        for hole in polygon.holes:
+            relation_with_hole = point_in_region(point, hole)
+            if relation_with_hole is Location.INTERIOR:
+                return False
+            elif relation_with_hole is Location.BOUNDARY:
+                return True
+    return location_without_holes is not Location.EXTERIOR
+
+
+def point_in_region(point: Point, region: Contour) -> Location:
+    result = False
+    point_y = point.y
+    for index, edge in enumerate(context.contour_segments(region)):
+        if context.segment_contains_point(edge, point):
+            return Location.BOUNDARY
+        start, end = edge.start, edge.end
+        if ((start.y > point_y) is not (end.y > point_y)
+                and ((end.y > start.y)
+                     is (context.angle_orientation(start, end, point)
+                         is Orientation.COUNTERCLOCKWISE))):
+            result = not result
+    return Location.INTERIOR if result else Location.EXTERIOR
 
 
 def mix_segments_do_not_cross_or_overlap(mix: Mix) -> bool:

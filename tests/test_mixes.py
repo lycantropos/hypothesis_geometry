@@ -12,6 +12,7 @@ from tests import strategies
 from tests.utils import (ScalarsLimitsType,
                          SizesPair,
                          is_mix,
+                         mix_discrete_component_is_disjoint_with_others,
                          mix_has_coordinates_in_range,
                          mix_has_coordinates_types,
                          mix_has_valid_sizes,
@@ -57,8 +58,7 @@ def test_basic(coordinates: Strategy[Scalar],
     assert isinstance(result, Strategy)
 
 
-@given(strategies.data,
-       strategies.scalars_strategy_with_limit_and_type_pairs,
+@given(strategies.data, strategies.scalars_strategy_with_limit_and_type_pairs,
        strategies.mix_components_sizes_pairs_triplets,
        strategies.concave_contours_sizes_pairs,
        strategies.polygon_holes_sizes_pairs,
@@ -125,11 +125,11 @@ def test_properties(data: DataObject,
                                         max_x_value=max_x_value,
                                         min_y_value=min_y_value,
                                         max_y_value=max_y_value)
+    assert mix_discrete_component_is_disjoint_with_others(result)
     assert mix_segments_do_not_cross_or_overlap(result)
 
 
-@given(strategies.data,
-       strategies.scalars_strategies_with_limits_and_types,
+@given(strategies.data, strategies.scalars_strategies_with_limits_and_types,
        strategies.mix_components_sizes_pairs_triplets,
        strategies.concave_contours_sizes_pairs,
        strategies.polygon_holes_sizes_pairs,
@@ -193,6 +193,7 @@ def test_same_coordinates(data: DataObject,
                                         max_x_value=max_value,
                                         min_y_value=min_value,
                                         max_y_value=max_value)
+    assert mix_discrete_component_is_disjoint_with_others(result)
     assert mix_segments_do_not_cross_or_overlap(result)
 
 
