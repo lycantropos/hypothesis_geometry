@@ -1,7 +1,7 @@
 hypothesis_geometry
 ===================
 
-[![](https://github.com/lycantropos/hypothesis_geometry/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/lycantropos/hypothesis_geometry/actions/workflows/ci.yml "Github Actions")
+[![](https://github.com/lycantropos/hypothesis_geometry/workflows/CI/badge.svg)](https://github.com/lycantropos/hypothesis_geometry/actions/workflows/ci.yml "Github Actions")
 [![](https://readthedocs.org/projects/hypothesis_geometry/badge/?version=latest)](https://hypothesis-geometry.readthedocs.io/en/latest "Documentation")
 [![](https://codecov.io/gh/lycantropos/hypothesis_geometry/branch/master/graph/badge.svg)](https://codecov.io/gh/lycantropos/hypothesis_geometry "Codecov")
 [![](https://img.shields.io/github/license/lycantropos/hypothesis_geometry.svg)](https://github.com/lycantropos/hypothesis_geometry/blob/master/LICENSE "License")
