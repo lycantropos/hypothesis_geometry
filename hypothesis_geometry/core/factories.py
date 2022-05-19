@@ -76,17 +76,6 @@ def constrict_convex_hull_size(points: Sequence[Point[Scalar]],
                       for start, end in new_border_extra_endpoints_pairs)])
 
 
-def _edge_key(edge: QuadEdge) -> Key:
-    weight = 0
-    cursor = edge
-    while True:
-        weight += _is_convex_quadrilateral_diagonal(cursor.left_from_end)
-        cursor = cursor.left_from_start
-        if cursor is edge:
-            break
-    return (weight, edge.start, edge.end)
-
-
 def to_multicontour(points: Sequence[Point[Scalar]],
                     sizes: Sequence[int],
                     chooser: Chooser,
@@ -435,6 +424,17 @@ def to_vertices_sequence(points: Sequence[Point[Scalar]],
                     neighbour
             )
     return _triangulation_to_border_vertices(triangulation)
+
+
+def _edge_key(edge: QuadEdge) -> Key:
+    weight = 0
+    cursor = edge
+    while True:
+        weight += _is_convex_quadrilateral_diagonal(cursor.left_from_end)
+        cursor = cursor.left_from_start
+        if cursor is edge:
+            break
+    return (weight, edge.start, edge.end)
 
 
 def _edge_to_increment(edge: QuadEdge) -> int:
