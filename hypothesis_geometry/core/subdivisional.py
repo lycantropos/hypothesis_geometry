@@ -133,6 +133,21 @@ class QuadEdge:
         alpha._left_from_start, beta._left_from_start = (
             beta.left_from_start, alpha.left_from_start)
 
+    def swap(self) -> None:
+        """
+        Swaps diagonal in a quadrilateral formed by triangles
+        in both clockwise and counterclockwise order around the start.
+        """
+        side = self.right_from_start
+        opposite = self.opposite
+        opposite_side = opposite.right_from_start
+        self.splice(side)
+        opposite.splice(opposite_side)
+        self.splice(side.left_from_end)
+        opposite.splice(opposite_side.left_from_end)
+        self._start = side.end
+        opposite._start = opposite_side.end
+
 
 def to_edge_neighbours(edge: QuadEdge) -> Sequence[QuadEdge]:
     candidate = edge.left_from_start

@@ -9,6 +9,7 @@ from operator import (attrgetter,
                       itemgetter)
 from random import Random
 from typing import (Callable,
+                    Collection,
                     Iterable,
                     List,
                     MutableSequence,
@@ -18,7 +19,8 @@ from typing import (Callable,
                     Type)
 
 from dendroid import red_black
-from dendroid.hints import Key
+from dendroid.hints import (Key,
+                            Set)
 from ground.base import (Context,
                          Orientation,
                          Relation)
@@ -74,9 +76,15 @@ def constrict_convex_hull_size(points: Sequence[Point[Scalar]],
                       for start, end in new_border_extra_endpoints_pairs)])
 
 
-def _edge_key(context: Context, edge: QuadEdge) -> Key:
-    return (context.points_squared_distance(edge.start, edge.end), edge.start,
-            edge.end)
+def _edge_key(edge: QuadEdge) -> Key:
+    weight = 0
+    cursor = edge
+    while True:
+        weight += _is_convex_quadrilateral_diagonal(cursor.left_from_end)
+        cursor = cursor.left_from_start
+        if cursor is edge:
+            break
+    return (weight, edge.start, edge.end)
 
 
 def to_multicontour(points: Sequence[Point[Scalar]],
@@ -180,7 +188,7 @@ def to_polygon(points: Sequence[Point[Scalar]],
     edges_neighbours = {edge: to_edge_neighbours(edge)
                         for edge in boundary_edges}
     candidates = red_black.set_(*filter(is_mouth, boundary_edges),
-                                key=partial(_edge_key, context))
+                                key=_edge_key)
     boundary_vertices = [edge.start for edge in boundary_edges]
     compress_contour(boundary_vertices, context.angle_orientation)
     current_border_size = len(boundary_vertices)
@@ -363,30 +371,109 @@ def to_vertices_sequence(points: Sequence[Point[Scalar]],
     triangulation = Triangulation.delaunay(points, context)
     boundary_edges = to_boundary_edges(triangulation)
     boundary_points = {edge.start for edge in boundary_edges}
-
-    def is_mouth(edge: QuadEdge) -> bool:
-        return edge.left_from_start.end not in boundary_points
-
-    edges_neighbours = {edge: to_edge_neighbours(edge)
-                        for edge in boundary_edges}
-    candidates = red_black.set_(*filter(is_mouth, boundary_edges),
-                                key=partial(_edge_key, context))
+    edges_increments = _to_edges_increments(boundary_edges)
     boundary_vertices = [edge.start for edge in boundary_edges]
     compress_contour(boundary_vertices, context.angle_orientation)
-    current_size = len(boundary_vertices)
-    while current_size < size:
-        try:
-            edge = candidates.popmax()
-        except ValueError:
-            break
-        if not is_mouth(edge):
-            continue
-        size += 1
-        boundary_points.add(edge.left_from_start.end)
-        triangulation.delete(edge)
-        for neighbour in edges_neighbours.pop(edge):
+    edges_neighbours = {edge: to_edge_neighbours(edge)
+                        for edge in boundary_edges}
+    left_increment = size - len(boundary_vertices)
+    while left_increment > 0:
+        if any(edges_increments[1:]):
+            max_increment = max(
+                    increment
+                    for increment, edges in enumerate(edges_increments[1:])
+                    if edges
+            )
+            target_increment = min(max_increment, left_increment)
+            candidates = edges_increments[target_increment + 1]
+            for _ in range(len(candidates)):
+                candidate = candidates.popmax()
+                if not _is_mouth(candidate, boundary_points):
+                    diagonal = candidate.left_from_end
+                    if (diagonal.right_from_start.end not in boundary_points
+                            and _is_convex_quadrilateral_diagonal(diagonal)):
+                        diagonal.swap()
+                        edges_neighbours[candidate] = to_edge_neighbours(
+                                candidate
+                        )
+                    else:
+                        del edges_neighbours[candidate]
+                        continue
+                actual_increment = _edge_to_increment(candidate)
+                if actual_increment == target_increment:
+                    break
+                else:
+                    edges_increments[actual_increment + 1].add(candidate)
+            else:
+                edges_increments = _to_edges_increments(edges_neighbours)
+                continue
+        else:
+            candidates = edges_increments[0]
+            for _ in range(len(candidates)):
+                candidate = candidates.popmax()
+                if _is_mouth(candidate, boundary_points):
+                    diagonal = candidate.left_from_end
+                    if (diagonal.right_from_start.end not in boundary_points
+                            and _is_convex_quadrilateral_diagonal(diagonal)):
+                        diagonal.swap()
+                        edges_neighbours[candidate] = to_edge_neighbours(
+                                candidate
+                        )
+                        break
+                    else:
+                        del edges_neighbours[candidate]
+                        continue
+            else:
+                break
+        assert _is_mouth(candidate, boundary_points)
+        boundary_points.add(candidate.left_from_start.end)
+        left_increment -= _edge_to_increment(candidate)
+        triangulation.delete(candidate)
+        for neighbour in edges_neighbours.pop(candidate):
             edges_neighbours[neighbour] = to_edge_neighbours(neighbour)
-            candidates.add(neighbour)
+            edges_increments[_edge_to_increment(neighbour) + 1].add(
+                    neighbour
+            )
+    return _triangulation_to_border_vertices(triangulation)
+
+
+def _edge_to_increment(edge: QuadEdge) -> int:
+    return (1
+            - (edge.left_from_start.orientation_of(edge.right_from_start.end)
+               is Orientation.COLLINEAR)
+            - (edge.left_from_end.orientation_of(edge.right_from_end.end)
+               is Orientation.COLLINEAR)
+            + (edge.orientation_of(edge.right_from_start.end)
+               is Orientation.COLLINEAR)
+            + (edge.orientation_of(edge.right_from_end.end)
+               is Orientation.COLLINEAR))
+
+
+def _is_convex_quadrilateral_diagonal(edge: QuadEdge) -> bool:
+    return (edge.right_from_start.orientation_of(edge.end)
+            is Orientation.COUNTERCLOCKWISE
+            is edge.right_from_end.opposite.orientation_of(
+                    edge.left_from_start.end)
+            is edge.left_from_end.orientation_of(edge.start)
+            is edge.left_from_start.opposite.orientation_of(
+                    edge.right_from_start.end))
+
+
+def _is_mouth(edge: QuadEdge, boundary_points: Collection[Point]) -> bool:
+    assert edge.start in boundary_points
+    return edge.left_from_start.end not in boundary_points
+
+
+def _to_edges_increments(edges: Iterable[QuadEdge]) -> Sequence[Set[QuadEdge]]:
+    result = [red_black.set_(key=_edge_key) for _ in range(5)]
+    for edge in edges:
+        increment = _edge_to_increment(edge)
+        result[increment + 1].add(edge)
+    return result
+
+
+def _triangulation_to_border_vertices(triangulation: Triangulation
+                                      ) -> Sequence[Point[Scalar]]:
     result = [edge.start for edge in to_boundary_edges(triangulation)]
-    compress_contour(result, context.angle_orientation)
+    compress_contour(result, triangulation.context.angle_orientation)
     return result
