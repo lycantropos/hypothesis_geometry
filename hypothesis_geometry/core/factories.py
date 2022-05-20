@@ -456,10 +456,9 @@ def to_vertices_sequence(points: Sequence[Point[Scalar]],
             else:
                 ears_increments = _to_ears_increments(ears_candidates)
                 continue
-        new_boundary_edge = candidate.left_from_end
-        if new_boundary_edge is not candidate.right_from_end:
-            new_boundary_edge.flip()
-        assert candidate.left_from_end is candidate.right_from_end
+        while candidate.left_from_end is not candidate.right_from_end:
+            candidate.left_from_end.flip()
+        new_boundary_edge = candidate.left_from_start
         candidate.right_from_end.flip()
         triangulation.delete(candidate)
         ears_candidates.add(new_boundary_edge)
