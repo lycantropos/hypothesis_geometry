@@ -134,14 +134,18 @@ def to_polygon(points: Sequence[Point[Scalar]],
                                         context.contour_segments)
     for hole_size in holes_sizes:
         hole_points = inner_points[:hole_size]
-        hole = contour_cls(_reverse_vertices(
-                to_vertices_sequence(hole_points, hole_size, context)))
-        holes.append(hole)
-        hole_edges = to_contour_segments(hole)
-        holes_edges.extend(hole_edges)
-        boundary_points.update(hole_points)
-        can_touch_next_hole = current_predicate(hole_edges)
-        inner_points = inner_points[hole_size - can_touch_next_hole:]
+        hole_vertices = _reverse_vertices(
+                to_vertices_sequence(hole_points, hole_size, context)
+        )
+        if len(hole_vertices) >= MIN_CONTOUR_SIZE:
+            hole = contour_cls(hole_vertices)
+            holes.append(hole)
+            hole_edges = to_contour_segments(hole)
+            holes_edges.extend(hole_edges)
+            boundary_points.update(hole_points)
+            can_touch_next_hole = current_predicate(hole_edges)
+            inner_points = inner_points[len(hole_points)
+                                        - can_touch_next_hole:]
         next_sorting_key = sorting_key_chooser()
         if next_sorting_key is not current_sorting_key:
             (current_sorting_key, inner_points,
@@ -364,7 +368,8 @@ def to_vertices_sequence(points: Sequence[Point[Scalar]],
     mouths_increments = _to_mouths_increments(boundary_edges)
     boundary_vertices = [edge.start for edge in boundary_edges]
     compress_contour(boundary_vertices, context.angle_orientation)
-    assert len(boundary_vertices) >= MIN_CONTOUR_SIZE
+    if len(boundary_vertices) < MIN_CONTOUR_SIZE:
+        return boundary_vertices
     mouths_candidates = set(boundary_edges)
     left_increment = size - len(boundary_vertices)
     while left_increment > 0:
