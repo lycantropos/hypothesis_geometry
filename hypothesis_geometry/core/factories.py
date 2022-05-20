@@ -30,6 +30,7 @@ from ground.hints import (Point,
                           Segment)
 from locus import segmental
 
+from .constants import MIN_CONTOUR_SIZE
 from .contracts import (angle_contains_point,
                         has_horizontal_lowermost_segment,
                         has_vertical_leftmost_segment)
@@ -360,63 +361,103 @@ def to_vertices_sequence(points: Sequence[Point[Scalar]],
     triangulation = Triangulation.delaunay(points, context)
     boundary_edges = to_boundary_edges(triangulation)
     boundary_points = {edge.start for edge in boundary_edges}
-    edges_increments = _to_edges_increments(boundary_edges)
+    mouths_increments = _to_mouths_increments(boundary_edges)
     boundary_vertices = [edge.start for edge in boundary_edges]
     compress_contour(boundary_vertices, context.angle_orientation)
-    boundary_edges = set(boundary_edges)
+    assert len(boundary_vertices) > MIN_CONTOUR_SIZE
+    mouths_candidates = set(boundary_edges)
     left_increment = size - len(boundary_vertices)
     while left_increment > 0:
         target_increment = max(
                 [increment
-                 for increment, edges in enumerate(edges_increments[1:])
+                 for increment, edges
+                 in enumerate(mouths_increments[MAX_MOUTH_DECREMENT:])
                  if edges and increment <= left_increment],
                 default=None
         )
-        if target_increment is not None:
-            candidates = edges_increments[target_increment + 1]
-            for _ in range(len(candidates)):
-                candidate = candidates.popmax()
-                if not _is_mouth(candidate, boundary_points):
-                    diagonal = candidate.left_from_end
-                    if (diagonal.right_from_start.end not in boundary_points
-                            and _is_convex_quadrilateral_diagonal(diagonal)):
-                        diagonal.swap()
-                    else:
-                        boundary_edges.remove(candidate)
-                        continue
-                actual_increment = _edge_to_increment(candidate)
-                if actual_increment == target_increment:
-                    break
-                else:
-                    edges_increments[actual_increment + 1].add(candidate)
-            else:
-                edges_increments = _to_edges_increments(boundary_edges)
-                continue
-        else:
-            candidates = edges_increments[0]
+        if target_increment is None:
+            candidates = mouths_increments[0]
             for _ in range(len(candidates)):
                 candidate = candidates.popmax()
                 if _is_mouth(candidate, boundary_points):
                     diagonal = candidate.left_from_end
                     if (diagonal.right_from_start.end not in boundary_points
                             and _is_convex_quadrilateral_diagonal(diagonal)):
-                        diagonal.swap()
+                        diagonal.flip()
                         break
                     else:
-                        boundary_edges.remove(candidate)
+                        mouths_candidates.remove(candidate)
                         continue
             else:
                 break
+        else:
+            candidates = mouths_increments[target_increment
+                                           + MAX_MOUTH_DECREMENT]
+            for _ in range(len(candidates)):
+                candidate = candidates.popmax()
+                if not _is_mouth(candidate, boundary_points):
+                    diagonal = candidate.left_from_end
+                    if (diagonal.right_from_start.end not in boundary_points
+                            and _is_convex_quadrilateral_diagonal(diagonal)):
+                        diagonal.flip()
+                    else:
+                        mouths_candidates.remove(candidate)
+                        continue
+                actual_increment = _mouth_to_increment(candidate)
+                if actual_increment == target_increment:
+                    break
+                else:
+                    (mouths_increments[actual_increment + MAX_MOUTH_DECREMENT]
+                     .add(candidate))
+            else:
+                mouths_increments = _to_mouths_increments(mouths_candidates)
+                continue
         assert _is_mouth(candidate, boundary_points)
         boundary_points.add(candidate.left_from_start.end)
-        left_increment -= _edge_to_increment(candidate)
+        left_increment -= _mouth_to_increment(candidate)
         neighbours = to_edge_neighbours(candidate)
         triangulation.delete(candidate)
         for neighbour in neighbours:
-            boundary_edges.add(neighbour)
-            edges_increments[_edge_to_increment(neighbour) + 1].add(
-                    neighbour
-            )
+            mouths_candidates.add(neighbour)
+            increment = _mouth_to_increment(neighbour)
+            mouths_increments[increment + MAX_MOUTH_DECREMENT].add(neighbour)
+    ears_candidates = (set(to_boundary_edges(triangulation))
+                       if left_increment > 0
+                       else set())
+    ears_increments = _to_ears_increments(ears_candidates)
+    while left_increment > 0:
+        target_increment = max(
+                [increment
+                 for increment, edges
+                 in enumerate(ears_increments[MAX_EAR_DECREMENT:])
+                 if edges and increment <= left_increment],
+                default=None
+        )
+        if target_increment is None:
+            break
+        else:
+            candidates = ears_increments[target_increment + MAX_EAR_DECREMENT]
+            for _ in range(len(candidates)):
+                candidate = candidates.popmax()
+                if not _is_ear(candidate):
+                    ears_candidates.remove(candidate)
+                    continue
+                actual_increment = _ear_to_increment(candidate)
+                if actual_increment == target_increment:
+                    break
+                else:
+                    (ears_increments[actual_increment + MAX_EAR_DECREMENT]
+                     .add(candidate))
+            else:
+                ears_increments = _to_ears_increments(ears_candidates)
+                continue
+        new_boundary_edge = candidate.left_from_end
+        if new_boundary_edge is not candidate.right_from_end:
+            new_boundary_edge.flip()
+        assert candidate.left_from_end is candidate.right_from_end
+        candidate.right_from_end.flip()
+        triangulation.delete(candidate)
+        ears_candidates.add(new_boundary_edge)
     return _triangulation_to_border_vertices(triangulation)
 
 
@@ -431,7 +472,7 @@ def _edge_key(edge: QuadEdge) -> Key:
     return weight, edge.start, edge.end
 
 
-def _edge_to_increment(edge: QuadEdge) -> int:
+def _mouth_to_increment(edge: QuadEdge) -> int:
     return (1
             - (edge.left_from_start.orientation_of(edge.right_from_start.end)
                is Orientation.COLLINEAR)
@@ -441,6 +482,19 @@ def _edge_to_increment(edge: QuadEdge) -> int:
                is Orientation.COLLINEAR)
             + (edge.orientation_of(edge.right_from_end.end)
                is Orientation.COLLINEAR))
+
+
+def _ear_to_increment(edge: QuadEdge) -> int:
+    return ((edge.right_from_end.orientation_of(edge.right_from_end
+                                                .right_from_end.end)
+             is Orientation.COLLINEAR)
+            + (edge.orientation_of(edge.right_from_start.end)
+               is Orientation.COLLINEAR)
+            - (edge.right_from_start.orientation_of(edge.right_from_end.end)
+               is Orientation.COLLINEAR)
+            - (edge.right_from_end.right_from_end.orientation_of(edge.start)
+               is Orientation.COLLINEAR)
+            - 1)
 
 
 def _is_convex_quadrilateral_diagonal(edge: QuadEdge) -> bool:
@@ -453,16 +507,45 @@ def _is_convex_quadrilateral_diagonal(edge: QuadEdge) -> bool:
                     edge.right_from_start.end))
 
 
+def _is_ear(edge: QuadEdge) -> bool:
+    return ((edge.orientation_of(edge.right_from_end.end)
+             is Orientation.COUNTERCLOCKWISE)
+            and _is_convex_quadrilateral_diagonal(
+                    edge.left_from_start
+                    if edge.left_from_end is edge.right_from_end
+                    else edge.left_from_end
+            ))
+
+
 def _is_mouth(edge: QuadEdge, boundary_points: Collection[Point]) -> bool:
     assert edge.start in boundary_points
     return edge.left_from_start.end not in boundary_points
 
 
-def _to_edges_increments(edges: Iterable[QuadEdge]) -> Sequence[Set[QuadEdge]]:
-    result = [red_black.set_(key=_edge_key) for _ in range(5)]
+MAX_EAR_DECREMENT = 3
+MAX_EAR_INCREMENT = 1
+
+
+def _to_ears_increments(edges: Iterable[QuadEdge]) -> Sequence[Set[QuadEdge]]:
+    result = [red_black.set_(key=_edge_key)
+              for _ in range(-MAX_EAR_DECREMENT, MAX_EAR_INCREMENT + 1)]
     for edge in edges:
-        increment = _edge_to_increment(edge)
-        result[increment + 1].add(edge)
+        increment = _ear_to_increment(edge)
+        result[increment + MAX_EAR_DECREMENT].add(edge)
+    return result
+
+
+MAX_MOUTH_DECREMENT = 1
+MAX_MOUTH_INCREMENT = 3
+
+
+def _to_mouths_increments(edges: Iterable[QuadEdge]
+                          ) -> Sequence[Set[QuadEdge]]:
+    result = [red_black.set_(key=_edge_key)
+              for _ in range(-MAX_MOUTH_DECREMENT, MAX_MOUTH_INCREMENT + 1)]
+    for edge in edges:
+        increment = _mouth_to_increment(edge)
+        result[increment + MAX_MOUTH_DECREMENT].add(edge)
     return result
 
 
