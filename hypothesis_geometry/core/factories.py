@@ -428,7 +428,7 @@ def _edge_key(edge: QuadEdge) -> Key:
         cursor = cursor.left_from_start
         if cursor is edge:
             break
-    return (weight, edge.start, edge.end)
+    return weight, edge.start, edge.end
 
 
 def _edge_to_increment(edge: QuadEdge) -> int:
