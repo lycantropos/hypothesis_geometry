@@ -364,7 +364,7 @@ def to_vertices_sequence(points: Sequence[Point[Scalar]],
     mouths_increments = _to_mouths_increments(boundary_edges)
     boundary_vertices = [edge.start for edge in boundary_edges]
     compress_contour(boundary_vertices, context.angle_orientation)
-    assert len(boundary_vertices) > MIN_CONTOUR_SIZE
+    assert len(boundary_vertices) >= MIN_CONTOUR_SIZE
     mouths_candidates = set(boundary_edges)
     left_increment = size - len(boundary_vertices)
     while left_increment > 0:
