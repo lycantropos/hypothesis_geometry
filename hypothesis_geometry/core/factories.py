@@ -363,17 +363,16 @@ def to_vertices_sequence(points: Sequence[Point[Scalar]],
     edges_increments = _to_edges_increments(boundary_edges)
     boundary_vertices = [edge.start for edge in boundary_edges]
     compress_contour(boundary_vertices, context.angle_orientation)
-    edges_neighbours = {edge: to_edge_neighbours(edge)
-                        for edge in boundary_edges}
+    boundary_edges = set(boundary_edges)
     left_increment = size - len(boundary_vertices)
     while left_increment > 0:
-        if any(edges_increments[1:]):
-            max_increment = max(
-                    increment
-                    for increment, edges in enumerate(edges_increments[1:])
-                    if edges
-            )
-            target_increment = min(max_increment, left_increment)
+        target_increment = max(
+                [increment
+                 for increment, edges in enumerate(edges_increments[1:])
+                 if edges and increment <= left_increment],
+                default=None
+        )
+        if target_increment is not None:
             candidates = edges_increments[target_increment + 1]
             for _ in range(len(candidates)):
                 candidate = candidates.popmax()
@@ -382,11 +381,8 @@ def to_vertices_sequence(points: Sequence[Point[Scalar]],
                     if (diagonal.right_from_start.end not in boundary_points
                             and _is_convex_quadrilateral_diagonal(diagonal)):
                         diagonal.swap()
-                        edges_neighbours[candidate] = to_edge_neighbours(
-                                candidate
-                        )
                     else:
-                        del edges_neighbours[candidate]
+                        boundary_edges.remove(candidate)
                         continue
                 actual_increment = _edge_to_increment(candidate)
                 if actual_increment == target_increment:
@@ -394,7 +390,7 @@ def to_vertices_sequence(points: Sequence[Point[Scalar]],
                 else:
                     edges_increments[actual_increment + 1].add(candidate)
             else:
-                edges_increments = _to_edges_increments(edges_neighbours)
+                edges_increments = _to_edges_increments(boundary_edges)
                 continue
         else:
             candidates = edges_increments[0]
@@ -405,21 +401,19 @@ def to_vertices_sequence(points: Sequence[Point[Scalar]],
                     if (diagonal.right_from_start.end not in boundary_points
                             and _is_convex_quadrilateral_diagonal(diagonal)):
                         diagonal.swap()
-                        edges_neighbours[candidate] = to_edge_neighbours(
-                                candidate
-                        )
                         break
                     else:
-                        del edges_neighbours[candidate]
+                        boundary_edges.remove(candidate)
                         continue
             else:
                 break
         assert _is_mouth(candidate, boundary_points)
         boundary_points.add(candidate.left_from_start.end)
         left_increment -= _edge_to_increment(candidate)
+        neighbours = to_edge_neighbours(candidate)
         triangulation.delete(candidate)
-        for neighbour in edges_neighbours.pop(candidate):
-            edges_neighbours[neighbour] = to_edge_neighbours(neighbour)
+        for neighbour in neighbours:
+            boundary_edges.add(neighbour)
             edges_increments[_edge_to_increment(neighbour) + 1].add(
                     neighbour
             )
