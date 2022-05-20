@@ -58,8 +58,11 @@ class Triangulation:
     def delete(self, edge: QuadEdge) -> None:
         """Deletes given edge from the triangulation."""
         if edge is self.right_side or edge.opposite is self.right_side:
+            assert (self.right_side
+                    is not self.right_side.right_from_end.opposite)
             self.right_side = self.right_side.right_from_end.opposite
         if edge is self.left_side or edge.opposite is self.left_side:
+            assert self.left_side is not self.left_side.left_from_start
             self.left_side = self.left_side.left_from_start
         edge.delete()
 

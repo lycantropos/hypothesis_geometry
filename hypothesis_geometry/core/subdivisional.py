@@ -133,11 +133,8 @@ class QuadEdge:
         alpha._left_from_start, beta._left_from_start = (
             beta.left_from_start, alpha.left_from_start)
 
-    def swap(self) -> None:
-        """
-        Swaps diagonal in a quadrilateral formed by triangles
-        in both clockwise and counterclockwise order around the start.
-        """
+    def flip(self) -> None:
+        """Flips diagonal of a quadrilateral."""
         side = self.right_from_start
         opposite = self.opposite
         opposite_side = opposite.right_from_start
