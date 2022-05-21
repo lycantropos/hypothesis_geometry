@@ -426,9 +426,10 @@ def to_vertices_sequence(points: Sequence[Point[Scalar]],
         assert _is_mouth(candidate, boundary_points)
         boundary_points.add(candidate.left_from_start.end)
         left_increment -= actual_increment
+        neighbours = to_edge_neighbours(candidate)
         mouths_candidates.remove(candidate)
         triangulation.delete(candidate)
-        for neighbour in to_edge_neighbours(candidate):
+        for neighbour in neighbours:
             mouths_candidates.add(neighbour)
             increment = _mouth_to_increment(neighbour)
             mouths_increments[increment + MAX_MOUTH_DECREMENT].add(neighbour)
