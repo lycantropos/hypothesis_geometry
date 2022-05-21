@@ -469,7 +469,6 @@ def to_vertices_sequence(points: Sequence[Point[Scalar]],
         assert actual_increment >= 0
         left_increment -= actual_increment
         ears_candidates.remove(candidate)
-        ears_candidates.remove(candidate.right_from_end)
         ear_base = candidate.left_from_start
         candidate.right_from_end.flip()
         triangulation.delete(candidate)
