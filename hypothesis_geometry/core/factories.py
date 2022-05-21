@@ -418,8 +418,9 @@ def to_vertices_sequence(points: Sequence[Point[Scalar]],
                 mouths_increments = _to_mouths_increments(mouths_candidates)
                 continue
         assert _is_mouth(candidate, boundary_points)
+        assert target_increment == _mouth_to_increment(candidate)
         boundary_points.add(candidate.left_from_start.end)
-        left_increment -= _mouth_to_increment(candidate)
+        left_increment -= target_increment
         neighbours = to_edge_neighbours(candidate)
         triangulation.delete(candidate)
         for neighbour in neighbours:
@@ -456,6 +457,8 @@ def to_vertices_sequence(points: Sequence[Point[Scalar]],
             else:
                 ears_increments = _to_ears_increments(ears_candidates)
                 continue
+        assert target_increment == _ear_to_increment(candidate)
+        left_increment -= target_increment
         while candidate.left_from_end is not candidate.right_from_end:
             candidate.left_from_end.flip()
         new_boundary_edge = candidate.left_from_start
