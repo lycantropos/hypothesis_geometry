@@ -365,11 +365,11 @@ def to_vertices_sequence(points: Sequence[Point[Scalar]],
     triangulation = Triangulation.delaunay(points, context)
     boundary_edges = to_boundary_edges(triangulation)
     boundary_points = {edge.start for edge in boundary_edges}
-    mouths_increments = _to_mouths_increments(boundary_edges)
     boundary_vertices = [edge.start for edge in boundary_edges]
     compress_contour(boundary_vertices, context.angle_orientation)
     if len(boundary_vertices) < MIN_CONTOUR_SIZE:
         return boundary_vertices
+    mouths_increments = _to_mouths_increments(boundary_edges)
     mouths_candidates = set(boundary_edges)
     left_increment = size - len(boundary_vertices)
     while left_increment > 0:
@@ -381,14 +381,18 @@ def to_vertices_sequence(points: Sequence[Point[Scalar]],
                 default=None
         )
         if target_increment is None:
+            target_increment = 1
             candidates = mouths_increments[0]
             for _ in range(len(candidates)):
                 candidate = candidates.popmax()
+                actual_increment = _mouth_to_increment(candidate)
+                assert actual_increment == -1
                 if _is_mouth(candidate, boundary_points):
                     diagonal = candidate.left_from_end
                     if (diagonal.right_from_start.end not in boundary_points
                             and _is_convex_quadrilateral_diagonal(diagonal)):
                         diagonal.flip()
+                        actual_increment = _mouth_to_increment(candidate)
                         break
                     else:
                         mouths_candidates.remove(candidate)
@@ -417,12 +421,14 @@ def to_vertices_sequence(points: Sequence[Point[Scalar]],
             else:
                 mouths_increments = _to_mouths_increments(mouths_candidates)
                 continue
+        assert actual_increment == target_increment
+        assert actual_increment >= 0
         assert _is_mouth(candidate, boundary_points)
         boundary_points.add(candidate.left_from_start.end)
-        left_increment -= _mouth_to_increment(candidate)
-        neighbours = to_edge_neighbours(candidate)
+        left_increment -= actual_increment
+        mouths_candidates.remove(candidate)
         triangulation.delete(candidate)
-        for neighbour in neighbours:
+        for neighbour in to_edge_neighbours(candidate):
             mouths_candidates.add(neighbour)
             increment = _mouth_to_increment(neighbour)
             mouths_increments[increment + MAX_MOUTH_DECREMENT].add(neighbour)
@@ -456,13 +462,17 @@ def to_vertices_sequence(points: Sequence[Point[Scalar]],
             else:
                 ears_increments = _to_ears_increments(ears_candidates)
                 continue
-        left_increment -= _ear_to_increment(candidate)
         while candidate.left_from_end is not candidate.right_from_end:
             candidate.left_from_end.flip()
-        new_boundary_edge = candidate.left_from_start
+        assert actual_increment == target_increment
+        assert actual_increment >= 0
+        left_increment -= actual_increment
+        ears_candidates.remove(candidate)
+        ears_candidates.remove(candidate.right_from_end)
+        ear_base = candidate.left_from_start
         candidate.right_from_end.flip()
         triangulation.delete(candidate)
-        ears_candidates.add(new_boundary_edge)
+        ears_candidates.add(ear_base)
     return _triangulation_to_border_vertices(triangulation)
 
 
