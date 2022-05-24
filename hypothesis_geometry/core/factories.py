@@ -81,17 +81,13 @@ def to_multicontour(points: Sequence[Point[Scalar]],
                     sizes: Sequence[int],
                     chooser: Chooser,
                     context: Context) -> Multicontour[Scalar]:
-    sorting_key_chooser = partial(chooser, [attrgetter('y', 'x'),
-                                            attrgetter('x', 'y')])
+    sorting_key_chooser = partial(chooser, [None, attrgetter('y', 'x')])
     current_sorting_key = sorting_key_chooser()
     points = sorted(points,
                     key=current_sorting_key)
-    predicates = cycle((has_vertical_leftmost_segment,
-                        has_horizontal_lowermost_segment)
-                       if current_sorting_key is None
-                       else (has_horizontal_lowermost_segment,
-                             has_vertical_leftmost_segment))
-    current_predicate = next(predicates)
+    current_predicate = (has_vertical_leftmost_segment
+                         if current_sorting_key is None
+                         else has_horizontal_lowermost_segment)
     contour_cls, to_contour_segments = (context.contour_cls,
                                         context.contour_segments)
     result = []
@@ -104,9 +100,13 @@ def to_multicontour(points: Sequence[Point[Scalar]],
         points = points[size - can_touch_next_contour:]
         new_sorting_key = sorting_key_chooser()
         if new_sorting_key is not current_sorting_key:
-            points.sort(key=new_sorting_key)
-            current_sorting_key, current_predicate = (new_sorting_key,
-                                                      next(predicates))
+            current_sorting_key, current_predicate = (
+                new_sorting_key,
+                has_vertical_leftmost_segment
+                if new_sorting_key is None
+                else has_horizontal_lowermost_segment
+            )
+            points.sort(key=current_sorting_key)
     return result
 
 
