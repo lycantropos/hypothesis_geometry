@@ -741,8 +741,18 @@ def points_in_general_position(x_coordinates: Strategy[Scalar],
                               ys[index])
                     for index in indices]
 
-        scales = (strategies.integers(1)
-                  .map(lambda scale: scale // gcd(scale, grid_size)))
+        def normalize_scale(scale: int) -> int:
+            grid_scale_gcd = gcd(scale, grid_size)
+            if grid_scale_gcd != 1:
+                while True:
+                    quotient, remainder = divmod(scale, grid_scale_gcd)
+                    if remainder:
+                        break
+                    scale = quotient
+            assert gcd(scale, grid_size) == 1
+            return scale
+
+        scales = strategies.integers(1).map(normalize_scale)
         x_indices = strategies.lists(strategies.sampled_from(range(len(xs))),
                                      min_size=grid_size,
                                      max_size=grid_size,
