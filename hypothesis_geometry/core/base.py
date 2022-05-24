@@ -752,7 +752,13 @@ def points_in_general_position(x_coordinates: Strategy[Scalar],
                                      max_size=grid_size,
                                      unique=True)
         return (strategies.builds(x_indices_to_points, x_indices, scales)
-                | strategies.builds(y_indices_to_points, y_indices, scales))
+                if len(xs) < len(ys)
+                else (strategies.builds(y_indices_to_points, y_indices, scales)
+                      if len(ys) < len(xs)
+                      else (strategies.builds(x_indices_to_points, x_indices,
+                                              scales)
+                            | strategies.builds(y_indices_to_points, y_indices,
+                                                scales))))
 
     return (strategies.tuples(strategies.lists(x_coordinates,
                                                unique=True,
