@@ -422,7 +422,6 @@ def to_vertices_sequence(points: Sequence[Point[Scalar]],
                 mouths_increments = _to_mouths_increments(mouths_candidates)
                 continue
         assert actual_increment == target_increment
-        assert actual_increment >= 0
         assert _is_mouth(candidate, boundary_points)
         boundary_points.add(candidate.left_from_start.end)
         left_increment -= actual_increment
@@ -466,7 +465,6 @@ def to_vertices_sequence(points: Sequence[Point[Scalar]],
         while candidate.left_from_end is not candidate.right_from_end:
             candidate.left_from_end.flip()
         assert actual_increment == target_increment
-        assert actual_increment >= 0
         left_increment -= actual_increment
         ears_candidates.remove(candidate)
         ear_base = candidate.left_from_start
