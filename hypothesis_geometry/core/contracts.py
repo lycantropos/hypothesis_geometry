@@ -97,12 +97,6 @@ def angle_contains_point(vertex: Point[Scalar],
                             or Orientation.COUNTERCLOCKWISE))))
 
 
-def are_points_non_collinear(points: Sequence[Point[Scalar]],
-                             orienteer: Orienteer) -> bool:
-    return any(orientation is not Orientation.COLLINEAR
-               for orientation in to_contour_orientations(points, orienteer))
-
-
 def are_vertices_non_convex(vertices: Sequence[Point[Scalar]],
                             orienteer: Orienteer) -> bool:
     orientations = iter(to_contour_orientations(vertices, orienteer))

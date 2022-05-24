@@ -1,8 +1,7 @@
 import math
 from collections import deque
 from functools import partial
-from itertools import (cycle,
-                       groupby)
+from itertools import groupby
 from math import atan2
 from numbers import Real
 from operator import (attrgetter,
@@ -43,50 +42,17 @@ from .triangular import (Triangulation,
                          to_boundary_edges)
 
 
-def constrict_convex_hull_size(points: Sequence[Point[Scalar]],
-                               *,
-                               context: Context,
-                               max_size: Optional[int]
-                               ) -> Sequence[Point[Scalar]]:
-    if max_size is None:
-        return points
-    convex_hull = context.points_convex_hull(points)
-    if len(convex_hull) <= max_size:
-        return points
-    sorted_convex_hull = sorted(
-            convex_hull,
-            key=partial(context.points_squared_distance, convex_hull[0]))
-    new_border_points = []
-    for index in range(max_size):
-        quotient, remainder = divmod(index, 2)
-        new_border_points.append(sorted_convex_hull[-quotient - 1]
-                                 if remainder
-                                 else sorted_convex_hull[quotient])
-    orienteer = context.angle_orientation
-    new_border = list(to_max_convex_hull(new_border_points, orienteer))
-    new_border_extra_endpoints_pairs = tuple(
-            {(new_border[index - 1], new_border[index])
-             for index in range(len(new_border))}
-            - {(convex_hull[index], convex_hull[index - 1])
-               for index in range(len(convex_hull))})
-    return (new_border
-            + [point
-               for point in set(points) - set(convex_hull)
-               if all(orienteer(start, end, point)
-                      is Orientation.COUNTERCLOCKWISE
-                      for start, end in new_border_extra_endpoints_pairs)])
-
-
 def to_multicontour(points: Sequence[Point[Scalar]],
                     sizes: Sequence[int],
                     chooser: Chooser,
                     context: Context) -> Multicontour[Scalar]:
-    sorting_key_chooser = partial(chooser, [None, attrgetter('y', 'x')])
+    sorting_key_chooser = partial(chooser, [horizontal_point_key,
+                                            vertical_point_key])
     current_sorting_key = sorting_key_chooser()
     points = sorted(points,
                     key=current_sorting_key)
     current_predicate = (has_vertical_leftmost_segment
-                         if current_sorting_key is None
+                         if current_sorting_key is horizontal_point_key
                          else has_horizontal_lowermost_segment)
     contour_cls, to_contour_segments = (context.contour_cls,
                                         context.contour_segments)
@@ -103,7 +69,7 @@ def to_multicontour(points: Sequence[Point[Scalar]],
             current_sorting_key, current_predicate = (
                 new_sorting_key,
                 has_vertical_leftmost_segment
-                if new_sorting_key is None
+                if new_sorting_key is horizontal_point_key
                 else has_horizontal_lowermost_segment
             )
             points.sort(key=current_sorting_key)
@@ -118,27 +84,22 @@ def to_polygon(points: Sequence[Point[Scalar]],
     triangulation = Triangulation.delaunay(points, context)
     boundary_edges = to_boundary_edges(triangulation)
     boundary_points = {edge.start for edge in boundary_edges}
-    sorting_key_chooser = partial(chooser, [attrgetter('y', 'x'),
-                                            attrgetter('x', 'y')])
+    sorting_key_chooser = partial(chooser, [horizontal_point_key,
+                                            vertical_point_key])
     current_sorting_key = sorting_key_chooser()
     inner_points = sorted(set(points) - boundary_points,
                           key=current_sorting_key)
-    predicates = cycle((has_vertical_leftmost_segment,
-                        has_horizontal_lowermost_segment)
-                       if current_sorting_key is None
-                       else (has_horizontal_lowermost_segment,
-                             has_vertical_leftmost_segment))
-    current_predicate = next(predicates)
+    current_predicate = (has_vertical_leftmost_segment
+                         if current_sorting_key is horizontal_point_key
+                         else has_horizontal_lowermost_segment)
     holes, holes_edges = [], []
     contour_cls, to_contour_segments = (context.contour_cls,
                                         context.contour_segments)
     for hole_size in holes_sizes:
         hole_points = inner_points[:hole_size]
-        hole_vertices = _reverse_vertices(
-                to_vertices_sequence(hole_points, hole_size, context)
-        )
+        hole_vertices = to_vertices_sequence(hole_points, hole_size, context)
         if len(hole_vertices) >= MIN_CONTOUR_SIZE:
-            hole = contour_cls(hole_vertices)
+            hole = contour_cls(_reverse_vertices(hole_vertices))
             holes.append(hole)
             hole_edges = to_contour_segments(hole)
             holes_edges.extend(hole_edges)
@@ -148,11 +109,13 @@ def to_polygon(points: Sequence[Point[Scalar]],
                                         - can_touch_next_hole:]
         next_sorting_key = sorting_key_chooser()
         if next_sorting_key is not current_sorting_key:
-            (current_sorting_key, inner_points,
-             current_predicate) = (next_sorting_key,
-                                   sorted(inner_points,
-                                          key=next_sorting_key),
-                                   next(predicates))
+            current_sorting_key, current_predicate = (
+                next_sorting_key,
+                has_vertical_leftmost_segment
+                if next_sorting_key is horizontal_point_key
+                else has_horizontal_lowermost_segment
+            )
+            inner_points.sort(key=current_sorting_key)
 
     def to_edges_cross_or_overlap_detector(edges: Sequence[Segment]
                                            ) -> Callable[[Segment], bool]:
@@ -204,8 +167,9 @@ def to_polygon(points: Sequence[Point[Scalar]],
     return context.polygon_cls(contour_cls(border_vertices), holes)
 
 
-def _reverse_vertices(vertices: List[Point[Scalar]]) -> List[Point[Scalar]]:
-    return [vertices[0]] + vertices[:0:-1]
+def _reverse_vertices(vertices: Sequence[Point[Scalar]]
+                      ) -> Sequence[Point[Scalar]]:
+    return vertices[:1] + vertices[:0:-1]
 
 
 def _to_segment_angle(start: Point, end: Point) -> Real:
@@ -468,8 +432,8 @@ def to_vertices_sequence(points: Sequence[Point[Scalar]],
         left_increment -= actual_increment
         ears_candidates.remove(candidate)
         ear_base = candidate.left_from_start
-        candidate.right_from_end.flip()
         triangulation.delete(candidate)
+        candidate.right_from_end.flip()
         ears_candidates.add(ear_base)
     return _triangulation_to_border_vertices(triangulation)
 
@@ -567,3 +531,11 @@ def _triangulation_to_border_vertices(triangulation: Triangulation
     result = [edge.start for edge in to_boundary_edges(triangulation)]
     compress_contour(result, triangulation.context.angle_orientation)
     return result
+
+
+def horizontal_point_key(point: Point[Scalar]) -> Tuple[Scalar, Scalar]:
+    return point.x, point.y
+
+
+def vertical_point_key(point: Point[Scalar]) -> Tuple[Scalar, Scalar]:
+    return point.y, point.x
