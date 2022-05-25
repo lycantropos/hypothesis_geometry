@@ -1,5 +1,4 @@
-from .core.hints import (Multicontour,
-                         Strategy)
+from .core import hints as _hints
 
-Multicontour = Multicontour
-Strategy = Strategy
+Multicontour = _hints.Multicontour
+Strategy = _hints.Strategy
