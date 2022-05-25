@@ -83,12 +83,7 @@ def to_polygon(points: Sequence[Point[Scalar]],
     sorting_key_chooser = partial(chooser, [horizontal_point_key,
                                             vertical_point_key])
     inner_points = list(set(points) - boundary_points)
-    prior_sorting_key, predicate = (
-        None,
-        has_vertical_leftmost_segment
-        if prior_sorting_key is horizontal_point_key
-        else has_horizontal_lowermost_segment
-    )
+    prior_sorting_key = predicate = None
     holes, holes_edges = [], []
     contour_cls, to_contour_segments = (context.contour_cls,
                                         context.contour_segments)
