@@ -713,6 +713,8 @@ def to_points_in_general_position(x_coordinates: Strategy[Scalar],
 
     def coordinates_to_points(xs: Sequence[Scalar], ys: Sequence[Scalar]
                               ) -> Strategy[Sequence[Point[Scalar]]]:
+        xs = sorted(xs)
+        ys = sorted(ys)
         grid_size = to_prior_prime(min(len(xs), len(ys)))
 
         def x_indices_to_points(
