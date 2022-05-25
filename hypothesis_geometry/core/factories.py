@@ -152,8 +152,9 @@ def to_polygon(points: Sequence[Point[Scalar]],
         for neighbour in edges_neighbours.pop(edge):
             edges_neighbours[neighbour] = to_edge_neighbours(neighbour)
             candidates.add(neighbour)
-    border = contour_cls(_triangulation_to_border_vertices(triangulation))
-    return context.polygon_cls(border, holes)
+    border_vertices = _triangulation_to_border_vertices(triangulation)
+    assert len(border_vertices) >= MIN_CONTOUR_SIZE
+    return context.polygon_cls(contour_cls(border_vertices), holes)
 
 
 def _reverse_vertices(vertices: Sequence[Point[Scalar]]
