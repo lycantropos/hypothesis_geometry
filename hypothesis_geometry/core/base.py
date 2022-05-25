@@ -582,8 +582,9 @@ def to_multipolygons(x_coordinates: Strategy[Scalar],
                             or max_border_size is None
                             or max_holes_size is None
                             or max_hole_size is None)
-                        else max_size * (max_border_size
-                                         + max_hole_size * max_holes_size))
+                        else max(max_size * (max_border_size
+                                             + max_hole_size * max_holes_size),
+                                 min_points_count))
     polygons = ((strategies.lists(x_coordinates,
                                   min_size=min_points_count,
                                   max_size=max_points_count,
