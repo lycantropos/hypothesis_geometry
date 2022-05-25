@@ -16,26 +16,27 @@ from ground.hints import (Box as _Box,
                           Segment as _Segment)
 from hypothesis.errors import HypothesisWarning as _HypothesisWarning
 
-from .core.base import (boxes as _boxes,
-                        concave_vertices_sequences
-                        as _concave_vertices_sequences,
-                        convex_vertices_sequences
-                        as _convex_vertices_sequences,
-                        empty_geometries as _empty_geometries,
-                        mixes as _mixes,
-                        multicontours as _multicontours,
-                        multipoints as _multipoints,
-                        multipolygons as _multipolygons,
-                        multisegments as _multisegments,
-                        points as _points,
-                        polygons as _polygons,
-                        rectangular_vertices_sequences
-                        as _rectangular_vertices_sequences,
-                        segments as _segments,
-                        star_vertices_sequences as _star_vertices_sequences,
-                        triangular_vertices_sequences
-                        as _triangular_vertices_sequences,
-                        vertices_sequences as _vertices_sequences)
+from .core.base import (to_boxes as _to_boxes,
+                        to_concave_vertices_sequences
+                        as _to_concave_vertices_sequences,
+                        to_convex_vertices_sequences
+                        as _to_convex_vertices_sequences,
+                        to_empty_geometries as _to_empty_geometries,
+                        to_mixes as _to_mixes,
+                        to_multicontours as _to_multicontours,
+                        to_multipoints as _to_multipoints,
+                        to_multipolygons as _to_multipolygons,
+                        to_multisegments as _to_multisegments,
+                        to_points as _to_points,
+                        to_polygons as _to_polygons,
+                        to_rectangular_vertices_sequences
+                        as _to_rectangular_vertices_sequences,
+                        to_segments as _to_segments,
+                        to_star_vertices_sequences
+                        as _to_star_vertices_sequences,
+                        to_triangular_vertices_sequences
+                        as _to_triangular_vertices_sequences,
+                        to_vertices_sequences as _to_vertices_sequences)
 from .core.constants import (MIN_CONTOUR_SIZE as _MIN_CONTOUR_SIZE,
                              MIN_MIX_COMPONENTS_COUNT
                              as _MIN_MIX_COMPONENTS_COUNT,
@@ -63,7 +64,9 @@ def empty_geometries(context: _Optional[_Context] = None) -> _Strategy[_Empty]:
     >>> isinstance(empty, Empty)
     True
     """
-    return _empty_geometries(_get_context() if context is None else context)
+    return _to_empty_geometries(_get_context()
+                                if context is None
+                                else context)
 
 
 def points(x_coordinates: _Strategy[_Scalar],
@@ -125,8 +128,8 @@ def points(x_coordinates: _Strategy[_Scalar],
     ...  and min_y_coordinate <= point.y <= max_y_coordinate)
     True
     """
-    return _points(x_coordinates, y_coordinates,
-                   context=_get_context() if context is None else context)
+    return _to_points(x_coordinates, y_coordinates,
+                      context=_get_context() if context is None else context)
 
 
 def multipoints(x_coordinates: _Strategy[_Scalar],
@@ -208,12 +211,12 @@ def multipoints(x_coordinates: _Strategy[_Scalar],
     True
     """
     _validate_sizes(min_size, max_size, _MIN_MULTIPOINT_SIZE)
-    if context is None:
-        context = _get_context()
-    return _multipoints(x_coordinates, y_coordinates,
-                        min_size=max(min_size, _MIN_MULTIPOINT_SIZE),
-                        max_size=max_size,
-                        context=context)
+    return _to_multipoints(x_coordinates, y_coordinates,
+                           min_size=max(min_size, _MIN_MULTIPOINT_SIZE),
+                           max_size=max_size,
+                           context=(_get_context()
+                                    if context is None
+                                    else context))
 
 
 def segments(x_coordinates: _Strategy[_Scalar],
@@ -284,8 +287,10 @@ def segments(x_coordinates: _Strategy[_Scalar],
     ...  and min_y_coordinate <= segment.end.y <= max_y_coordinate)
     True
     """
-    return _segments(x_coordinates, y_coordinates,
-                     context=_get_context() if context is None else context)
+    return _to_segments(x_coordinates, y_coordinates,
+                        context=(_get_context()
+                                 if context is None
+                                 else context))
 
 
 def multisegments(x_coordinates: _Strategy[_Scalar],
@@ -375,12 +380,12 @@ def multisegments(x_coordinates: _Strategy[_Scalar],
     True
     """
     _validate_sizes(min_size, max_size, _MIN_MULTISEGMENT_SIZE)
-    return _multisegments(x_coordinates, y_coordinates,
-                          min_size=max(min_size, _MIN_MULTISEGMENT_SIZE),
-                          max_size=max_size,
-                          context=(_get_context()
-                                   if context is None
-                                   else context))
+    return _to_multisegments(x_coordinates, y_coordinates,
+                             min_size=max(min_size, _MIN_MULTISEGMENT_SIZE),
+                             max_size=max_size,
+                             context=(_get_context()
+                                      if context is None
+                                      else context))
 
 
 def contours(x_coordinates: _Strategy[_Scalar],
@@ -464,10 +469,10 @@ def contours(x_coordinates: _Strategy[_Scalar],
     _validate_sizes(min_size, max_size, _MIN_CONTOUR_SIZE)
     if context is None:
         context = _get_context()
-    return (_vertices_sequences(x_coordinates, y_coordinates,
-                                min_size=max(min_size, _MIN_CONTOUR_SIZE),
-                                max_size=max_size,
-                                context=context)
+    return (_to_vertices_sequences(x_coordinates, y_coordinates,
+                                   min_size=max(min_size, _MIN_CONTOUR_SIZE),
+                                   max_size=max_size,
+                                   context=context)
             .map(context.contour_cls))
 
 
@@ -553,13 +558,13 @@ def convex_contours(x_coordinates: _Strategy[_Scalar],
     True
     """
     _validate_sizes(min_size, max_size, _MinContourSize.CONVEX)
-    if context is None:
-        context = _get_context()
-    return (_convex_vertices_sequences(x_coordinates, y_coordinates,
-                                       min_size=max(min_size,
-                                                    _MinContourSize.CONVEX),
-                                       max_size=max_size,
-                                       context=context)
+    min_size = max(min_size, _MinContourSize.CONVEX)
+    return (_to_convex_vertices_sequences(x_coordinates, y_coordinates,
+                                          min_size=min_size,
+                                          max_size=max_size,
+                                          context=(_get_context()
+                                                   if context is None
+                                                   else context))
             .map(context.contour_cls))
 
 
@@ -643,13 +648,13 @@ def concave_contours(x_coordinates: _Strategy[_Scalar],
     True
     """
     _validate_sizes(min_size, max_size, _MinContourSize.CONCAVE)
-    if context is None:
-        context = _get_context()
-    return (_concave_vertices_sequences(x_coordinates, y_coordinates,
-                                        min_size=max(min_size,
-                                                     _MinContourSize.CONCAVE),
-                                        max_size=max_size,
-                                        context=context)
+    min_size = max(min_size, _MinContourSize.CONCAVE)
+    return (_to_concave_vertices_sequences(x_coordinates, y_coordinates,
+                                           min_size=min_size,
+                                           max_size=max_size,
+                                           context=(_get_context()
+                                                    if context is None
+                                                    else context))
             .map(context.contour_cls))
 
 
@@ -722,10 +727,10 @@ def triangular_contours(x_coordinates: _Strategy[_Scalar],
     ...     for vertex in contour.vertices)
     True
     """
-    if context is None:
-        context = _get_context()
-    return (_triangular_vertices_sequences(x_coordinates, y_coordinates,
-                                           context=context)
+    return (_to_triangular_vertices_sequences(x_coordinates, y_coordinates,
+                                              context=(_get_context()
+                                                       if context is None
+                                                       else context))
             .map(context.contour_cls))
 
 
@@ -798,10 +803,10 @@ def rectangular_contours(x_coordinates: _Strategy[_Scalar],
     ...     for vertex in contour.vertices)
     True
     """
-    if context is None:
-        context = _get_context()
-    return (_rectangular_vertices_sequences(x_coordinates, y_coordinates,
-                                            context=context)
+    return (_to_rectangular_vertices_sequences(x_coordinates, y_coordinates,
+                                               context=(_get_context()
+                                                        if context is None
+                                                        else context))
             .map(context.contour_cls))
 
 
@@ -872,8 +877,8 @@ def boxes(x_coordinates: _Strategy[_Scalar],
     ...  and min_y_coordinate <= box.max_y <= max_y_coordinate)
     True
     """
-    return _boxes(x_coordinates, y_coordinates,
-                  context=_get_context() if context is None else context)
+    return _to_boxes(x_coordinates, y_coordinates,
+                     context=_get_context() if context is None else context)
 
 
 def star_contours(x_coordinates: _Strategy[_Scalar],
@@ -957,12 +962,13 @@ def star_contours(x_coordinates: _Strategy[_Scalar],
     True
     """
     _validate_sizes(min_size, max_size, _MIN_CONTOUR_SIZE)
-    if context is None:
-        context = _get_context()
-    return (_star_vertices_sequences(x_coordinates, y_coordinates,
-                                     min_size=max(min_size, _MIN_CONTOUR_SIZE),
-                                     max_size=max_size,
-                                     context=context)
+    min_size = max(min_size, _MIN_CONTOUR_SIZE)
+    return (_to_star_vertices_sequences(x_coordinates, y_coordinates,
+                                        min_size=min_size,
+                                        max_size=max_size,
+                                        context=(_get_context()
+                                                 if context is None
+                                                 else context))
             .map(context.contour_cls))
 
 
@@ -1074,15 +1080,16 @@ def multicontours(x_coordinates: _Strategy[_Scalar],
     _validate_sizes(min_size, max_size, _MIN_MULTICONTOUR_SIZE)
     _validate_sizes(min_contour_size, max_contour_size, _MIN_CONTOUR_SIZE,
                     'min_contour_size', 'max_contour_size')
-    return _multicontours(x_coordinates, y_coordinates,
-                          min_size=max(min_size, _MIN_MULTICONTOUR_SIZE),
-                          max_size=max_size,
-                          min_contour_size=max(min_contour_size,
-                                               _MIN_CONTOUR_SIZE),
-                          max_contour_size=max_contour_size,
-                          context=(_get_context()
-                                   if context is None
-                                   else context))
+    min_size = max(min_size, _MIN_MULTICONTOUR_SIZE)
+    return _to_multicontours(x_coordinates, y_coordinates,
+                             min_size=min_size,
+                             max_size=max_size,
+                             min_contour_size=max(min_contour_size,
+                                                  _MIN_CONTOUR_SIZE),
+                             max_contour_size=max_contour_size,
+                             context=(_get_context()
+                                      if context is None
+                                      else context))
 
 
 def polygons(x_coordinates: _Strategy[_Scalar],
@@ -1218,14 +1225,17 @@ def polygons(x_coordinates: _Strategy[_Scalar],
                     'min_holes_size', 'max_holes_size')
     _validate_sizes(min_hole_size, max_hole_size, _MIN_CONTOUR_SIZE,
                     'min_hole_size', 'max_hole_size')
-    return _polygons(x_coordinates, y_coordinates,
-                     min_size=max(min_size, _MIN_CONTOUR_SIZE),
-                     max_size=max_size,
-                     min_holes_size=max(min_holes_size, 0),
-                     max_holes_size=max_holes_size,
-                     min_hole_size=max(min_hole_size, _MIN_CONTOUR_SIZE),
-                     max_hole_size=max_hole_size,
-                     context=_get_context() if context is None else context)
+    min_size = max(min_size, _MIN_CONTOUR_SIZE)
+    return _to_polygons(x_coordinates, y_coordinates,
+                        min_size=min_size,
+                        max_size=max_size,
+                        min_holes_size=max(min_holes_size, 0),
+                        max_holes_size=max_holes_size,
+                        min_hole_size=max(min_hole_size, _MIN_CONTOUR_SIZE),
+                        max_hole_size=max_hole_size,
+                        context=(_get_context()
+                                 if context is None
+                                 else context))
 
 
 def multipolygons(x_coordinates: _Strategy[_Scalar],
@@ -1378,19 +1388,21 @@ def multipolygons(x_coordinates: _Strategy[_Scalar],
                     'max_holes_size')
     _validate_sizes(min_hole_size, max_hole_size, _MIN_CONTOUR_SIZE,
                     'min_hole_size', 'max_hole_size')
-    return _multipolygons(x_coordinates, y_coordinates,
-                          min_size=max(min_size, _MIN_MULTIPOLYGON_SIZE),
-                          max_size=max_size,
-                          min_border_size=max(min_border_size,
-                                              _MIN_CONTOUR_SIZE),
-                          max_border_size=max_border_size,
-                          min_holes_size=min_holes_size,
-                          max_holes_size=max_holes_size,
-                          min_hole_size=max(min_hole_size, _MIN_CONTOUR_SIZE),
-                          max_hole_size=max_hole_size,
-                          context=(_get_context()
-                                   if context is None
-                                   else context))
+    min_size = max(min_size, _MIN_MULTIPOLYGON_SIZE)
+    min_border_size = max(min_border_size, _MIN_CONTOUR_SIZE)
+    min_hole_size = max(min_hole_size, _MIN_CONTOUR_SIZE)
+    return _to_multipolygons(x_coordinates, y_coordinates,
+                             min_size=min_size,
+                             max_size=max_size,
+                             min_border_size=min_border_size,
+                             max_border_size=max_border_size,
+                             min_holes_size=min_holes_size,
+                             max_holes_size=max_holes_size,
+                             min_hole_size=min_hole_size,
+                             max_hole_size=max_hole_size,
+                             context=(_get_context()
+                                      if context is None
+                                      else context))
 
 
 def mixes(x_coordinates: _Strategy[_Scalar],
@@ -1691,85 +1703,12 @@ def mixes(x_coordinates: _Strategy[_Scalar],
     min_polygon_hole_size = max(min_polygon_hole_size, _MIN_CONTOUR_SIZE)
     if context is None:
         context = _get_context()
-    return (((_mixes(x_coordinates, y_coordinates,
-                     min_points_size=max(min_points_size, 1),
-                     max_points_size=max_points_size,
-                     min_segments_size=max(min_segments_size, 1),
-                     max_segments_size=max_segments_size,
-                     min_polygons_size=min_polygons_size,
-                     max_polygons_size=max_polygons_size,
-                     min_polygon_border_size=min_polygon_border_size,
-                     max_polygon_border_size=max_polygon_border_size,
-                     min_polygon_holes_size=min_polygon_holes_size,
-                     max_polygon_holes_size=max_polygon_holes_size,
-                     min_polygon_hole_size=min_polygon_hole_size,
-                     max_polygon_hole_size=max_polygon_hole_size,
-                     context=context)
-              | _mixes(x_coordinates, y_coordinates,
-                       min_points_size=max(min_points_size, 1),
-                       max_points_size=max_points_size,
-                       min_segments_size=min_segments_size,
-                       max_segments_size=max_segments_size,
-                       min_polygons_size=max(min_polygons_size, 1),
-                       max_polygons_size=max_polygons_size,
-                       min_polygon_border_size=min_polygon_border_size,
-                       max_polygon_border_size=max_polygon_border_size,
-                       min_polygon_holes_size=min_polygon_holes_size,
-                       max_polygon_holes_size=max_polygon_holes_size,
-                       min_polygon_hole_size=min_polygon_hole_size,
-                       max_polygon_hole_size=max_polygon_hole_size,
-                       context=context)
-              | _mixes(x_coordinates, y_coordinates,
-                       min_points_size=min_points_size,
-                       max_points_size=max_points_size,
-                       min_segments_size=max(min_segments_size, 1),
-                       max_segments_size=max_segments_size,
-                       min_polygons_size=max(min_polygons_size, 1),
-                       max_polygons_size=max_polygons_size,
-                       min_polygon_border_size=min_polygon_border_size,
-                       max_polygon_border_size=max_polygon_border_size,
-                       min_polygon_holes_size=min_polygon_holes_size,
-                       max_polygon_holes_size=max_polygon_holes_size,
-                       min_polygon_hole_size=min_polygon_hole_size,
-                       max_polygon_hole_size=max_polygon_hole_size,
-                       context=context)
-              if has_shaped
-              else _mixes(x_coordinates, y_coordinates,
-                          min_points_size=max(min_points_size, 1),
-                          max_points_size=max_points_size,
-                          min_segments_size=max(min_segments_size, 1),
-                          max_segments_size=max_segments_size,
-                          min_polygons_size=min_polygons_size,
-                          max_polygons_size=max_polygons_size,
-                          min_polygon_border_size=min_polygon_border_size,
-                          max_polygon_border_size=max_polygon_border_size,
-                          min_polygon_holes_size=min_polygon_holes_size,
-                          max_polygon_holes_size=max_polygon_holes_size,
-                          min_polygon_hole_size=min_polygon_hole_size,
-                          max_polygon_hole_size=max_polygon_hole_size,
-                          context=context))
-             if has_linear
-             else _mixes(x_coordinates, y_coordinates,
-                         min_points_size=max(min_points_size, 1),
-                         max_points_size=max_points_size,
-                         min_segments_size=min_segments_size,
-                         max_segments_size=max_segments_size,
-                         min_polygons_size=max(min_polygons_size, 1),
-                         max_polygons_size=max_polygons_size,
-                         min_polygon_border_size=min_polygon_border_size,
-                         max_polygon_border_size=max_polygon_border_size,
-                         min_polygon_holes_size=min_polygon_holes_size,
-                         max_polygon_holes_size=max_polygon_holes_size,
-                         min_polygon_hole_size=min_polygon_hole_size,
-                         max_polygon_hole_size=max_polygon_hole_size,
-                         context=context))
-            if has_discrete
-            else _mixes(x_coordinates, y_coordinates,
-                        min_points_size=min_points_size,
+    return (((_to_mixes(x_coordinates, y_coordinates,
+                        min_points_size=max(min_points_size, 1),
                         max_points_size=max_points_size,
                         min_segments_size=max(min_segments_size, 1),
                         max_segments_size=max_segments_size,
-                        min_polygons_size=max(min_polygons_size, 1),
+                        min_polygons_size=min_polygons_size,
                         max_polygons_size=max_polygons_size,
                         min_polygon_border_size=min_polygon_border_size,
                         max_polygon_border_size=max_polygon_border_size,
@@ -1777,7 +1716,80 @@ def mixes(x_coordinates: _Strategy[_Scalar],
                         max_polygon_holes_size=max_polygon_holes_size,
                         min_polygon_hole_size=min_polygon_hole_size,
                         max_polygon_hole_size=max_polygon_hole_size,
-                        context=context))
+                        context=context)
+              | _to_mixes(x_coordinates, y_coordinates,
+                          min_points_size=max(min_points_size, 1),
+                          max_points_size=max_points_size,
+                          min_segments_size=min_segments_size,
+                          max_segments_size=max_segments_size,
+                          min_polygons_size=max(min_polygons_size, 1),
+                          max_polygons_size=max_polygons_size,
+                          min_polygon_border_size=min_polygon_border_size,
+                          max_polygon_border_size=max_polygon_border_size,
+                          min_polygon_holes_size=min_polygon_holes_size,
+                          max_polygon_holes_size=max_polygon_holes_size,
+                          min_polygon_hole_size=min_polygon_hole_size,
+                          max_polygon_hole_size=max_polygon_hole_size,
+                          context=context)
+              | _to_mixes(x_coordinates, y_coordinates,
+                          min_points_size=min_points_size,
+                          max_points_size=max_points_size,
+                          min_segments_size=max(min_segments_size, 1),
+                          max_segments_size=max_segments_size,
+                          min_polygons_size=max(min_polygons_size, 1),
+                          max_polygons_size=max_polygons_size,
+                          min_polygon_border_size=min_polygon_border_size,
+                          max_polygon_border_size=max_polygon_border_size,
+                          min_polygon_holes_size=min_polygon_holes_size,
+                          max_polygon_holes_size=max_polygon_holes_size,
+                          min_polygon_hole_size=min_polygon_hole_size,
+                          max_polygon_hole_size=max_polygon_hole_size,
+                          context=context)
+              if has_shaped
+              else _to_mixes(x_coordinates, y_coordinates,
+                             min_points_size=max(min_points_size, 1),
+                             max_points_size=max_points_size,
+                             min_segments_size=max(min_segments_size, 1),
+                             max_segments_size=max_segments_size,
+                             min_polygons_size=min_polygons_size,
+                             max_polygons_size=max_polygons_size,
+                             min_polygon_border_size=min_polygon_border_size,
+                             max_polygon_border_size=max_polygon_border_size,
+                             min_polygon_holes_size=min_polygon_holes_size,
+                             max_polygon_holes_size=max_polygon_holes_size,
+                             min_polygon_hole_size=min_polygon_hole_size,
+                             max_polygon_hole_size=max_polygon_hole_size,
+                             context=context))
+             if has_linear
+             else _to_mixes(x_coordinates, y_coordinates,
+                            min_points_size=max(min_points_size, 1),
+                            max_points_size=max_points_size,
+                            min_segments_size=min_segments_size,
+                            max_segments_size=max_segments_size,
+                            min_polygons_size=max(min_polygons_size, 1),
+                            max_polygons_size=max_polygons_size,
+                            min_polygon_border_size=min_polygon_border_size,
+                            max_polygon_border_size=max_polygon_border_size,
+                            min_polygon_holes_size=min_polygon_holes_size,
+                            max_polygon_holes_size=max_polygon_holes_size,
+                            min_polygon_hole_size=min_polygon_hole_size,
+                            max_polygon_hole_size=max_polygon_hole_size,
+                            context=context))
+            if has_discrete
+            else _to_mixes(x_coordinates, y_coordinates,
+                           min_points_size=min_points_size,
+                           max_points_size=max_points_size,
+                           min_segments_size=max(min_segments_size, 1),
+                           max_segments_size=max_segments_size,
+                           min_polygons_size=max(min_polygons_size, 1),
+                           max_polygons_size=max_polygons_size,
+                           min_polygon_border_size=min_polygon_border_size,
+                           max_polygon_border_size=max_polygon_border_size,
+                           min_polygon_holes_size=min_polygon_holes_size,
+                           max_polygon_holes_size=max_polygon_holes_size,
+                           min_polygon_hole_size=min_polygon_hole_size,
+                           max_polygon_hole_size=max_polygon_hole_size,
+                           context=context))
 
 
 def _validate_sizes(min_size: int,
