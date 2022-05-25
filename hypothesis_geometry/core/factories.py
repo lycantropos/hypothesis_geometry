@@ -1,7 +1,10 @@
 import math
+from collections import deque
 from functools import partial
+from itertools import groupby
 from math import atan2
 from numbers import Real
+from operator import itemgetter
 from random import Random
 from typing import (Callable,
                     Collection,
@@ -25,7 +28,8 @@ from ground.hints import (Point,
 from locus import segmental
 
 from .constants import MIN_CONTOUR_SIZE
-from .contracts import (has_horizontal_lowermost_segment,
+from .contracts import (angle_contains_point,
+                        has_horizontal_lowermost_segment,
                         has_vertical_leftmost_segment)
 from .hints import (Chooser,
                     Multicontour,
@@ -160,6 +164,34 @@ def _reverse_vertices(vertices: Sequence[Point[Scalar]]
 
 def _to_segment_angle(start: Point, end: Point) -> Real:
     return math.atan2(end.y - start.y, end.x - start.x)
+
+
+def to_star_contour_vertices(points: Sequence[Point[Scalar]],
+                             context: Context) -> Sequence[Point[Scalar]]:
+    centroid = context.multipoint_centroid(context.multipoint_cls(points))
+    contour_cls, region_centroid_constructor, orienteer = (
+        context.contour_cls, context.region_centroid,
+        context.angle_orientation)
+    result, prev_size = points, len(points) + 1
+    while 2 < len(result) < prev_size:
+        prev_size = len(result)
+        result = [deque(candidates,
+                        maxlen=1)[0][1]
+                  for _, candidates in groupby(sorted(
+                    (_to_segment_angle(centroid, point), point)
+                    for point in result),
+                    key=itemgetter(0))]
+        if len(result) > 2:
+            centroid = region_centroid_constructor(contour_cls(result))
+            index = 0
+            while max(index, 2) < len(result):
+                if not angle_contains_point(result[index], result[index - 1],
+                                            result[(index + 1) % len(result)],
+                                            centroid, orienteer):
+                    del result[index]
+                index += 1
+            compress_contour(result, orienteer)
+    return result
 
 
 def to_convex_vertices_sequence(points: Sequence[Point[Scalar]],
