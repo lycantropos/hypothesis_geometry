@@ -77,32 +77,14 @@ def to_polygon(points: Sequence[Point[Scalar]],
                context: Context) -> Polygon[Scalar]:
     triangulation = Triangulation.delaunay(points, context)
     boundary_edges = to_boundary_edges(triangulation)
-    border_points = [edge.start for edge in boundary_edges]
-    boundary_points = set(border_points)
+    boundary_points = {edge.start for edge in boundary_edges}
     sorting_key_chooser = partial(chooser, [horizontal_point_key,
                                             vertical_point_key])
     inner_points = list(set(points) - boundary_points)
     prior_sorting_key = predicate = None
     holes, holes_edges = [], []
-    contour_cls, orienteer, points_squared_distance, to_contour_segments = (
-        context.contour_cls, context.angle_orientation,
-        context.points_squared_distance, context.contour_segments
-    )
-
-    def is_valid_border_point(first_hole_vertex: Point,
-                              second_hole_vertex: Point,
-                              point: Point) -> bool:
-        first_segment = context.segment_cls(first_hole_vertex, point)
-        second_segment = context.segment_cls(second_hole_vertex, point)
-        return (all((context.segments_relation(edge, first_segment)
-                     in (Relation.TOUCH, Relation.DISJOINT))
-                    and (context.segments_relation(edge, second_segment)
-                         in (Relation.TOUCH, Relation.DISJOINT))
-                    for edge in holes_edges)
-                and (orienteer(first_hole_vertex, second_hole_vertex, point)
-                     is not Orientation.COLLINEAR))
-
-    touches_border = touches_prior_hole = False
+    contour_cls, to_contour_segments = (context.contour_cls,
+                                        context.contour_segments)
     for hole_size in holes_sizes:
         sorting_key = sorting_key_chooser()
         if sorting_key is not prior_sorting_key:
@@ -115,35 +97,15 @@ def to_polygon(points: Sequence[Point[Scalar]],
             inner_points.sort(key=sorting_key)
         hole_points = inner_points[:hole_size]
         hole_vertices = to_vertices_sequence(hole_points, hole_size, context)
-        if len(hole_vertices) == hole_size - 1:
-            min_hole_vertex = min(hole_vertices,
-                                  key=sorting_key)
-            max_hole_vertex = max(hole_vertices,
-                                  key=sorting_key)
-            candidates = [point
-                          for point in border_points
-                          if is_valid_border_point(min_hole_vertex,
-                                                   max_hole_vertex, point)]
-            touches_border = ((not touches_border or not touches_prior_hole)
-                              and len(candidates) > 0)
-            if touches_border:
-                border_point = min(candidates,
-                                   key=partial(points_squared_distance,
-                                               max_hole_vertex))
-                hole_points.append(border_point)
-                hole_vertices = to_vertices_sequence(hole_points, hole_size,
-                                                     context)
-                assert len(hole_vertices) == hole_size
-        else:
-            touches_border = False
         if len(hole_vertices) >= MIN_CONTOUR_SIZE:
             hole = contour_cls(_reverse_vertices(hole_vertices))
             holes.append(hole)
             hole_edges = to_contour_segments(hole)
             holes_edges.extend(hole_edges)
             boundary_points.update(hole_points)
-            touches_prior_hole = predicate(hole_edges)
-            inner_points = inner_points[len(hole_points) - touches_prior_hole:]
+            can_touch_next_hole = predicate(hole_edges)
+            inner_points = inner_points[len(hole_points)
+                                        - can_touch_next_hole:]
 
     def to_edges_cross_or_overlap_detector(edges: Sequence[Segment]
                                            ) -> Callable[[Segment], bool]:
@@ -190,9 +152,8 @@ def to_polygon(points: Sequence[Point[Scalar]],
         for neighbour in edges_neighbours.pop(edge):
             edges_neighbours[neighbour] = to_edge_neighbours(neighbour)
             candidates.add(neighbour)
-    border_vertices = [edge.start for edge in to_boundary_edges(triangulation)]
-    compress_contour(border_vertices, context.angle_orientation)
-    return context.polygon_cls(contour_cls(border_vertices), holes)
+    border = contour_cls(_triangulation_to_border_vertices(triangulation))
+    return context.polygon_cls(border, holes)
 
 
 def _reverse_vertices(vertices: Sequence[Point[Scalar]]
