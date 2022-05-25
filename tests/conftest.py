@@ -17,7 +17,8 @@ settings.register_profile('default',
                                     if on_ci
                                     else None),
                           max_examples=max_examples,
-                          suppress_health_check=[HealthCheck.filter_too_much,
+                          suppress_health_check=[HealthCheck.data_too_large,
+                                                 HealthCheck.filter_too_much,
                                                  HealthCheck.too_slow])
 
 
