@@ -128,8 +128,10 @@ def points(x_coordinates: _Strategy[_Scalar],
     ...  and min_y_coordinate <= point.y <= max_y_coordinate)
     True
     """
+    if context is None:
+        context = _get_context()
     return _to_points(x_coordinates, y_coordinates,
-                      context=_get_context() if context is None else context)
+                      context=context)
 
 
 def multipoints(x_coordinates: _Strategy[_Scalar],
@@ -877,8 +879,10 @@ def boxes(x_coordinates: _Strategy[_Scalar],
     ...  and min_y_coordinate <= box.max_y <= max_y_coordinate)
     True
     """
+    if context is None:
+        context = _get_context()
     return _to_boxes(x_coordinates, y_coordinates,
-                     context=_get_context() if context is None else context)
+                     context=context)
 
 
 def star_contours(x_coordinates: _Strategy[_Scalar],
