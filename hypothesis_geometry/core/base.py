@@ -816,7 +816,8 @@ def polygons(x_coordinates: Strategy[Scalar],
         return ((strategies.integers(min_holes_size, points_max_hole_size)
                  .flatmap(partial(_to_holes_sizes,
                                   min_hole_points_count=min_hole_size,
-                                  max_hole_points_count=max_inner_points_count)))
+                                  max_hole_points_count
+                                  =max_inner_points_count)))
                 if max_inner_points_count >= min_hole_size
                 else strategies.builds(list))
 
@@ -846,7 +847,8 @@ def polygons(x_coordinates: Strategy[Scalar],
                         min_size=min_holes_size,
                         max_size=max_holes_size,
                         min_contour_size=min_hole_size,
-                        max_contour_size=max_hole_size))
+                        max_contour_size=max_hole_size
+                ))
 
     min_inner_points_count = min_hole_size * min_holes_size
 
