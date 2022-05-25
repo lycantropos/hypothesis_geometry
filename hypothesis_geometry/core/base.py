@@ -41,7 +41,6 @@ from .factories import (contour_vertices_to_edges,
                         to_max_convex_hull,
                         to_multicontour,
                         to_polygon,
-                        to_star_contour_vertices,
                         to_vertices_sequence)
 from .hints import (Chooser,
                     Domain,
@@ -880,24 +879,6 @@ def to_segments(x_coordinates: Strategy[Scalar],
             .map(pack(context.segment_cls)))
 
 
-def to_star_vertices_sequences(x_coordinates: Strategy[Scalar],
-                               y_coordinates: Optional[Strategy[Scalar]],
-                               *,
-                               min_size: int,
-                               max_size: Optional[int],
-                               context: Context
-                               ) -> Strategy[Sequence[Point[Scalar]]]:
-    return (to_points_in_general_position(x_coordinates, y_coordinates,
-                                          min_size=min_size,
-                                          max_size=max_size,
-                                          context=context)
-            .map(partial(to_star_contour_vertices,
-                         context=context))
-            .filter(partial(has_valid_size,
-                            min_size=min_size,
-                            max_size=max_size)))
-
-
 def to_sub_lists(values: Sequence[Domain],
                  *,
                  min_size: int) -> Strategy[List[Domain]]:
@@ -977,17 +958,13 @@ def _to_vertices_sequences(
                                     else min(len(points), max_size))
         return strategies.tuples(strategies.just(points), sizes)
 
-    return (to_star_vertices_sequences(x_coordinates, y_coordinates,
-                                       min_size=min_size,
-                                       max_size=max_size,
-                                       context=context)
-            | (to_points_in_general_position(x_coordinates, y_coordinates,
-                                             min_size=min_size,
-                                             max_size=max_size,
-                                             context=context)
-               .flatmap(to_points_with_sizes)
-               .map(pack(partial(to_vertices_sequence,
-                                 context=context)))
-               .filter(partial(has_valid_size,
-                               min_size=min_size,
-                               max_size=max_size))))
+    return (to_points_in_general_position(x_coordinates, y_coordinates,
+                                          min_size=min_size,
+                                          max_size=max_size,
+                                          context=context)
+            .flatmap(to_points_with_sizes)
+            .map(pack(partial(to_vertices_sequence,
+                              context=context)))
+            .filter(partial(has_valid_size,
+                            min_size=min_size,
+                            max_size=max_size)))

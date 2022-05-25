@@ -32,8 +32,6 @@ from .core.base import (to_boxes as _to_boxes,
                         to_rectangular_vertices_sequences
                         as _to_rectangular_vertices_sequences,
                         to_segments as _to_segments,
-                        to_star_vertices_sequences
-                        as _to_star_vertices_sequences,
                         to_triangular_vertices_sequences
                         as _to_triangular_vertices_sequences,
                         to_vertices_sequences as _to_vertices_sequences)
@@ -883,97 +881,6 @@ def boxes(x_coordinates: _Strategy[_Scalar],
         context = _get_context()
     return _to_boxes(x_coordinates, y_coordinates,
                      context=context)
-
-
-def star_contours(x_coordinates: _Strategy[_Scalar],
-                  y_coordinates: _Optional[_Strategy[_Scalar]] = None,
-                  *,
-                  min_size: int = _MIN_CONTOUR_SIZE,
-                  max_size: _Optional[int] = None,
-                  context: _Optional[_Context] = None
-                  ) -> _Strategy[_Contour[_Scalar]]:
-    """
-    Returns a strategy for star contours.
-    Star contour is a contour such that every vertex is visible from centroid,
-    i.e. segments from centroid to vertices do not cross or overlap contour.
-
-    :param x_coordinates: strategy for vertices' x-coordinates.
-    :param y_coordinates:
-        strategy for vertices' y-coordinates,
-        ``None`` for reusing x-coordinates strategy.
-    :param min_size: lower bound for contour size.
-    :param max_size: upper bound for contour size, ``None`` for unbound.
-    :param context: strategy context.
-
-    >>> from ground.base import get_context
-    >>> from hypothesis import strategies
-    >>> from hypothesis_geometry import planar
-    >>> context = get_context()
-    >>> Contour = context.contour_cls
-
-    For same coordinates' domain:
-
-    >>> min_coordinate, max_coordinate = -1., 1.
-    >>> coordinates_type = float
-    >>> coordinates = strategies.floats(min_coordinate, max_coordinate,
-    ...                                 allow_infinity=False,
-    ...                                 allow_nan=False)
-    >>> min_size, max_size = 5, 10
-    >>> contours = planar.star_contours(coordinates,
-    ...                                 min_size=min_size,
-    ...                                 max_size=max_size)
-    >>> contour = contours.example()
-    >>> isinstance(contour, Contour)
-    True
-    >>> min_size <= len(contour.vertices) <= max_size
-    True
-    >>> all(isinstance(vertex.x, coordinates_type)
-    ...     and isinstance(vertex.y, coordinates_type)
-    ...     for vertex in contour.vertices)
-    True
-    >>> all(min_coordinate <= vertex.x <= max_coordinate
-    ...     and min_coordinate <= vertex.y <= max_coordinate
-    ...     for vertex in contour.vertices)
-    True
-
-    For different coordinates' domains:
-
-    >>> min_x_coordinate, max_x_coordinate = -1., 1.
-    >>> min_y_coordinate, max_y_coordinate = 10., 100.
-    >>> coordinates_type = float
-    >>> x_coordinates = strategies.floats(min_x_coordinate, max_x_coordinate,
-    ...                                   allow_infinity=False,
-    ...                                   allow_nan=False)
-    >>> y_coordinates = strategies.floats(min_y_coordinate, max_y_coordinate,
-    ...                                   allow_infinity=False,
-    ...                                   allow_nan=False)
-    >>> min_size, max_size = 5, 10
-    >>> contours = planar.star_contours(x_coordinates, y_coordinates,
-    ...                                 min_size=min_size,
-    ...                                 max_size=max_size)
-    >>> contour = contours.example()
-    >>> isinstance(contour, Contour)
-    True
-    >>> min_size <= len(contour.vertices) <= max_size
-    True
-    >>> all(isinstance(vertex.x, coordinates_type)
-    ...     and isinstance(vertex.y, coordinates_type)
-    ...     for vertex in contour.vertices)
-    True
-    >>> all(min_x_coordinate <= vertex.x <= max_x_coordinate
-    ...     and min_y_coordinate <= vertex.y <= max_y_coordinate
-    ...     for vertex in contour.vertices)
-    True
-    """
-    _validate_sizes(min_size, max_size, _MIN_CONTOUR_SIZE)
-    if context is None:
-        context = _get_context()
-    min_size = max(min_size, _MIN_CONTOUR_SIZE)
-    return (_to_star_vertices_sequences(x_coordinates, y_coordinates,
-                                        min_size=min_size,
-                                        max_size=max_size,
-                                        context=context)
-            .map(context.contour_cls))
 
 
 def multicontours(x_coordinates: _Strategy[_Scalar],
