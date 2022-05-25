@@ -62,11 +62,11 @@ def to_multicontour(points: Sequence[Point[Scalar]],
             )
             points.sort(key=sorting_key)
         contour_vertices = to_vertices_sequence(points[:size], size, context)
-        if len(contour_vertices) >= MIN_CONTOUR_SIZE:
-            contour = contour_cls(contour_vertices)
-            result.append(contour)
-            can_touch_next_contour = predicate(to_contour_segments(contour))
-            points = points[size - can_touch_next_contour:]
+        assert len(contour_vertices) >= MIN_CONTOUR_SIZE
+        contour = contour_cls(contour_vertices)
+        result.append(contour)
+        can_touch_next_contour = predicate(to_contour_segments(contour))
+        points = points[size - can_touch_next_contour:]
     return result
 
 
@@ -97,15 +97,15 @@ def to_polygon(points: Sequence[Point[Scalar]],
             inner_points.sort(key=sorting_key)
         hole_points = inner_points[:hole_size]
         hole_vertices = to_vertices_sequence(hole_points, hole_size, context)
-        if len(hole_vertices) >= MIN_CONTOUR_SIZE:
-            hole = contour_cls(_reverse_vertices(hole_vertices))
-            holes.append(hole)
-            hole_edges = to_contour_segments(hole)
-            holes_edges.extend(hole_edges)
-            boundary_points.update(hole_points)
-            can_touch_next_hole = predicate(hole_edges)
-            inner_points = inner_points[len(hole_points)
-                                        - can_touch_next_hole:]
+        assert len(hole_vertices) >= MIN_CONTOUR_SIZE
+        hole = contour_cls(_reverse_vertices(hole_vertices))
+        holes.append(hole)
+        hole_edges = to_contour_segments(hole)
+        holes_edges.extend(hole_edges)
+        boundary_points.update(hole_points)
+        can_touch_next_hole = predicate(hole_edges)
+        inner_points = inner_points[len(hole_points)
+                                    - can_touch_next_hole:]
 
     def to_edges_cross_or_overlap_detector(edges: Sequence[Segment]
                                            ) -> Callable[[Segment], bool]:
@@ -321,8 +321,7 @@ def to_vertices_sequence(points: Sequence[Point[Scalar]],
     boundary_points = {edge.start for edge in boundary_edges}
     boundary_vertices = [edge.start for edge in boundary_edges]
     compress_contour(boundary_vertices, context.angle_orientation)
-    if len(boundary_vertices) < MIN_CONTOUR_SIZE:
-        return boundary_vertices
+    assert len(boundary_vertices) >= MIN_CONTOUR_SIZE
     mouths_increments = _to_mouths_increments(boundary_edges)
     mouths_candidates = set(boundary_edges)
     left_increment = size - len(boundary_vertices)
