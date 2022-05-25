@@ -729,30 +729,24 @@ def points_in_general_position(x_coordinates: Strategy[Scalar],
                 point_cls: Type[Point[Scalar]] = context.point_cls
         ) -> Sequence[Point[Scalar]]:
             return [point_cls(xs[index],
-                              ys[(scale * (index * index)) % grid_size])
-                    for index in indices]
+                              ys[indices[(scale * (index_index * index_index))
+                                         % grid_size]])
+                    for index_index, index in enumerate(indices)]
 
         def y_indices_to_points(
                 indices: Sequence[int],
                 scale: int,
                 point_cls: Type[Point[Scalar]] = context.point_cls
         ) -> Sequence[Point[Scalar]]:
-            return [point_cls(xs[(scale * (index * index)) % grid_size],
+            return [point_cls(xs[indices[(scale * (index_index * index_index))
+                                         % grid_size]],
                               ys[index])
-                    for index in indices]
+                    for index_index, index in enumerate(indices)]
 
-        def normalize_scale(scale: int) -> int:
-            grid_scale_gcd = gcd(scale, grid_size)
-            if grid_scale_gcd != 1:
-                while True:
-                    quotient, remainder = divmod(scale, grid_scale_gcd)
-                    if remainder:
-                        break
-                    scale = quotient
-            assert gcd(scale, grid_size) == 1
-            return scale
-
-        scales = strategies.integers(1).map(normalize_scale)
+        scales = (strategies.integers(0)
+                  .flatmap(lambda scale
+                           : strategies.integers(scale * grid_size + 1,
+                                                 (scale + 1) * grid_size - 1)))
         x_indices = strategies.lists(strategies.sampled_from(range(len(xs))),
                                      min_size=grid_size,
                                      max_size=grid_size,
