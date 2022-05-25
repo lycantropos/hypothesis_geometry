@@ -520,7 +520,8 @@ def to_multipolygons(x_coordinates: Strategy[Scalar],
                                        context=context))
             result.append(polygon)
             can_touch_next_polygon = not has_vertical_leftmost_segment(
-                    to_contour_segments(polygon.border))
+                    to_contour_segments(polygon.border)
+            )
             start += polygon_points_count - can_touch_next_polygon
         result.append(draw(to_polygons(strategies.sampled_from(xs[start:]),
                                        y_coordinates,
