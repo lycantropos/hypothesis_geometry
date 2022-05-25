@@ -713,32 +713,37 @@ def to_points_in_general_position(x_coordinates: Strategy[Scalar],
 
     def coordinates_to_points(xs: Sequence[Scalar], ys: Sequence[Scalar]
                               ) -> Strategy[Sequence[Point[Scalar]]]:
-        xs = sorted(xs)
-        ys = sorted(ys)
+        xs, ys = sorted(xs), sorted(ys)
         grid_size = to_prior_prime(min(len(xs), len(ys)))
-
-        def x_indices_to_points(
-                scale: int,
-                point_cls: Type[Point[Scalar]] = context.point_cls
-        ) -> Sequence[Point[Scalar]]:
-            return [point_cls(xs[index],
-                              ys[(scale * (index * index)) % grid_size])
-                    for index in range(grid_size)]
-
-        def y_indices_to_points(
-                scale: int,
-                point_cls: Type[Point[Scalar]] = context.point_cls
-        ) -> Sequence[Point[Scalar]]:
-            return [point_cls(xs[(scale * (index * index)) % grid_size],
-                              ys[index])
-                    for index in range(grid_size)]
-
         scales = (strategies.integers(0)
                   .flatmap(lambda scale
                            : strategies.integers(scale * grid_size + 1,
                                                  (scale + 1) * grid_size - 1)))
-        return (strategies.builds(x_indices_to_points, scales)
-                | strategies.builds(y_indices_to_points, scales))
+        return (strategies.builds(partial(x_indices_to_points, grid_size, xs,
+                                          ys),
+                                  scales)
+                | strategies.builds(partial(y_indices_to_points, grid_size, xs,
+                                            ys),
+                                    scales))
+
+    def x_indices_to_points(grid_size: int,
+                            xs: Sequence[Scalar],
+                            ys: Sequence[Scalar],
+                            scale: int,
+                            point_cls: Type[Point[Scalar]] = context.point_cls
+                            ) -> Sequence[Point[Scalar]]:
+        return [point_cls(xs[index],
+                          ys[(scale * (index * index)) % grid_size])
+                for index in range(grid_size)]
+
+    def y_indices_to_points(grid_size: int,
+                            xs: Sequence[Scalar],
+                            ys: Sequence[Scalar],
+                            scale: int,
+                            point_cls: Type[Point[Scalar]] = context.point_cls
+                            ) -> Sequence[Point[Scalar]]:
+        return [point_cls(xs[(scale * (index * index)) % grid_size], ys[index])
+                for index in range(grid_size)]
 
     return (strategies.tuples(strategies.lists(x_coordinates,
                                                unique=True,
