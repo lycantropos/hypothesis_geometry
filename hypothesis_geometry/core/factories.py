@@ -48,31 +48,32 @@ def to_multicontour(points: Sequence[Point[Scalar]],
                     context: Context) -> Multicontour[Scalar]:
     sorting_key_chooser = partial(chooser, [horizontal_point_key,
                                             vertical_point_key])
-    current_sorting_key = sorting_key_chooser()
-    points = sorted(points,
-                    key=current_sorting_key)
-    current_predicate = (has_vertical_leftmost_segment
-                         if current_sorting_key is horizontal_point_key
-                         else has_horizontal_lowermost_segment)
+    points = list(points)
+    prior_sorting_key, predicate = (
+        None,
+        has_vertical_leftmost_segment
+        if prior_sorting_key is horizontal_point_key
+        else has_horizontal_lowermost_segment
+    )
     contour_cls, to_contour_segments = (context.contour_cls,
                                         context.contour_segments)
     result = []
     for size in sizes:
-        contour = contour_cls(to_vertices_sequence(points[:size], size,
-                                                   context))
-        result.append(contour)
-        can_touch_next_contour = current_predicate(
-                to_contour_segments(contour))
-        points = points[size - can_touch_next_contour:]
-        new_sorting_key = sorting_key_chooser()
-        if new_sorting_key is not current_sorting_key:
-            current_sorting_key, current_predicate = (
-                new_sorting_key,
+        sorting_key = sorting_key_chooser()
+        if sorting_key is not prior_sorting_key:
+            prior_sorting_key, predicate = (
+                sorting_key,
                 has_vertical_leftmost_segment
-                if new_sorting_key is horizontal_point_key
+                if sorting_key is horizontal_point_key
                 else has_horizontal_lowermost_segment
             )
-            points.sort(key=current_sorting_key)
+            points.sort(key=sorting_key)
+        contour_vertices = to_vertices_sequence(points[:size], size, context)
+        if len(contour_vertices) >= MIN_CONTOUR_SIZE:
+            contour = contour_cls(contour_vertices)
+            result.append(contour)
+            can_touch_next_contour = predicate(to_contour_segments(contour))
+            points = points[size - can_touch_next_contour:]
     return result
 
 
