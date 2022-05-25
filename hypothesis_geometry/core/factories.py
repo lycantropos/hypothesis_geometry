@@ -86,16 +86,26 @@ def to_polygon(points: Sequence[Point[Scalar]],
     boundary_points = {edge.start for edge in boundary_edges}
     sorting_key_chooser = partial(chooser, [horizontal_point_key,
                                             vertical_point_key])
-    current_sorting_key = sorting_key_chooser()
-    inner_points = sorted(set(points) - boundary_points,
-                          key=current_sorting_key)
-    current_predicate = (has_vertical_leftmost_segment
-                         if current_sorting_key is horizontal_point_key
-                         else has_horizontal_lowermost_segment)
+    inner_points = list(set(points) - boundary_points)
+    prior_sorting_key, predicate = (
+        None,
+        has_vertical_leftmost_segment
+        if prior_sorting_key is horizontal_point_key
+        else has_horizontal_lowermost_segment
+    )
     holes, holes_edges = [], []
     contour_cls, to_contour_segments = (context.contour_cls,
                                         context.contour_segments)
     for hole_size in holes_sizes:
+        sorting_key = sorting_key_chooser()
+        if sorting_key is not prior_sorting_key:
+            prior_sorting_key, predicate = (
+                sorting_key,
+                has_vertical_leftmost_segment
+                if sorting_key is horizontal_point_key
+                else has_horizontal_lowermost_segment
+            )
+            inner_points.sort(key=prior_sorting_key)
         hole_points = inner_points[:hole_size]
         hole_vertices = to_vertices_sequence(hole_points, hole_size, context)
         if len(hole_vertices) >= MIN_CONTOUR_SIZE:
@@ -104,18 +114,9 @@ def to_polygon(points: Sequence[Point[Scalar]],
             hole_edges = to_contour_segments(hole)
             holes_edges.extend(hole_edges)
             boundary_points.update(hole_points)
-            can_touch_next_hole = current_predicate(hole_edges)
+            can_touch_next_hole = predicate(hole_edges)
             inner_points = inner_points[len(hole_points)
                                         - can_touch_next_hole:]
-        next_sorting_key = sorting_key_chooser()
-        if next_sorting_key is not current_sorting_key:
-            current_sorting_key, current_predicate = (
-                next_sorting_key,
-                has_vertical_leftmost_segment
-                if next_sorting_key is horizontal_point_key
-                else has_horizontal_lowermost_segment
-            )
-            inner_points.sort(key=current_sorting_key)
 
     def to_edges_cross_or_overlap_detector(edges: Sequence[Segment]
                                            ) -> Callable[[Segment], bool]:
