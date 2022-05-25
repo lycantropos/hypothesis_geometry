@@ -4,15 +4,13 @@ from functools import partial
 from itertools import groupby
 from math import atan2
 from numbers import Real
-from operator import (attrgetter,
-                      itemgetter)
+from operator import itemgetter
 from random import Random
 from typing import (Callable,
                     Collection,
                     Iterable,
                     List,
                     MutableSequence,
-                    Optional,
                     Sequence,
                     Tuple,
                     Type)
