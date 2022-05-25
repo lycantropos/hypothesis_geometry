@@ -2,7 +2,6 @@ from functools import partial
 from itertools import (chain,
                        cycle,
                        repeat)
-from math import gcd
 from operator import add
 from typing import (Callable,
                     List,
