@@ -96,7 +96,7 @@ def to_polygon(points: Sequence[Point[Scalar]],
                 if sorting_key is horizontal_point_key
                 else has_horizontal_lowermost_segment
             )
-            inner_points.sort(key=prior_sorting_key)
+            inner_points.sort(key=sorting_key)
         hole_points = inner_points[:hole_size]
         hole_vertices = to_vertices_sequence(hole_points, hole_size, context)
         if len(hole_vertices) >= MIN_CONTOUR_SIZE:
