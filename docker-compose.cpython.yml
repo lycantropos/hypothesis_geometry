@@ -10,10 +10,8 @@ services:
     image: lycantropos/hypothesis_geometry-cpython:7.3.0
     volumes:
       - ./hypothesis_geometry:/opt/hypothesis_geometry/hypothesis_geometry
-      - ./pytest.ini:/opt/hypothesis_geometry/pytest.ini
+      - ./pyproject.toml:/opt/hypothesis_geometry/pyproject.toml
       - ./README.md:/opt/hypothesis_geometry/README.md
-      - ./requirements-tests.txt:/opt/hypothesis_geometry/requirements-tests.txt
-      - ./requirements.txt:/opt/hypothesis_geometry/requirements.txt
       - ./setup.py:/opt/hypothesis_geometry/setup.py
       - ./tests:/opt/hypothesis_geometry/tests
     entrypoint: pytest
