@@ -22,7 +22,8 @@ from hypothesis_geometry.core.contracts import (
     are_vertices_non_convex as _are_vertices_non_convex,
     are_vertices_strict as _are_vertices_strict,
     has_valid_size,
-    multicontour_has_valid_sizes)
+    multicontour_has_valid_sizes
+)
 from hypothesis_geometry.core.utils import flatten
 from hypothesis_geometry.hints import (Multicontour,
                                        Strategy)
