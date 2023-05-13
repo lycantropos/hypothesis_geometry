@@ -468,10 +468,12 @@ def _is_convex_quadrilateral_diagonal(edge: QuadEdge) -> bool:
     return (edge.right_from_start.orientation_of(edge.end)
             is Orientation.COUNTERCLOCKWISE
             is edge.right_from_end.opposite.orientation_of(
-                    edge.left_from_start.end)
+                    edge.left_from_start.end
+            )
             is edge.left_from_end.orientation_of(edge.start)
             is edge.left_from_start.opposite.orientation_of(
-                    edge.right_from_start.end))
+                    edge.right_from_start.end
+            ))
 
 
 def _is_ear(edge: QuadEdge) -> bool:
