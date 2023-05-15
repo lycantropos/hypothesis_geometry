@@ -69,6 +69,7 @@ jobs:
         run: >
           coverage run -m doctest README.md
           && coverage run --append -m pytest --doctest-modules --ignore=tests
+        if: ${{ !startsWith(matrix.python_version, 'pypy') }}
       - name: 'Run tests'
         run: coverage run --append -m pytest
       - name: 'Collect coverage'
