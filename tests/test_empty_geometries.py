@@ -1,22 +1,23 @@
-from hypothesis import given
-from hypothesis.strategies import DataObject
+from typing import Any
 
-from hypothesis_geometry.hints import Strategy
+from ground.hints import Empty
+from hypothesis import given, strategies as st
+
 from hypothesis_geometry.planar import empty_geometries
-from tests import strategies
-from tests.utils import is_empty
+from tests.strategies import data_object_strategy
+from tests.utils import context
 
 
 def test_basic() -> None:
-    result = empty_geometries()
+    result: st.SearchStrategy[Empty[Any]] = empty_geometries()
 
-    assert isinstance(result, Strategy)
+    assert isinstance(result, st.SearchStrategy)
 
 
-@given(strategies.data)
-def test_properties(data: DataObject) -> None:
-    strategy = empty_geometries()
+@given(data_object_strategy)
+def test_properties(data: st.DataObject) -> None:
+    strategy: st.SearchStrategy[Empty[Any]] = empty_geometries()
 
     result = data.draw(strategy)
 
-    assert is_empty(result)
+    assert isinstance(result, context.empty_cls)

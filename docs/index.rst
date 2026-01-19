@@ -6,6 +6,6 @@ Welcome to hypothesis_geometry's documentation!
    it should be considered as implementation detail
    that can change and should not be relied upon.
 
-.. automodule:: hypothesis_geometry.planar
+.. automodule:: hypothesis_geometry
     :members:
-    :special-members:
+    :imported-members:

@@ -1,19 +1,19 @@
-hypothesis_geometry
-===================
+# hypothesis_geometry
 
-[![](https://github.com/lycantropos/hypothesis_geometry/workflows/CI/badge.svg)](https://github.com/lycantropos/hypothesis_geometry/actions/workflows/ci.yml "Github Actions")
-[![](https://readthedocs.org/projects/hypothesis_geometry/badge/?version=latest)](https://hypothesis-geometry.readthedocs.io/en/latest "Documentation")
-[![](https://codecov.io/gh/lycantropos/hypothesis_geometry/branch/master/graph/badge.svg)](https://codecov.io/gh/lycantropos/hypothesis_geometry "Codecov")
-[![](https://img.shields.io/github/license/lycantropos/hypothesis_geometry.svg)](https://github.com/lycantropos/hypothesis_geometry/blob/master/LICENSE "License")
-[![](https://badge.fury.io/py/hypothesis-geometry.svg)](https://badge.fury.io/py/hypothesis-geometry "PyPI")
+[![Github Actions](https://github.com/lycantropos/hypothesis_geometry/workflows/CI/badge.svg)](https://github.com/lycantropos/hypothesis_geometry/actions/workflows/ci.yml "Github Actions")
+[![Codecov](https://codecov.io/gh/lycantropos/hypothesis_geometry/branch/master/graph/badge.svg)](https://codecov.io/gh/lycantropos/hypothesis_geometry "Codecov")
+[![License](https://img.shields.io/github/license/lycantropos/hypothesis_geometry.svg)](https://github.com/lycantropos/hypothesis_geometry/blob/master/LICENSE "License")
+[![PyPI](https://badge.fury.io/py/hypothesis-geometry.svg)](https://badge.fury.io/py/hypothesis-geometry "PyPI")
 
-In what follows `python` is an alias for `python3.7` or `pypy3.7`
-or any later version (`python3.8`, `pypy3.8` and so on).
+In what follows `python` is an alias for `python3.10` or `pypy3.10`
+or any later version (`python3.11`, `pypy3.11` and so on).
 
-Installation
-------------
+## Installation
+
+### Prerequisites
 
 Install the latest `pip` & `setuptools` packages versions
+
 ```bash
 python -m pip install --upgrade pip setuptools
 ```
@@ -21,6 +21,7 @@ python -m pip install --upgrade pip setuptools
 ### User
 
 Download and install the latest stable version from `PyPI` repository
+
 ```bash
 python -m pip install --upgrade hypothesis_geometry
 ```
@@ -28,27 +29,24 @@ python -m pip install --upgrade hypothesis_geometry
 ### Developer
 
 Download the latest version from `GitHub` repository
+
 ```bash
 git clone https://github.com/lycantropos/hypothesis_geometry.git
 cd hypothesis_geometry
 ```
 
-Install dependencies
-```bash
-python -m pip install -r requirements.txt
-```
-
 Install
+
 ```bash
-python setup.py install
+python -m pip install -e '.'
 ```
 
-Usage
------
+## Usage
 
 With setup
+
 ```python
->>> from ground.base import get_context
+>>> from ground.context import get_context
 >>> from hypothesis import strategies
 >>> from hypothesis_geometry import planar
 >>> context = get_context()
@@ -62,7 +60,7 @@ With setup
 >>> Polygon = context.polygon_cls
 >>> Segment = context.segment_cls
 >>> min_coordinate, max_coordinate = -100, 100
->>> coordinates_type = int
+>>> coordinate_type = int
 >>> coordinates = strategies.integers(min_coordinate, max_coordinate)
 >>> import warnings
 >>> from hypothesis.errors import NonInteractiveExampleWarning
@@ -70,9 +68,11 @@ With setup
 ... warnings.filterwarnings('ignore', category=NonInteractiveExampleWarning)
 
 ```
+
 let's take a look at what can be generated and how.
 
 ### Empty geometries
+
 ```python
 >>> empty_geometries = planar.empty_geometries()
 >>> empty = empty_geometries.example()
@@ -82,119 +82,148 @@ True
 ```
 
 ### Points
+
 ```python
 >>> points = planar.points(coordinates)
 >>> point = points.example()
 >>> isinstance(point, Point)
 True
->>> (isinstance(point.x, coordinates_type)
-...  and isinstance(point.y, coordinates_type))
+>>> (
+...     isinstance(point.x, coordinate_type)
+...     and isinstance(point.y, coordinate_type)
+... )
 True
->>> (min_coordinate <= point.x <= max_coordinate
-...  and min_coordinate <= point.y <= max_coordinate)
+>>> (
+...     min_coordinate <= point.x <= max_coordinate
+...     and min_coordinate <= point.y <= max_coordinate
+... )
 True
 
 ```
 
 ### Multipoints
+
 ```python
 >>> min_size, max_size = 5, 10
->>> multipoints = planar.multipoints(coordinates,
-...                                  min_size=min_size,
-...                                  max_size=max_size)
+>>> multipoints = planar.multipoints(
+...     coordinates, min_size=min_size, max_size=max_size
+... )
 >>> multipoint = multipoints.example()
 >>> isinstance(multipoint, Multipoint)
 True
 >>> min_size <= len(multipoint.points) <= max_size
 True
->>> all(isinstance(point.x, coordinates_type)
-...     and isinstance(point.y, coordinates_type)
-...     for point in multipoint.points)
+>>> all(
+...     isinstance(point.x, coordinate_type)
+...     and isinstance(point.y, coordinate_type)
+...     for point in multipoint.points
+... )
 True
->>> all(min_coordinate <= point.x <= max_coordinate
+>>> all(
+...     min_coordinate <= point.x <= max_coordinate
 ...     and min_coordinate <= point.y <= max_coordinate
-...     for point in multipoint.points)
+...     for point in multipoint.points
+... )
 True
 
 ```
 
 ### Segments
+
 ```python
 >>> segments = planar.segments(coordinates)
 >>> segment = segments.example()
 >>> isinstance(segment, Segment)
 True
->>> (isinstance(segment.start.x, coordinates_type)
-...  and isinstance(segment.start.y, coordinates_type)
-...  and isinstance(segment.end.x, coordinates_type)
-...  and isinstance(segment.end.y, coordinates_type))
+>>> (
+...     isinstance(segment.start.x, coordinate_type)
+...     and isinstance(segment.start.y, coordinate_type)
+...     and isinstance(segment.end.x, coordinate_type)
+...     and isinstance(segment.end.y, coordinate_type)
+... )
 True
->>> (min_coordinate <= segment.start.x <= max_coordinate 
-...  and min_coordinate <= segment.start.y <= max_coordinate
-...  and min_coordinate <= segment.end.x <= max_coordinate 
-...  and min_coordinate <= segment.end.y <= max_coordinate)
+>>> (
+...     min_coordinate <= segment.start.x <= max_coordinate
+...     and min_coordinate <= segment.start.y <= max_coordinate
+...     and min_coordinate <= segment.end.x <= max_coordinate
+...     and min_coordinate <= segment.end.y <= max_coordinate
+... )
 True
 
 ```
 
 ### Multisegments
+
 ```python
 >>> min_size, max_size = 5, 10
->>> multisegments = planar.multisegments(coordinates, 
-...                                      min_size=min_size,
-...                                      max_size=max_size)
+>>> multisegments = planar.multisegments(
+...     coordinates, min_size=min_size, max_size=max_size
+... )
 >>> multisegment = multisegments.example()
 >>> isinstance(multisegment, Multisegment)
 True
 >>> min_size <= len(multisegment.segments) <= max_size
 True
->>> all(isinstance(segment.start.x, coordinates_type)
-...     and isinstance(segment.start.y, coordinates_type)
-...     and isinstance(segment.end.x, coordinates_type)
-...     and isinstance(segment.end.y, coordinates_type)
-...     for segment in multisegment.segments)
+>>> all(
+...     isinstance(segment.start.x, coordinate_type)
+...     and isinstance(segment.start.y, coordinate_type)
+...     and isinstance(segment.end.x, coordinate_type)
+...     and isinstance(segment.end.y, coordinate_type)
+...     for segment in multisegment.segments
+... )
 True
->>> all(min_coordinate <= segment.start.x <= max_coordinate
+>>> all(
+...     min_coordinate <= segment.start.x <= max_coordinate
 ...     and min_coordinate <= segment.start.y <= max_coordinate
 ...     and min_coordinate <= segment.end.x <= max_coordinate
 ...     and min_coordinate <= segment.end.y <= max_coordinate
-...     for segment in multisegment.segments)
+...     for segment in multisegment.segments
+... )
 True
 
 ```
 
 ### Contours
+
 ```python
 >>> min_size, max_size = 5, 10
->>> contours = planar.contours(coordinates, 
-...                            min_size=min_size,
-...                            max_size=max_size)
+>>> contours = planar.contours(
+...     coordinates, min_size=min_size, max_size=max_size
+... )
 >>> contour = contours.example()
 >>> isinstance(contour, Contour)
 True
 >>> min_size <= len(contour.vertices) <= max_size
 True
->>> all(isinstance(vertex.x, coordinates_type)
-...     and isinstance(vertex.y, coordinates_type)
-...     for vertex in contour.vertices)
+>>> all(
+...     isinstance(vertex.x, coordinate_type)
+...     and isinstance(vertex.y, coordinate_type)
+...     for vertex in contour.vertices
+... )
 True
->>> all(min_coordinate <= vertex.x <= max_coordinate
+>>> all(
+...     min_coordinate <= vertex.x <= max_coordinate
 ...     and min_coordinate <= vertex.y <= max_coordinate
-...     for vertex in contour.vertices)
+...     for vertex in contour.vertices
+... )
 True
 
 ```
+
 also `planar.concave_contours` & `planar.convex_contours` options are available.
 
 ### Multicontours
+
 ```python
 >>> min_size, max_size = 5, 10
 >>> min_contour_size, max_contour_size = 4, 8
->>> multicontours = planar.multicontours(coordinates, 
-...                                      min_size=min_size,
-...                                      max_size=max_size,
-...                                      min_contour_size=min_contour_size,
-...                                      max_contour_size=max_contour_size)
+>>> multicontours = planar.multicontours(
+...     coordinates,
+...     min_size=min_size,
+...     max_size=max_size,
+...     min_contour_size=min_contour_size,
+...     max_contour_size=max_contour_size,
+... )
 >>> multicontour = multicontours.example()
 >>> isinstance(multicontour, list)
 True
@@ -202,34 +231,43 @@ True
 True
 >>> min_size <= len(multicontour) <= max_size
 True
->>> all(min_contour_size <= len(contour.vertices) <= max_contour_size
-...     for contour in multicontour)
-True
->>> all(isinstance(vertex.x, coordinates_type)
-...     and isinstance(vertex.y, coordinates_type)
+>>> all(
+...     min_contour_size <= len(contour.vertices) <= max_contour_size
 ...     for contour in multicontour
-...     for vertex in contour.vertices)
+... )
 True
->>> all(min_coordinate <= vertex.x <= max_coordinate
+>>> all(
+...     isinstance(vertex.x, coordinate_type)
+...     and isinstance(vertex.y, coordinate_type)
+...     for contour in multicontour
+...     for vertex in contour.vertices
+... )
+True
+>>> all(
+...     min_coordinate <= vertex.x <= max_coordinate
 ...     and min_coordinate <= vertex.y <= max_coordinate
 ...     for contour in multicontour
-...     for vertex in contour.vertices)
+...     for vertex in contour.vertices
+... )
 True
 
 ```
 
 ### Polygons
+
 ```python
 >>> min_size, max_size = 5, 10
 >>> min_holes_size, max_holes_size = 1, 3
 >>> min_hole_size, max_hole_size = 4, 8
->>> polygons = planar.polygons(coordinates, 
-...                            min_size=min_size,
-...                            max_size=max_size,
-...                            min_holes_size=min_holes_size,
-...                            max_holes_size=max_holes_size,
-...                            min_hole_size=min_hole_size,
-...                            max_hole_size=max_hole_size)
+>>> polygons = planar.polygons(
+...     coordinates,
+...     min_size=min_size,
+...     max_size=max_size,
+...     min_holes_size=min_holes_size,
+...     max_holes_size=max_holes_size,
+...     min_hole_size=min_hole_size,
+...     max_hole_size=max_hole_size,
+... )
 >>> polygon = polygons.example()
 >>> isinstance(polygon, Polygon)
 True
@@ -237,70 +275,97 @@ True
 True
 >>> min_holes_size <= len(polygon.holes) <= max_holes_size
 True
->>> all(min_hole_size <= len(hole.vertices) <= max_hole_size for hole in polygon.holes)
+>>> all(
+...     min_hole_size <= len(hole.vertices) <= max_hole_size
+...     for hole in polygon.holes
+... )
 True
 >>> polygon_contours = [polygon.border, *polygon.holes]
->>> all(isinstance(vertex.x, coordinates_type)
-...     and isinstance(vertex.y, coordinates_type)
+>>> all(
+...     isinstance(vertex.x, coordinate_type)
+...     and isinstance(vertex.y, coordinate_type)
 ...     for contour in polygon_contours
-...     for vertex in contour.vertices)
+...     for vertex in contour.vertices
+... )
 True
->>> all(min_coordinate <= vertex.x <= max_coordinate
+>>> all(
+...     min_coordinate <= vertex.x <= max_coordinate
 ...     and min_coordinate <= vertex.y <= max_coordinate
 ...     for contour in polygon_contours
-...     for vertex in contour.vertices)
+...     for vertex in contour.vertices
+... )
 True
 
 ```
 
 ### Multipolygons
+
 ```python
 >>> min_size, max_size = 2, 5
 >>> min_border_size, max_border_size = 5, 10
 >>> min_holes_size, max_holes_size = 1, 3
 >>> min_hole_size, max_hole_size = 4, 8
->>> multipolygons = planar.multipolygons(coordinates, 
-...                                      min_size=min_size,
-...                                      max_size=max_size,
-...                                      min_border_size=min_border_size,
-...                                      max_border_size=max_border_size,
-...                                      min_holes_size=min_holes_size,
-...                                      max_holes_size=max_holes_size,
-...                                      min_hole_size=min_hole_size,
-...                                      max_hole_size=max_hole_size)
+>>> multipolygons = planar.multipolygons(
+...     coordinates,
+...     min_size=min_size,
+...     max_size=max_size,
+...     min_border_size=min_border_size,
+...     max_border_size=max_border_size,
+...     min_holes_size=min_holes_size,
+...     max_holes_size=max_holes_size,
+...     min_hole_size=min_hole_size,
+...     max_hole_size=max_hole_size,
+... )
 >>> multipolygon = multipolygons.example()
 >>> isinstance(multipolygon, Multipolygon)
 True
 >>> min_size <= len(multipolygon.polygons) <= max_size
 True
->>> all(min_border_size <= len(polygon.border.vertices) <= max_border_size
+>>> all(
+...     min_border_size <= len(polygon.border.vertices) <= max_border_size
 ...     and min_holes_size <= len(polygon.holes) <= max_holes_size
-...     and all(min_hole_size <= len(hole.vertices) <= max_hole_size
-...             for hole in polygon.holes)
-...     for polygon in multipolygon.polygons)
+...     and all(
+...         min_hole_size <= len(hole.vertices) <= max_hole_size
+...         for hole in polygon.holes
+...     )
+...     for polygon in multipolygon.polygons
+... )
 True
->>> all(all(isinstance(vertex.x, coordinates_type)
-...         and isinstance(vertex.y, coordinates_type)
-...         for vertex in polygon.border.vertices)
-...     and all(isinstance(vertex.x, coordinates_type)
-...             and isinstance(vertex.y, coordinates_type)
-...             for hole in polygon.holes
-...             for vertex in hole.vertices)
-...     for polygon in multipolygon.polygons)
+>>> all(
+...     all(
+...         isinstance(vertex.x, coordinate_type)
+...         and isinstance(vertex.y, coordinate_type)
+...         for vertex in polygon.border.vertices
+...     )
+...     and all(
+...         isinstance(vertex.x, coordinate_type)
+...         and isinstance(vertex.y, coordinate_type)
+...         for hole in polygon.holes
+...         for vertex in hole.vertices
+...     )
+...     for polygon in multipolygon.polygons
+... )
 True
->>> all(all(min_coordinate <= vertex.x <= max_coordinate
+>>> all(
+...     all(
+...         min_coordinate <= vertex.x <= max_coordinate
 ...         and min_coordinate <= vertex.y <= max_coordinate
-...         for vertex in polygon.border.vertices)
-...     and all(min_coordinate <= vertex.x <= max_coordinate
-...             and min_coordinate <= vertex.y <= max_coordinate
-...             for hole in polygon.holes
-...             for vertex in hole.vertices)
-...     for polygon in multipolygon.polygons)
+...         for vertex in polygon.border.vertices
+...     )
+...     and all(
+...         min_coordinate <= vertex.x <= max_coordinate
+...         and min_coordinate <= vertex.y <= max_coordinate
+...         for hole in polygon.holes
+...         for vertex in hole.vertices
+...     )
+...     for polygon in multipolygon.polygons
+... )
 True
 
 ```
 
 ### Mixes
+
 ```python
 >>> min_points_size, max_points_size = 2, 3
 >>> min_segments_size, max_segments_size = 1, 4
@@ -308,19 +373,21 @@ True
 >>> min_polygon_border_size, max_polygon_border_size = 5, 10
 >>> min_polygon_holes_size, max_polygon_holes_size = 1, 4
 >>> min_polygon_hole_size, max_polygon_hole_size = 3, 5
->>> mixes = planar.mixes(coordinates,
-...                      min_points_size=min_points_size,
-...                      max_points_size=max_points_size,
-...                      min_segments_size=min_segments_size,
-...                      max_segments_size=max_segments_size,
-...                      min_polygons_size=min_polygons_size,
-...                      max_polygons_size=max_polygons_size,
-...                      min_polygon_border_size=min_polygon_border_size,
-...                      max_polygon_border_size=max_polygon_border_size,
-...                      min_polygon_holes_size=min_polygon_holes_size,
-...                      max_polygon_holes_size=max_polygon_holes_size,
-...                      min_polygon_hole_size=min_polygon_hole_size,
-...                      max_polygon_hole_size=max_polygon_hole_size)
+>>> mixes = planar.mixes(
+...     coordinates,
+...     min_points_size=min_points_size,
+...     max_points_size=max_points_size,
+...     min_segments_size=min_segments_size,
+...     max_segments_size=max_segments_size,
+...     min_polygons_size=min_polygons_size,
+...     max_polygons_size=max_polygons_size,
+...     min_polygon_border_size=min_polygon_border_size,
+...     max_polygon_border_size=max_polygon_border_size,
+...     min_polygon_holes_size=min_polygon_holes_size,
+...     max_polygon_holes_size=max_polygon_holes_size,
+...     min_polygon_hole_size=min_polygon_hole_size,
+...     max_polygon_hole_size=max_polygon_hole_size,
+... )
 >>> mix = mixes.example()
 >>> isinstance(mix, Mix)
 True
@@ -329,187 +396,240 @@ True
 >>> points = [] if isinstance(mix.discrete, Empty) else mix.discrete.points
 >>> min_points_size <= len(points) <= max_points_size
 True
->>> all(isinstance(point.x, coordinates_type)
-...     and isinstance(point.y, coordinates_type)
-...     for point in points)
+>>> all(
+...     isinstance(point.x, coordinate_type)
+...     and isinstance(point.y, coordinate_type)
+...     for point in points
+... )
 True
->>> all(min_coordinate <= point.x <= max_coordinate
+>>> all(
+...     min_coordinate <= point.x <= max_coordinate
 ...     and min_coordinate <= point.y <= max_coordinate
-...     for point in points)
+...     for point in points
+... )
 True
 >>> isinstance(mix.linear, (Empty, Segment, Contour, Multisegment))
 True
->>> segments = ([]
-...             if isinstance(mix.linear, Empty)
-...             else ([mix.linear]
-...                   if isinstance(mix.linear, Segment)
-...                   else (mix.linear.segments
-...                         if isinstance(mix.linear, Multisegment)
-...                         else context.contour_edges(mix.linear))))
+>>> segments = (
+...     []
+...     if isinstance(mix.linear, Empty)
+...     else (
+...         [mix.linear]
+...         if isinstance(mix.linear, Segment)
+...         else (
+...             mix.linear.segments
+...             if isinstance(mix.linear, Multisegment)
+...             else context.contour_edges(mix.linear)
+...         )
+...     )
+... )
 >>> min_segments_size <= len(segments) <= max_segments_size
 True
->>> all(isinstance(segment.start.x, coordinates_type)
-...     and isinstance(segment.start.y, coordinates_type)
-...     and isinstance(segment.end.x, coordinates_type)
-...     and isinstance(segment.end.y, coordinates_type)
-...     for segment in segments)
+>>> all(
+...     isinstance(segment.start.x, coordinate_type)
+...     and isinstance(segment.start.y, coordinate_type)
+...     and isinstance(segment.end.x, coordinate_type)
+...     and isinstance(segment.end.y, coordinate_type)
+...     for segment in segments
+... )
 True
->>> all(min_coordinate <= segment.start.x <= max_coordinate
+>>> all(
+...     min_coordinate <= segment.start.x <= max_coordinate
 ...     and min_coordinate <= segment.start.y <= max_coordinate
 ...     and min_coordinate <= segment.end.x <= max_coordinate
 ...     and min_coordinate <= segment.end.y <= max_coordinate
-...     for segment in segments)
+...     for segment in segments
+... )
 True
 >>> isinstance(mix.shaped, (Empty, Polygon, Multipolygon))
 True
->>> polygons = ([]
-...             if isinstance(mix.shaped, Empty)
-...             else ([mix.shaped]
-...                   if isinstance(mix.shaped, Polygon)
-...                   else mix.shaped.polygons))
+>>> polygons = (
+...     []
+...     if isinstance(mix.shaped, Empty)
+...     else (
+...         [mix.shaped]
+...         if isinstance(mix.shaped, Polygon)
+...         else mix.shaped.polygons
+...     )
+... )
 >>> min_polygons_size <= len(polygons) <= max_polygons_size
 True
->>> all(min_polygon_border_size
+>>> all(
+...     min_polygon_border_size
 ...     <= len(polygon.border.vertices)
 ...     <= max_polygon_border_size
-...     and (min_polygon_holes_size
-...          <= len(polygon.holes)
-...          <= max_polygon_holes_size)
-...     and all(min_polygon_hole_size
-...             <= len(hole.vertices)
-...             <= max_polygon_hole_size
-...             for hole in polygon.holes)
-...     for polygon in polygons)
+...     and (
+...         min_polygon_holes_size
+...         <= len(polygon.holes)
+...         <= max_polygon_holes_size
+...     )
+...     and all(
+...         min_polygon_hole_size
+...         <= len(hole.vertices)
+...         <= max_polygon_hole_size
+...         for hole in polygon.holes
+...     )
+...     for polygon in polygons
+... )
 True
->>> all(all(isinstance(vertex.x, coordinates_type)
-...         and isinstance(vertex.y, coordinates_type)
-...         for vertex in polygon.border.vertices)
-...     and all(isinstance(vertex.x, coordinates_type)
-...             and isinstance(vertex.y, coordinates_type)
-...             for hole in polygon.holes
-...             for vertex in hole.vertices)
-...     for polygon in polygons)
+>>> all(
+...     all(
+...         isinstance(vertex.x, coordinate_type)
+...         and isinstance(vertex.y, coordinate_type)
+...         for vertex in polygon.border.vertices
+...     )
+...     and all(
+...         isinstance(vertex.x, coordinate_type)
+...         and isinstance(vertex.y, coordinate_type)
+...         for hole in polygon.holes
+...         for vertex in hole.vertices
+...     )
+...     for polygon in polygons
+... )
 True
->>> all(all(min_coordinate <= vertex.x <= max_coordinate
+>>> all(
+...     all(
+...         min_coordinate <= vertex.x <= max_coordinate
 ...         and min_coordinate <= vertex.y <= max_coordinate
-...         for vertex in polygon.border.vertices)
-...     and all(min_coordinate <= vertex.x <= max_coordinate
-...             and min_coordinate <= vertex.y <= max_coordinate
-...             for hole in polygon.holes
-...             for vertex in hole.vertices)
-...     for polygon in polygons)
+...         for vertex in polygon.border.vertices
+...     )
+...     and all(
+...         min_coordinate <= vertex.x <= max_coordinate
+...         and min_coordinate <= vertex.y <= max_coordinate
+...         for hole in polygon.holes
+...         for vertex in hole.vertices
+...     )
+...     for polygon in polygons
+... )
 True
 
 ```
 
 #### Caveats
+
 - Strategies may be slow depending on domain,
 so it may be necessary to add `HealthCheck.filter_too_much`, `HealthCheck.too_slow`
-in [`suppress_health_check`](https://hypothesis.readthedocs.io/en/latest/settings.html#hypothesis.settings.suppress_health_check) 
-and set [`deadline`](https://hypothesis.readthedocs.io/en/latest/settings.html#hypothesis.settings.deadline) to `None`.
+in [`suppress_health_check`](https://hypothesis.readthedocs.io/en/latest/settings.html#hypothesis.settings.suppress_health_check)
+and set
+[`deadline`](https://hypothesis.readthedocs.io/en/latest/settings.html#hypothesis.settings.deadline)
+to `None`.
 
-- Unbounded floating point strategies for coordinates 
+- Unbounded floating point strategies for coordinates
 (like [`hypothesis.strategies.floats`](https://hypothesis.readthedocs.io/en/latest/data.html#hypothesis.strategies.floats)
-with unset `min_value`/`max_value`) do not play well with bounded sizes 
+with unset `min_value`/`max_value`) do not play well with bounded sizes
 and may cause a lot of searching iterations with no success,
-so it is recommended to use bounded floating point coordinates with bounded sizes
-or unbounded coordinates with unbounded sizes.
+so it is recommended to use bounded floating point coordinates
+with bounded sizes or unbounded coordinates with unbounded sizes.
 
-- [`decimal.Decimal`](https://docs.python.org/library/decimal.html) coordinates are not supported, because 
-they seem to be too hard to work with correctly (e.g. sometimes self-intersecting contours arise), 
-so it is suggested to use `float`  or [`fractions.Fraction`](https://docs.python.org/library/fractions.html) instead.
+- [`decimal.Decimal`](https://docs.python.org/library/decimal.html) coordinates
+are not supported, because they seem to be too hard to work with correctly
+(e.g. sometimes self-intersecting contours arise),
+so it is suggested to use `float`
+or [`fractions.Fraction`](https://docs.python.org/library/fractions.html)
+instead.
 
-Development
------------
+## Development
 
 ### Bumping version
 
-#### Preparation
+#### Prerequisites
 
-Install
-[bump2version](https://github.com/c4urself/bump2version#installation).
+Install [bump-my-version](https://github.com/callowayproject/bump-my-version#installation).
 
-#### Pre-release
+#### Release
 
 Choose which version number category to bump following [semver
 specification](http://semver.org/).
 
 Test bumping version
+
 ```bash
-bump2version --dry-run --verbose $CATEGORY
+bump-my-version bump --dry-run --verbose $CATEGORY
 ```
 
 where `$CATEGORY` is the target version number category name, possible
 values are `patch`/`minor`/`major`.
 
 Bump version
+
 ```bash
-bump2version --verbose $CATEGORY
-```
-
-This will set version to `major.minor.patch-alpha`. 
-
-#### Release
-
-Test bumping version
-```bash
-bump2version --dry-run --verbose release
-```
-
-Bump version
-```bash
-bump2version --verbose release
+bump-my-version bump --verbose $CATEGORY
 ```
 
 This will set version to `major.minor.patch`.
 
 ### Running tests
 
-Install dependencies
+#### Plain
+
+Install with dependencies
+
 ```bash
-python -m pip install -r requirements-tests.txt
+python -m pip install -e '.[tests]'
 ```
 
-Plain
+Run
+
 ```bash
 pytest
 ```
 
-Inside `Docker` container:
+#### `Docker` container
+
+Run
+
 - with `CPython`
+
   ```bash
   docker-compose --file docker-compose.cpython.yml up
   ```
+
 - with `PyPy`
+
   ```bash
   docker-compose --file docker-compose.pypy.yml up
   ```
 
-`Bash` script:
+#### `Bash` script
+
+Run
+
 - with `CPython`
+
   ```bash
   ./run-tests.sh
   ```
+
   or
+
   ```bash
   ./run-tests.sh cpython
   ```
 
 - with `PyPy`
+
   ```bash
   ./run-tests.sh pypy
   ```
 
-`PowerShell` script:
+#### `PowerShell` script
+
+Run
+
 - with `CPython`
+
   ```powershell
   .\run-tests.ps1
   ```
+
   or
+
   ```powershell
   .\run-tests.ps1 cpython
   ```
+
 - with `PyPy`
+
   ```powershell
   .\run-tests.ps1 pypy
   ```

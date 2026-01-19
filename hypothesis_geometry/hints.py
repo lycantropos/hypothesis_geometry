@@ -1,4 +1,5 @@
-from .core import hints as _hints
+from typing import TypeAlias
 
-Multicontour = _hints.Multicontour
-Strategy = _hints.Strategy
+from ._core import hints as _hints
+
+Multicontour: TypeAlias = _hints.Multicontour[_hints.ScalarT]

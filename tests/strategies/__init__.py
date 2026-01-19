@@ -1,25 +1,39 @@
-from .base import (concave_contours_sizes_pairs,
-                   convex_contours_sizes_pairs,
-                   data,
-                   invalid_concave_contours_sizes_pairs,
-                   invalid_convex_contours_sizes_pairs,
-                   invalid_mix_components_sizes_pairs_triplets,
-                   invalid_mix_points_sizes_pairs,
-                   invalid_mix_polygons_sizes_pairs,
-                   invalid_mix_segments_sizes_pairs,
-                   invalid_multicontours_sizes_pairs,
-                   invalid_multipoints_sizes_pairs,
-                   invalid_multipolygons_sizes_pairs,
-                   invalid_multisegments_sizes_pairs,
-                   invalid_polygon_holes_sizes_pairs,
-                   mix_components_sizes_pairs_triplets,
-                   multicontours_sizes_pairs,
-                   multipoints_sizes_pairs,
-                   multipolygons_sizes_pairs,
-                   multisegments_sizes_pairs,
-                   non_valid_concave_contours_sizes_pairs,
-                   non_valid_convex_contours_sizes_pairs,
-                   polygon_holes_sizes_pairs,
-                   scalars_strategies,
-                   scalars_strategies_with_limits_and_types,
-                   scalars_strategy_with_limit_and_type_pairs)
+from . import base
+
+concave_contours_sizes_pairs = base.concave_contours_sizes_pairs
+convex_contours_sizes_pairs = base.convex_contours_sizes_pairs
+data_object_strategy = base.data_object_strategy
+invalid_concave_contours_sizes_pairs = (
+    base.invalid_concave_contours_sizes_pairs
+)
+invalid_convex_contours_sizes_pairs = base.invalid_convex_contours_sizes_pairs
+invalid_mix_components_sizes_pairs_triplets = (
+    base.invalid_mix_components_sizes_pairs_triplets
+)
+invalid_mix_points_sizes_pairs = base.invalid_mix_points_sizes_pairs
+invalid_mix_polygons_sizes_pairs = base.invalid_mix_polygons_sizes_pairs
+invalid_mix_segments_sizes_pairs = base.invalid_mix_segments_sizes_pairs
+invalid_multicontours_sizes_pairs = base.invalid_multicontours_sizes_pairs
+invalid_multipoints_sizes_pairs = base.invalid_multipoints_sizes_pairs
+invalid_multipolygons_sizes_pairs = base.invalid_multipolygons_sizes_pairs
+invalid_multisegments_sizes_pairs = base.invalid_multisegments_sizes_pairs
+invalid_polygon_holes_sizes_pairs = base.invalid_polygon_holes_sizes_pairs
+mix_components_sizes_pairs_triplets = base.mix_components_sizes_pairs_triplets
+multicontours_sizes_pairs = base.multicontours_sizes_pairs
+multipoints_sizes_pairs = base.multipoints_sizes_pairs
+multipolygons_sizes_pairs = base.multipolygons_sizes_pairs
+multisegments_sizes_pairs = base.multisegments_sizes_pairs
+non_valid_concave_contours_sizes_pairs = (
+    base.non_valid_concave_contours_sizes_pairs
+)
+non_valid_convex_contours_sizes_pairs = (
+    base.non_valid_convex_contours_sizes_pairs
+)
+polygon_holes_sizes_pairs = base.polygon_holes_sizes_pairs
+scalars_strategies = base.scalar_strategy_strategy
+scalars_strategies_with_limits_and_types = (
+    base.scalars_strategies_with_limits_and_types
+)
+scalars_strategy_with_limit_and_type_pairs = (
+    base.scalars_strategy_with_limit_and_type_pairs
+)
