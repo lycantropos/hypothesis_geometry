@@ -1,39 +1,59 @@
 from . import base
 
-concave_contours_sizes_pairs = base.concave_contours_sizes_pairs
-convex_contours_sizes_pairs = base.convex_contours_sizes_pairs
+concave_contour_size_pair_strategy = base.concave_contour_size_pair_strategy
+convex_contour_size_pair_strategy = base.convex_contour_size_pair_strategy
 data_object_strategy = base.data_object_strategy
-invalid_concave_contours_sizes_pairs = (
-    base.invalid_concave_contours_sizes_pairs
+invalid_concave_contour_size_pair_strategy = (
+    base.invalid_concave_contour_size_pair_strategy
 )
-invalid_convex_contours_sizes_pairs = base.invalid_convex_contours_sizes_pairs
-invalid_mix_components_sizes_pairs_triplets = (
-    base.invalid_mix_components_sizes_pairs_triplets
+invalid_convex_contour_size_pair_strategy = (
+    base.invalid_convex_contour_size_pair_strategy
 )
-invalid_mix_points_sizes_pairs = base.invalid_mix_points_sizes_pairs
-invalid_mix_polygons_sizes_pairs = base.invalid_mix_polygons_sizes_pairs
-invalid_mix_segments_sizes_pairs = base.invalid_mix_segments_sizes_pairs
-invalid_multicontours_sizes_pairs = base.invalid_multicontours_sizes_pairs
-invalid_multipoints_sizes_pairs = base.invalid_multipoints_sizes_pairs
-invalid_multipolygons_sizes_pairs = base.invalid_multipolygons_sizes_pairs
-invalid_multisegments_sizes_pairs = base.invalid_multisegments_sizes_pairs
-invalid_polygon_holes_sizes_pairs = base.invalid_polygon_holes_sizes_pairs
-mix_components_sizes_pairs_triplets = base.mix_components_sizes_pairs_triplets
-multicontours_sizes_pairs = base.multicontours_sizes_pairs
-multipoints_sizes_pairs = base.multipoints_sizes_pairs
-multipolygons_sizes_pairs = base.multipolygons_sizes_pairs
-multisegments_sizes_pairs = base.multisegments_sizes_pairs
-non_valid_concave_contours_sizes_pairs = (
-    base.non_valid_concave_contours_sizes_pairs
+invalid_mix_component_size_pair_triplet_strategy = (
+    base.invalid_mix_component_size_pair_triplet_strategy
 )
-non_valid_convex_contours_sizes_pairs = (
-    base.non_valid_convex_contours_sizes_pairs
+invalid_mix_point_size_pair_strategy = (
+    base.invalid_mix_point_size_pair_strategy
 )
-polygon_holes_sizes_pairs = base.polygon_holes_sizes_pairs
-scalars_strategies = base.scalar_strategy_strategy
-scalars_strategies_with_limits_and_types = (
-    base.scalars_strategies_with_limits_and_types
+invalid_mix_polygon_size_pair_strategy = (
+    base.invalid_mix_polygon_size_pair_strategy
 )
-scalars_strategy_with_limit_and_type_pairs = (
-    base.scalars_strategy_with_limit_and_type_pairs
+invalid_mix_segment_size_pair_strategy = (
+    base.invalid_mix_segment_size_pair_strategy
+)
+invalid_multicontour_size_pair_strategy = (
+    base.invalid_multicontour_size_pair_strategy
+)
+invalid_multipoint_size_pair_strategy = (
+    base.invalid_multipoint_size_pair_strategy
+)
+invalid_multipolygon_size_pair_strategy = (
+    base.invalid_multipolygon_size_pair_strategy
+)
+invalid_multisegment_size_pair_strategy = (
+    base.invalid_multisegment_size_pair_strategy
+)
+invalid_polygon_hole_size_pair_strategy = (
+    base.invalid_polygon_hole_size_pair_strategy
+)
+mix_component_size_pair_triplet_strategy = (
+    base.mix_component_size_pair_triplet_strategy
+)
+multicontour_size_pair_strategy = base.multicontour_size_pair_strategy
+multipoint_size_pair_strategy = base.multipoint_size_pair_strategy
+multipolygon_size_pair_strategy = base.multipolygon_size_pair_strategy
+multisegment_size_pair_strategy = base.multisegment_size_pair_strategy
+non_valid_concave_contour_size_pair_strategy = (
+    base.non_valid_concave_contour_size_pair_strategy
+)
+non_valid_convex_contour_size_pair_strategy = (
+    base.non_valid_convex_contour_size_pair_strategy
+)
+polygon_hole_size_pair_strategy = base.polygon_hole_size_pair_strategy
+scalar_strategy_strategy = base.scalar_strategy_strategy
+scalar_strategy_with_limits_and_type_strategy = (
+    base.scalar_strategy_with_limits_and_type_strategy
+)
+scalar_strategy_with_limit_and_type_pair_strategy = (
+    base.scalar_strategy_with_limit_and_type_pair_strategy
 )

@@ -82,8 +82,8 @@ def to_invalid_sizes_pairs(
     )
 
 
-concave_contours_sizes_pairs = to_sizes_pairs(MinContourSize.CONCAVE)
-convex_contours_sizes_pairs = to_sizes_pairs(MinContourSize.CONVEX)
+concave_contour_size_pair_strategy = to_sizes_pairs(MinContourSize.CONCAVE)
+convex_contour_size_pair_strategy = to_sizes_pairs(MinContourSize.CONVEX)
 
 
 def is_valid_mix_components_sizes_pairs_triplet(
@@ -98,46 +98,48 @@ def is_valid_mix_components_sizes_pairs_triplet(
     )
 
 
-mix_components_sizes_pairs_triplets = st.tuples(
+mix_component_size_pair_triplet_strategy = st.tuples(
     *repeat(to_sizes_pairs(0), 3)
 ).filter(is_valid_mix_components_sizes_pairs_triplet)
-multicontours_sizes_pairs = to_sizes_pairs(MIN_MULTICONTOUR_SIZE, 5)
-multipoints_sizes_pairs = to_sizes_pairs(MIN_MULTIPOINT_SIZE)
-multipolygons_sizes_pairs = to_sizes_pairs(MIN_MULTIPOLYGON_SIZE, 5)
-multisegments_sizes_pairs = to_sizes_pairs(MIN_MULTISEGMENT_SIZE)
-polygon_holes_sizes_pairs = to_sizes_pairs(0, 5)
-non_valid_concave_contours_sizes_pairs = to_non_valid_sizes_pairs(
+multicontour_size_pair_strategy = to_sizes_pairs(MIN_MULTICONTOUR_SIZE, 5)
+multipoint_size_pair_strategy = to_sizes_pairs(MIN_MULTIPOINT_SIZE)
+multipolygon_size_pair_strategy = to_sizes_pairs(MIN_MULTIPOLYGON_SIZE, 5)
+multisegment_size_pair_strategy = to_sizes_pairs(MIN_MULTISEGMENT_SIZE)
+polygon_hole_size_pair_strategy = to_sizes_pairs(0, 5)
+non_valid_concave_contour_size_pair_strategy = to_non_valid_sizes_pairs(
     MinContourSize.CONCAVE
 )
-non_valid_convex_contours_sizes_pairs = to_non_valid_sizes_pairs(
+non_valid_convex_contour_size_pair_strategy = to_non_valid_sizes_pairs(
     MinContourSize.CONVEX
 )
-invalid_concave_contours_sizes_pairs = to_invalid_sizes_pairs(
+invalid_concave_contour_size_pair_strategy = to_invalid_sizes_pairs(
     MinContourSize.CONCAVE
 )
-invalid_convex_contours_sizes_pairs = to_invalid_sizes_pairs(
+invalid_convex_contour_size_pair_strategy = to_invalid_sizes_pairs(
     MinContourSize.CONVEX
 )
-invalid_mix_components_sizes_pairs_triplets = st.permutations(
+invalid_mix_component_size_pair_triplet_strategy = st.permutations(
     [to_sizes_pairs(0), st.just((0, 0)), st.just((0, 0))]
 ).flatmap(pack(st.tuples))
-invalid_multicontours_sizes_pairs = to_invalid_sizes_pairs(
+invalid_multicontour_size_pair_strategy = to_invalid_sizes_pairs(
     MIN_MULTICONTOUR_SIZE
 )
-invalid_polygon_holes_sizes_pairs = to_invalid_sizes_pairs(0)
-invalid_multipoints_sizes_pairs = to_invalid_sizes_pairs(MIN_MULTIPOINT_SIZE)
-invalid_multipolygons_sizes_pairs = to_invalid_sizes_pairs(
+invalid_polygon_hole_size_pair_strategy = to_invalid_sizes_pairs(0)
+invalid_multipoint_size_pair_strategy = to_invalid_sizes_pairs(
+    MIN_MULTIPOINT_SIZE
+)
+invalid_multipolygon_size_pair_strategy = to_invalid_sizes_pairs(
     MIN_MULTIPOLYGON_SIZE
 )
-invalid_mix_points_sizes_pairs = to_invalid_sizes_pairs(0)
-invalid_mix_polygons_sizes_pairs = to_invalid_sizes_pairs(0)
-invalid_mix_segments_sizes_pairs = to_invalid_sizes_pairs(0)
-invalid_multisegments_sizes_pairs = to_invalid_sizes_pairs(
+invalid_mix_point_size_pair_strategy = to_invalid_sizes_pairs(0)
+invalid_mix_polygon_size_pair_strategy = to_invalid_sizes_pairs(0)
+invalid_mix_segment_size_pair_strategy = to_invalid_sizes_pairs(0)
+invalid_multisegment_size_pair_strategy = to_invalid_sizes_pairs(
     MIN_MULTISEGMENT_SIZE
 )
 
 
-def to_coordinate_strategy_with_limit_and_type_strategy(
+def to_scalar_strategy_with_limit_and_type_strategy(
     scalar_type: type[ScalarT], /
 ) -> st.SearchStrategy[
     tuple[tuple[st.SearchStrategy[ScalarT], Limits[ScalarT]], type[ScalarT]]
@@ -180,16 +182,14 @@ def are_pair_coordinates_sparse(pair: tuple[ScalarT, ScalarT], /) -> bool:
     return bool(context.coordinate_factory(300) <= abs(first - second))
 
 
-scalars_strategies_with_limits_and_types_strategies: st.SearchStrategy[
+scalars_strategy_with_limits_and_type_strategy_strategy: st.SearchStrategy[
     st.SearchStrategy[
         tuple[tuple[st.SearchStrategy[Any], Limits[Any]], type[Any]]
     ]
-] = scalar_type_strategy.map(
-    to_coordinate_strategy_with_limit_and_type_strategy
+] = scalar_type_strategy.map(to_scalar_strategy_with_limit_and_type_strategy)
+scalar_strategy_with_limits_and_type_strategy = (
+    scalars_strategy_with_limits_and_type_strategy_strategy.flatmap(identity)
 )
-scalars_strategies_with_limits_and_types = (
-    scalars_strategies_with_limits_and_types_strategies.flatmap(identity)
-)
-scalars_strategy_with_limit_and_type_pairs = (
-    scalars_strategies_with_limits_and_types_strategies.flatmap(to_pairs)
+scalar_strategy_with_limit_and_type_pair_strategy = (
+    scalars_strategy_with_limits_and_type_strategy_strategy.flatmap(to_pairs)
 )

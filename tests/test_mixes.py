@@ -3,8 +3,24 @@ from hypothesis import given, strategies as st
 from hypothesis.errors import HypothesisWarning
 
 from hypothesis_geometry.planar import mixes
-from tests import strategies
 from tests.hints import ScalarT
+from tests.strategies import (
+    concave_contour_size_pair_strategy,
+    convex_contour_size_pair_strategy,
+    data_object_strategy,
+    invalid_convex_contour_size_pair_strategy,
+    invalid_mix_component_size_pair_triplet_strategy,
+    invalid_mix_point_size_pair_strategy,
+    invalid_mix_polygon_size_pair_strategy,
+    invalid_mix_segment_size_pair_strategy,
+    invalid_polygon_hole_size_pair_strategy,
+    mix_component_size_pair_triplet_strategy,
+    non_valid_convex_contour_size_pair_strategy,
+    polygon_hole_size_pair_strategy,
+    scalar_strategy_strategy,
+    scalar_strategy_with_limit_and_type_pair_strategy,
+    scalar_strategy_with_limits_and_type_strategy,
+)
 from tests.utils import (
     ScalarStrategyLimitsWithType,
     SizePair,
@@ -18,11 +34,11 @@ from tests.utils import (
 
 
 @given(
-    strategies.scalars_strategies,
-    strategies.mix_components_sizes_pairs_triplets,
-    strategies.concave_contours_sizes_pairs,
-    strategies.polygon_holes_sizes_pairs,
-    strategies.convex_contours_sizes_pairs,
+    scalar_strategy_strategy,
+    mix_component_size_pair_triplet_strategy,
+    concave_contour_size_pair_strategy,
+    polygon_hole_size_pair_strategy,
+    convex_contour_size_pair_strategy,
 )
 def test_basic(
     coordinates: st.SearchStrategy[ScalarT],
@@ -68,12 +84,12 @@ def test_basic(
 
 
 @given(
-    strategies.data_object_strategy,
-    strategies.scalars_strategy_with_limit_and_type_pairs,
-    strategies.mix_components_sizes_pairs_triplets,
-    strategies.concave_contours_sizes_pairs,
-    strategies.polygon_holes_sizes_pairs,
-    strategies.convex_contours_sizes_pairs,
+    data_object_strategy,
+    scalar_strategy_with_limit_and_type_pair_strategy,
+    mix_component_size_pair_triplet_strategy,
+    concave_contour_size_pair_strategy,
+    polygon_hole_size_pair_strategy,
+    convex_contour_size_pair_strategy,
 )
 def test_properties(
     data: st.DataObject,
@@ -158,12 +174,12 @@ def test_properties(
 
 
 @given(
-    strategies.data_object_strategy,
-    strategies.scalars_strategies_with_limits_and_types,
-    strategies.mix_components_sizes_pairs_triplets,
-    strategies.concave_contours_sizes_pairs,
-    strategies.polygon_holes_sizes_pairs,
-    strategies.convex_contours_sizes_pairs,
+    data_object_strategy,
+    scalar_strategy_with_limits_and_type_strategy,
+    mix_component_size_pair_triplet_strategy,
+    concave_contour_size_pair_strategy,
+    polygon_hole_size_pair_strategy,
+    convex_contour_size_pair_strategy,
 )
 def test_same_coordinates(
     data: st.DataObject,
@@ -234,8 +250,7 @@ def test_same_coordinates(
 
 
 @given(
-    strategies.scalars_strategies,
-    strategies.invalid_mix_components_sizes_pairs_triplets,
+    scalar_strategy_strategy, invalid_mix_component_size_pair_triplet_strategy
 )
 def test_invalid_components_sizes(
     coordinates: st.SearchStrategy[ScalarT],
@@ -261,9 +276,7 @@ def test_invalid_components_sizes(
         )
 
 
-@given(
-    strategies.scalars_strategies, strategies.invalid_mix_points_sizes_pairs
-)
+@given(scalar_strategy_strategy, invalid_mix_point_size_pair_strategy)
 def test_invalid_points_sizes(
     coordinates: st.SearchStrategy[ScalarT], invalid_sizes_pair: SizePair
 ) -> None:
@@ -278,9 +291,7 @@ def test_invalid_points_sizes(
         )
 
 
-@given(
-    strategies.scalars_strategies, strategies.invalid_mix_polygons_sizes_pairs
-)
+@given(scalar_strategy_strategy, invalid_mix_polygon_size_pair_strategy)
 def test_invalid_polygons_sizes(
     coordinates: st.SearchStrategy[ScalarT], invalid_sizes_pair: SizePair
 ) -> None:
@@ -295,9 +306,7 @@ def test_invalid_polygons_sizes(
         )
 
 
-@given(
-    strategies.scalars_strategies, strategies.invalid_mix_segments_sizes_pairs
-)
+@given(scalar_strategy_strategy, invalid_mix_segment_size_pair_strategy)
 def test_invalid_segments_sizes(
     coordinates: st.SearchStrategy[ScalarT], invalid_sizes_pair: SizePair
 ) -> None:
@@ -312,10 +321,7 @@ def test_invalid_segments_sizes(
         )
 
 
-@given(
-    strategies.scalars_strategies,
-    strategies.invalid_convex_contours_sizes_pairs,
-)
+@given(scalar_strategy_strategy, invalid_convex_contour_size_pair_strategy)
 def test_invalid_polygon_border_sizes(
     coordinates: st.SearchStrategy[ScalarT], invalid_sizes_pair: SizePair
 ) -> None:
@@ -330,9 +336,7 @@ def test_invalid_polygon_border_sizes(
         )
 
 
-@given(
-    strategies.scalars_strategies, strategies.invalid_polygon_holes_sizes_pairs
-)
+@given(scalar_strategy_strategy, invalid_polygon_hole_size_pair_strategy)
 def test_invalid_polygon_holes_list_sizes(
     coordinates: st.SearchStrategy[ScalarT], invalid_sizes_pair: SizePair
 ) -> None:
@@ -347,10 +351,7 @@ def test_invalid_polygon_holes_list_sizes(
         )
 
 
-@given(
-    strategies.scalars_strategies,
-    strategies.invalid_convex_contours_sizes_pairs,
-)
+@given(scalar_strategy_strategy, invalid_convex_contour_size_pair_strategy)
 def test_invalid_polygon_holes_sizes(
     coordinates: st.SearchStrategy[ScalarT], invalid_sizes_pair: SizePair
 ) -> None:
@@ -365,10 +366,7 @@ def test_invalid_polygon_holes_sizes(
         )
 
 
-@given(
-    strategies.scalars_strategies,
-    strategies.non_valid_convex_contours_sizes_pairs,
-)
+@given(scalar_strategy_strategy, non_valid_convex_contour_size_pair_strategy)
 def test_non_valid_polygon_border_sizes(
     coordinates: st.SearchStrategy[ScalarT], non_valid_sizes_pair: SizePair
 ) -> None:
@@ -385,10 +383,7 @@ def test_non_valid_polygon_border_sizes(
     assert len(warnings) == 1
 
 
-@given(
-    strategies.scalars_strategies,
-    strategies.non_valid_convex_contours_sizes_pairs,
-)
+@given(scalar_strategy_strategy, non_valid_convex_contour_size_pair_strategy)
 def test_non_valid_polygon_holes_sizes(
     coordinates: st.SearchStrategy[ScalarT], non_valid_sizes_pair: SizePair
 ) -> None:

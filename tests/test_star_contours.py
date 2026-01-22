@@ -3,8 +3,16 @@ from hypothesis import given, strategies as st
 from hypothesis.errors import HypothesisWarning
 
 from hypothesis_geometry.planar import star_contours
-from tests import strategies
 from tests.hints import ScalarT
+from tests.strategies import (
+    convex_contour_size_pair_strategy,
+    data_object_strategy,
+    invalid_convex_contour_size_pair_strategy,
+    non_valid_convex_contour_size_pair_strategy,
+    scalar_strategy_strategy,
+    scalar_strategy_with_limit_and_type_pair_strategy,
+    scalar_strategy_with_limits_and_type_strategy,
+)
 from tests.utils import (
     ScalarStrategyLimitsWithType,
     SizePair,
@@ -20,7 +28,7 @@ from tests.utils import (
 )
 
 
-@given(strategies.scalars_strategies, strategies.convex_contours_sizes_pairs)
+@given(scalar_strategy_strategy, convex_contour_size_pair_strategy)
 def test_basic(
     coordinates: st.SearchStrategy[ScalarT], sizes_pair: SizePair
 ) -> None:
@@ -34,9 +42,9 @@ def test_basic(
 
 
 @given(
-    strategies.data_object_strategy,
-    strategies.scalars_strategy_with_limit_and_type_pairs,
-    strategies.convex_contours_sizes_pairs,
+    data_object_strategy,
+    scalar_strategy_with_limit_and_type_pair_strategy,
+    convex_contour_size_pair_strategy,
 )
 def test_properties(
     data: st.DataObject,
@@ -86,9 +94,9 @@ def test_properties(
 
 
 @given(
-    strategies.data_object_strategy,
-    strategies.scalars_strategies_with_limits_and_types,
-    strategies.convex_contours_sizes_pairs,
+    data_object_strategy,
+    scalar_strategy_with_limits_and_type_strategy,
+    convex_contour_size_pair_strategy,
 )
 def test_same_coordinates(
     data: st.DataObject,
@@ -122,10 +130,7 @@ def test_same_coordinates(
     assert is_star_contour(result)
 
 
-@given(
-    strategies.scalars_strategies,
-    strategies.invalid_convex_contours_sizes_pairs,
-)
+@given(scalar_strategy_strategy, invalid_convex_contour_size_pair_strategy)
 def test_invalid_sizes(
     coordinates: st.SearchStrategy[ScalarT], invalid_sizes_pair: SizePair
 ) -> None:
@@ -137,10 +142,7 @@ def test_invalid_sizes(
         )
 
 
-@given(
-    strategies.scalars_strategies,
-    strategies.non_valid_convex_contours_sizes_pairs,
-)
+@given(scalar_strategy_strategy, non_valid_convex_contour_size_pair_strategy)
 def test_non_valid_sizes(
     coordinates: st.SearchStrategy[ScalarT], non_valid_sizes_pair: SizePair
 ) -> None:

@@ -1,8 +1,13 @@
 from hypothesis import given, strategies as st
 
 from hypothesis_geometry.planar import segments
-from tests import strategies
 from tests.hints import ScalarT
+from tests.strategies import (
+    data_object_strategy,
+    scalar_strategy_strategy,
+    scalar_strategy_with_limit_and_type_pair_strategy,
+    scalar_strategy_with_limits_and_type_strategy,
+)
 from tests.utils import (
     ScalarStrategyLimitsWithType,
     context,
@@ -11,17 +16,14 @@ from tests.utils import (
 )
 
 
-@given(strategies.scalars_strategies)
+@given(scalar_strategy_strategy)
 def test_basic(coordinates: st.SearchStrategy[ScalarT]) -> None:
     result = segments(coordinates, context=context)
 
     assert isinstance(result, st.SearchStrategy)
 
 
-@given(
-    strategies.data_object_strategy,
-    strategies.scalars_strategy_with_limit_and_type_pairs,
-)
+@given(data_object_strategy, scalar_strategy_with_limit_and_type_pair_strategy)
 def test_properties(
     data: st.DataObject,
     coordinates_limits_type_pair: tuple[
@@ -55,10 +57,7 @@ def test_properties(
     assert result.start != result.end
 
 
-@given(
-    strategies.data_object_strategy,
-    strategies.scalars_strategies_with_limits_and_types,
-)
+@given(data_object_strategy, scalar_strategy_with_limits_and_type_strategy)
 def test_same_coordinates(
     data: st.DataObject,
     coordinates_limits_type: ScalarStrategyLimitsWithType[ScalarT],
