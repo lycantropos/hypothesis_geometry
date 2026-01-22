@@ -21,7 +21,9 @@ def test_basic(
 ) -> None:
     min_size, max_size = sizes_pair
 
-    result = multisegments(coordinates, min_size=min_size, max_size=max_size)
+    result = multisegments(
+        coordinates, context=context, min_size=min_size, max_size=max_size
+    )
 
     assert isinstance(result, st.SearchStrategy)
 
@@ -51,7 +53,11 @@ def test_properties(
     min_size, max_size = sizes_pair
 
     strategy = multisegments(
-        x_coordinates, y_coordinates, min_size=min_size, max_size=max_size
+        x_coordinates,
+        y_coordinates,
+        context=context,
+        min_size=min_size,
+        max_size=max_size,
     )
 
     result = data.draw(strategy)
@@ -70,7 +76,7 @@ def test_properties(
         min_y_value=min_y_value,
         max_y_value=max_y_value,
     )
-    assert segments_do_not_cross_or_overlap(result.segments)
+    assert segments_do_not_cross_or_overlap(result.segments, context=context)
 
 
 @given(
@@ -86,7 +92,9 @@ def test_same_coordinates(
     (coordinates, (min_value, max_value)), type_ = coordinates_limits_type
     min_size, max_size = sizes_pair
 
-    strategy = multisegments(coordinates, min_size=min_size, max_size=max_size)
+    strategy = multisegments(
+        coordinates, context=context, min_size=min_size, max_size=max_size
+    )
 
     result = data.draw(strategy)
 
@@ -104,7 +112,7 @@ def test_same_coordinates(
         min_y_value=min_value,
         max_y_value=max_value,
     )
-    assert segments_do_not_cross_or_overlap(result.segments)
+    assert segments_do_not_cross_or_overlap(result.segments, context=context)
 
 
 @given(
@@ -116,4 +124,6 @@ def test_invalid_sizes(
     min_size, max_size = invalid_sizes_pair
 
     with pytest.raises(ValueError):
-        multisegments(coordinates, min_size=min_size, max_size=max_size)
+        multisegments(
+            coordinates, context=context, min_size=min_size, max_size=max_size
+        )

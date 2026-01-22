@@ -37,6 +37,7 @@ def test_basic(
 
     result = polygons(
         coordinates,
+        context=context,
         min_size=min_size,
         max_size=max_size,
         min_holes_size=min_holes_size,
@@ -81,6 +82,7 @@ def test_properties(
     strategy = polygons(
         x_coordinates,
         y_coordinates,
+        context=context,
         min_size=min_size,
         max_size=max_size,
         min_holes_size=min_holes_size,
@@ -138,6 +140,7 @@ def test_same_coordinates(
 
     strategy = polygons(
         coordinates,
+        context=context,
         min_size=min_size,
         max_size=max_size,
         min_holes_size=min_holes_size,
@@ -185,7 +188,9 @@ def test_invalid_border_sizes(
     min_size, max_size = invalid_sizes_pair
 
     with pytest.raises(ValueError):
-        polygons(coordinates, min_size=min_size, max_size=max_size)
+        polygons(
+            coordinates, context=context, min_size=min_size, max_size=max_size
+        )
 
 
 @given(
@@ -199,6 +204,7 @@ def test_invalid_holes_list_sizes(
     with pytest.raises(ValueError):
         polygons(
             coordinates,
+            context=context,
             min_holes_size=min_holes_size,
             max_holes_size=max_holes_size,
         )
@@ -216,6 +222,7 @@ def test_invalid_holes_sizes(
     with pytest.raises(ValueError):
         polygons(
             coordinates,
+            context=context,
             min_hole_size=min_hole_size,
             max_hole_size=max_hole_size,
         )
@@ -231,7 +238,9 @@ def test_non_valid_border_sizes(
     min_size, max_size = non_valid_sizes_pair
 
     with pytest.warns(HypothesisWarning) as warnings:
-        polygons(coordinates, min_size=min_size, max_size=max_size)
+        polygons(
+            coordinates, context=context, min_size=min_size, max_size=max_size
+        )
 
     assert len(warnings) == 1
 
@@ -246,6 +255,11 @@ def test_non_valid_holes_sizes(
     min_size, max_size = non_valid_sizes_pair
 
     with pytest.warns(HypothesisWarning) as warnings:
-        polygons(coordinates, min_hole_size=min_size, max_hole_size=max_size)
+        polygons(
+            coordinates,
+            context=context,
+            min_hole_size=min_size,
+            max_hole_size=max_size,
+        )
 
     assert len(warnings) == 1

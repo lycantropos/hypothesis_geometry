@@ -13,7 +13,7 @@ from tests.utils import (
 
 @given(strategies.scalars_strategies)
 def test_basic(coordinates: st.SearchStrategy[ScalarT]) -> None:
-    result = points(coordinates)
+    result = points(coordinates, context=context)
 
     assert isinstance(result, st.SearchStrategy)
 
@@ -39,7 +39,7 @@ def test_properties(
         y_coordinates_limits_type
     )
 
-    strategy = points(x_coordinates, y_coordinates)
+    strategy = points(x_coordinates, y_coordinates, context=context)
 
     result = data.draw(strategy)
 
@@ -64,7 +64,7 @@ def test_same_coordinates(
 ) -> None:
     (coordinates, (min_value, max_value)), type_ = coordinates_limits_type
 
-    strategy = points(coordinates)
+    strategy = points(coordinates, context=context)
 
     result = data.draw(strategy)
 

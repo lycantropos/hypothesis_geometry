@@ -4,6 +4,7 @@ from itertools import chain
 from typing import Any, Protocol, TypeVar
 
 from bentley_ottmann.planar import segments_cross_or_overlap
+from ground.context import Context
 from ground.hints import Contour, Segment
 from typing_extensions import Self
 
@@ -83,7 +84,9 @@ def sort_pair(
     pair: Sequence[_OrderedT], /, *, reverse: bool = False
 ) -> tuple[_OrderedT, _OrderedT]:
     first, second = pair
-    return (first, second) if first < second or reverse else (second, first)
+    return (
+        (first, second) if (first < second) is not reverse else (second, first)
+    )
 
 
 def contours_do_not_cross_or_overlap(
@@ -92,15 +95,18 @@ def contours_do_not_cross_or_overlap(
         [Contour[ScalarT]], Sequence[Segment[ScalarT]]
     ],
     /,
+    *,
+    context: Context[ScalarT],
 ) -> bool:
     return segments_do_not_cross_or_overlap(
         list(
             flatten(contour_segments_factory(contour) for contour in contours)
-        )
+        ),
+        context=context,
     )
 
 
 def segments_do_not_cross_or_overlap(
-    segments: Sequence[Segment[ScalarT]],
+    segments: Sequence[Segment[ScalarT]], /, *, context: Context[ScalarT]
 ) -> bool:
-    return not segments_cross_or_overlap(segments)
+    return not segments_cross_or_overlap(segments, context=context)

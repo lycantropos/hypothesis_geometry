@@ -6,10 +6,10 @@ from tests.hints import ScalarT
 from tests.utils import (
     ScalarStrategyLimitsWithType,
     are_vertices_non_convex,
+    context,
     contour_has_coordinate_types,
     contour_has_coordinates_in_range,
     contour_has_valid_sizes,
-    is_contour,
     is_contour_counterclockwise,
     is_contour_non_self_intersecting,
     is_contour_strict,
@@ -18,7 +18,7 @@ from tests.utils import (
 
 @given(strategies.scalars_strategies)
 def test_basic(coordinates: st.SearchStrategy[ScalarT]) -> None:
-    result = triangular_contours(coordinates)
+    result = triangular_contours(coordinates, context=context)
 
     assert isinstance(result, st.SearchStrategy)
 
@@ -44,11 +44,13 @@ def test_properties(
         y_coordinates_limits_type
     )
 
-    strategy = triangular_contours(x_coordinates, y_coordinates)
+    strategy = triangular_contours(
+        x_coordinates, y_coordinates, context=context
+    )
 
     result = data.draw(strategy)
 
-    assert is_contour(result)
+    assert isinstance(result, context.contour_cls)
     assert contour_has_valid_sizes(result, min_size=3, max_size=3)
     assert contour_has_coordinate_types(result, x_type=x_type, y_type=y_type)
     assert contour_has_coordinates_in_range(
@@ -74,11 +76,11 @@ def test_same_coordinates(
 ) -> None:
     (coordinates, (min_value, max_value)), type_ = coordinates_limits_type
 
-    strategy = triangular_contours(coordinates)
+    strategy = triangular_contours(coordinates, context=context)
 
     result = data.draw(strategy)
 
-    assert is_contour(result)
+    assert isinstance(result, context.contour_cls)
     assert contour_has_valid_sizes(result, min_size=3, max_size=3)
     assert contour_has_coordinate_types(result, x_type=type_, y_type=type_)
     assert contour_has_coordinates_in_range(

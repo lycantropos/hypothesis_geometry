@@ -9,14 +9,14 @@ from tests.utils import context
 
 
 def test_basic() -> None:
-    result: st.SearchStrategy[Empty[Any]] = empty_geometries()
+    result: st.SearchStrategy[Empty[Any]] = empty_geometries(context=context)
 
     assert isinstance(result, st.SearchStrategy)
 
 
 @given(data_object_strategy)
 def test_properties(data: st.DataObject) -> None:
-    strategy: st.SearchStrategy[Empty[Any]] = empty_geometries()
+    strategy: st.SearchStrategy[Empty[Any]] = empty_geometries(context=context)
 
     result = data.draw(strategy)
 

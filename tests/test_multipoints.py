@@ -21,7 +21,9 @@ def test_basic(
 ) -> None:
     min_size, max_size = sizes_pair
 
-    result = multipoints(coordinates, min_size=min_size, max_size=max_size)
+    result = multipoints(
+        coordinates, context=context, min_size=min_size, max_size=max_size
+    )
 
     assert isinstance(result, st.SearchStrategy)
 
@@ -51,7 +53,11 @@ def test_properties(
     min_size, max_size = sizes_pair
 
     strategy = multipoints(
-        x_coordinates, y_coordinates, min_size=min_size, max_size=max_size
+        x_coordinates,
+        y_coordinates,
+        context=context,
+        min_size=min_size,
+        max_size=max_size,
     )
 
     result = data.draw(strategy)
@@ -84,7 +90,9 @@ def test_same_coordinates(
     (coordinates, (min_value, max_value)), type_ = coordinates_limits_type
     min_size, max_size = sizes_pair
 
-    strategy = multipoints(coordinates, min_size=min_size, max_size=max_size)
+    strategy = multipoints(
+        coordinates, context=context, min_size=min_size, max_size=max_size
+    )
 
     result = data.draw(strategy)
 
@@ -110,4 +118,6 @@ def test_invalid_sizes(
     min_size, max_size = invalid_sizes_pair
 
     with pytest.raises(ValueError):
-        multipoints(coordinates, min_size=min_size, max_size=max_size)
+        multipoints(
+            coordinates, context=context, min_size=min_size, max_size=max_size
+        )

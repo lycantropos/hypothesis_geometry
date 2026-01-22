@@ -25,7 +25,9 @@ def test_basic(
 ) -> None:
     min_size, max_size = sizes_pair
 
-    result = convex_contours(coordinates, min_size=min_size, max_size=max_size)
+    result = convex_contours(
+        coordinates, context=context, min_size=min_size, max_size=max_size
+    )
 
     assert isinstance(result, st.SearchStrategy)
 
@@ -55,7 +57,11 @@ def test_properties(
     min_size, max_size = sizes_pair
 
     strategy = convex_contours(
-        x_coordinates, y_coordinates, min_size=min_size, max_size=max_size
+        x_coordinates,
+        y_coordinates,
+        context=context,
+        min_size=min_size,
+        max_size=max_size,
     )
 
     result = data.draw(strategy)
@@ -92,7 +98,7 @@ def test_same_coordinates(
     min_size, max_size = sizes_pair
 
     strategy = convex_contours(
-        coordinates, min_size=min_size, max_size=max_size
+        coordinates, context=context, min_size=min_size, max_size=max_size
     )
 
     result = data.draw(strategy)
@@ -125,7 +131,9 @@ def test_invalid_sizes(
     min_size, max_size = invalid_sizes_pair
 
     with pytest.raises(ValueError):
-        convex_contours(coordinates, min_size=min_size, max_size=max_size)
+        convex_contours(
+            coordinates, context=context, min_size=min_size, max_size=max_size
+        )
 
 
 @given(
@@ -138,6 +146,8 @@ def test_non_valid_sizes(
     min_size, max_size = non_valid_sizes_pair
 
     with pytest.warns(HypothesisWarning) as warnings:
-        convex_contours(coordinates, min_size=min_size, max_size=max_size)
+        convex_contours(
+            coordinates, context=context, min_size=min_size, max_size=max_size
+        )
 
     assert len(warnings) == 1

@@ -40,6 +40,7 @@ def test_basic(
 
     result = multipolygons(
         coordinates,
+        context=context,
         min_size=min_size,
         max_size=max_size,
         min_border_size=min_border_size,
@@ -89,6 +90,7 @@ def test_properties(
     strategy = multipolygons(
         x_coordinates,
         y_coordinates,
+        context=context,
         min_size=min_size,
         max_size=max_size,
         min_border_size=min_border_size,
@@ -171,6 +173,7 @@ def test_same_coordinates(
 
     strategy = multipolygons(
         coordinates,
+        context=context,
         min_size=min_size,
         max_size=max_size,
         min_border_size=min_border_size,
@@ -238,7 +241,9 @@ def test_invalid_sizes(
     min_size, max_size = invalid_sizes_pair
 
     with pytest.raises(ValueError):
-        multipolygons(coordinates, min_size=min_size, max_size=max_size)
+        multipolygons(
+            coordinates, context=context, min_size=min_size, max_size=max_size
+        )
 
 
 @given(
@@ -253,6 +258,7 @@ def test_invalid_border_sizes(
     with pytest.raises(ValueError):
         multipolygons(
             coordinates,
+            context=context,
             min_border_size=min_border_size,
             max_border_size=max_border_size,
         )
@@ -269,6 +275,7 @@ def test_invalid_holes_list_sizes(
     with pytest.raises(ValueError):
         multipolygons(
             coordinates,
+            context=context,
             min_holes_size=min_holes_size,
             max_holes_size=max_holes_size,
         )
@@ -286,6 +293,7 @@ def test_invalid_holes_sizes(
     with pytest.raises(ValueError):
         multipolygons(
             coordinates,
+            context=context,
             min_hole_size=min_hole_size,
             max_hole_size=max_hole_size,
         )
@@ -303,6 +311,7 @@ def test_non_valid_border_sizes(
     with pytest.warns(HypothesisWarning) as warnings:
         multipolygons(
             coordinates,
+            context=context,
             min_border_size=min_border_size,
             max_border_size=max_border_size,
         )
@@ -321,7 +330,10 @@ def test_non_valid_holes_sizes(
 
     with pytest.warns(HypothesisWarning) as warnings:
         multipolygons(
-            coordinates, min_hole_size=min_size, max_hole_size=max_size
+            coordinates,
+            context=context,
+            min_hole_size=min_size,
+            max_hole_size=max_size,
         )
 
     assert len(warnings) == 1

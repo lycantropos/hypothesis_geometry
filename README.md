@@ -46,10 +46,13 @@ python -m pip install -e '.'
 With setup
 
 ```python
->>> from ground.context import get_context
+>>> import math
+>>> from fractions import Fraction
+>>> from ground.context import Context
 >>> from hypothesis import strategies
 >>> from hypothesis_geometry import planar
->>> context = get_context()
+>>> coordinate_type = Fraction
+>>> context = Context(coordinate_factory=coordinate_type, sqrt=math.sqrt)
 >>> Contour = context.contour_cls
 >>> Empty = context.empty_cls
 >>> Mix = context.mix_cls
@@ -60,8 +63,7 @@ With setup
 >>> Polygon = context.polygon_cls
 >>> Segment = context.segment_cls
 >>> min_coordinate, max_coordinate = -100, 100
->>> coordinate_type = int
->>> coordinates = strategies.integers(min_coordinate, max_coordinate)
+>>> coordinates = strategies.fractions(min_coordinate, max_coordinate)
 >>> import warnings
 >>> from hypothesis.errors import NonInteractiveExampleWarning
 >>> # ignore hypothesis warnings caused by `example` method call
@@ -74,7 +76,7 @@ let's take a look at what can be generated and how.
 ### Empty geometries
 
 ```python
->>> empty_geometries = planar.empty_geometries()
+>>> empty_geometries = planar.empty_geometries(context=context)
 >>> empty = empty_geometries.example()
 >>> isinstance(empty, Empty)
 True
@@ -84,7 +86,7 @@ True
 ### Points
 
 ```python
->>> points = planar.points(coordinates)
+>>> points = planar.points(coordinates, context=context)
 >>> point = points.example()
 >>> isinstance(point, Point)
 True
@@ -106,7 +108,7 @@ True
 ```python
 >>> min_size, max_size = 5, 10
 >>> multipoints = planar.multipoints(
-...     coordinates, min_size=min_size, max_size=max_size
+...     coordinates, context=context, min_size=min_size, max_size=max_size
 ... )
 >>> multipoint = multipoints.example()
 >>> isinstance(multipoint, Multipoint)
@@ -131,7 +133,7 @@ True
 ### Segments
 
 ```python
->>> segments = planar.segments(coordinates)
+>>> segments = planar.segments(coordinates, context=context)
 >>> segment = segments.example()
 >>> isinstance(segment, Segment)
 True
@@ -157,7 +159,7 @@ True
 ```python
 >>> min_size, max_size = 5, 10
 >>> multisegments = planar.multisegments(
-...     coordinates, min_size=min_size, max_size=max_size
+...     coordinates, context=context, min_size=min_size, max_size=max_size
 ... )
 >>> multisegment = multisegments.example()
 >>> isinstance(multisegment, Multisegment)
@@ -188,7 +190,7 @@ True
 ```python
 >>> min_size, max_size = 5, 10
 >>> contours = planar.contours(
-...     coordinates, min_size=min_size, max_size=max_size
+...     coordinates, context=context, min_size=min_size, max_size=max_size
 ... )
 >>> contour = contours.example()
 >>> isinstance(contour, Contour)
@@ -219,6 +221,7 @@ also `planar.concave_contours` & `planar.convex_contours` options are available.
 >>> min_contour_size, max_contour_size = 4, 8
 >>> multicontours = planar.multicontours(
 ...     coordinates,
+...     context=context,
 ...     min_size=min_size,
 ...     max_size=max_size,
 ...     min_contour_size=min_contour_size,
@@ -261,6 +264,7 @@ True
 >>> min_hole_size, max_hole_size = 4, 8
 >>> polygons = planar.polygons(
 ...     coordinates,
+...     context=context,
 ...     min_size=min_size,
 ...     max_size=max_size,
 ...     min_holes_size=min_holes_size,
@@ -307,6 +311,7 @@ True
 >>> min_hole_size, max_hole_size = 4, 8
 >>> multipolygons = planar.multipolygons(
 ...     coordinates,
+...     context=context,
 ...     min_size=min_size,
 ...     max_size=max_size,
 ...     min_border_size=min_border_size,
@@ -375,6 +380,7 @@ True
 >>> min_polygon_hole_size, max_polygon_hole_size = 3, 5
 >>> mixes = planar.mixes(
 ...     coordinates,
+...     context=context,
 ...     min_points_size=min_points_size,
 ...     max_points_size=max_points_size,
 ...     min_segments_size=min_segments_size,

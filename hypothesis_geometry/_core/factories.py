@@ -152,7 +152,7 @@ def to_polygon(
         if len(hole_vertices) >= MIN_CONTOUR_SIZE:
             hole = contour_cls(_reverse_vertices(hole_vertices))
             assert contours_do_not_cross_or_overlap(
-                [*holes, hole], context.contour_segments
+                [*holes, hole], context.contour_segments, context=context
             )
             holes.append(hole)
             hole_edges = list(to_contour_segments(hole))

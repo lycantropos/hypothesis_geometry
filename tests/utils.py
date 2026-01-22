@@ -1,10 +1,12 @@
+import math
 from collections.abc import Callable, Hashable, Iterable, Sequence
+from fractions import Fraction
 from functools import partial
 from itertools import chain
 from typing import Any, TypeAlias, TypeVar
 
 from bentley_ottmann.planar import contour_self_intersects
-from ground.context import get_context
+from ground.context import Context
 from ground.enums import Location, Orientation
 from ground.hints import (
     Box,
@@ -43,7 +45,7 @@ ScalarStrategyLimitsWithType: TypeAlias = tuple[
     tuple[st.SearchStrategy[ScalarT], Limits[ScalarT]], type[ScalarT]
 ]
 SizePair: TypeAlias = tuple[int, int | None]
-context = get_context()
+context: Context[Any] = Context(coordinate_factory=Fraction, sqrt=math.sqrt)
 
 
 def identity(argument: Domain) -> Domain:
@@ -670,7 +672,7 @@ def is_multicontour(object_: Any) -> bool:
 
 
 def is_contour_non_self_intersecting(contour: Contour[ScalarT]) -> bool:
-    return not contour_self_intersects(contour)
+    return not contour_self_intersects(contour, context=context)
 
 
 to_contour_segments = context.contour_segments
@@ -682,7 +684,8 @@ def is_star_contour(contour: Contour[ScalarT]) -> bool:
             chain(
                 contour_to_star_segments(contour), to_contour_segments(contour)
             )
-        )
+        ),
+        context=context,
     )
 
 
@@ -762,7 +765,8 @@ def mix_segments_do_not_cross_or_overlap(mix: Mix[ScalarT]) -> bool:
                     for polygon in mix_to_polygons(mix)
                 ),
             )
-        )
+        ),
+        context=context,
     )
 
 
@@ -770,7 +774,7 @@ def contours_do_not_cross_or_overlap(
     contours: Sequence[Contour[ScalarT]], /
 ) -> bool:
     return _contours_do_not_cross_or_overlap(
-        contours, context.contour_segments
+        contours, context.contour_segments, context=context
     )
 
 

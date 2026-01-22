@@ -8,6 +8,7 @@ from tests.hints import ScalarT
 from tests.utils import (
     ScalarStrategyLimitsWithType,
     SizePair,
+    context,
     contours_do_not_cross_or_overlap,
     has_valid_size,
     is_contour_counterclockwise,
@@ -35,6 +36,7 @@ def test_basic(
 
     result = multicontours(
         coordinates,
+        context=context,
         min_size=min_size,
         max_size=max_size,
         min_contour_size=min_contour_size,
@@ -74,6 +76,7 @@ def test_properties(
     strategy = multicontours(
         x_coordinates,
         y_coordinates,
+        context=context,
         min_size=min_size,
         max_size=max_size,
         min_contour_size=min_contour_size,
@@ -124,6 +127,7 @@ def test_same_coordinates(
 
     strategy = multicontours(
         coordinates,
+        context=context,
         min_size=min_size,
         max_size=max_size,
         min_contour_size=min_contour_size,
@@ -166,7 +170,9 @@ def test_invalid_sizes(
     min_size, max_size = invalid_sizes_pair
 
     with pytest.raises(ValueError):
-        multicontours(coordinates, min_size=min_size, max_size=max_size)
+        multicontours(
+            coordinates, context=context, min_size=min_size, max_size=max_size
+        )
 
 
 @given(
@@ -182,6 +188,7 @@ def test_invalid_contours_sizes(
     with pytest.raises(ValueError):
         multicontours(
             coordinates,
+            context=context,
             min_contour_size=min_contour_size,
             max_contour_size=max_contour_size,
         )
@@ -198,7 +205,10 @@ def test_non_valid_contours_sizes(
 
     with pytest.warns(HypothesisWarning) as warnings:
         multicontours(
-            coordinates, min_contour_size=min_size, max_contour_size=max_size
+            coordinates,
+            context=context,
+            min_contour_size=min_size,
+            max_contour_size=max_size,
         )
 
     assert len(warnings) == 1

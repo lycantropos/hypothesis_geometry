@@ -49,6 +49,7 @@ def test_basic(
 
     result = mixes(
         coordinates,
+        context=context,
         min_points_size=min_points_size,
         max_points_size=max_points_size,
         min_segments_size=min_segments_size,
@@ -111,6 +112,7 @@ def test_properties(
     strategy = mixes(
         x_coordinates,
         y_coordinates,
+        context=context,
         min_points_size=min_points_size,
         max_points_size=max_points_size,
         min_segments_size=min_segments_size,
@@ -186,6 +188,7 @@ def test_same_coordinates(
 
     strategy = mixes(
         coordinates,
+        context=context,
         min_points_size=min_points_size,
         max_points_size=max_points_size,
         min_segments_size=min_segments_size,
@@ -248,6 +251,7 @@ def test_invalid_components_sizes(
     with pytest.raises(ValueError):
         mixes(
             coordinates,
+            context=context,
             min_points_size=min_points_size,
             max_points_size=max_points_size,
             min_segments_size=min_segments_size,
@@ -268,6 +272,7 @@ def test_invalid_points_sizes(
     with pytest.raises(ValueError):
         mixes(
             coordinates,
+            context=context,
             min_points_size=min_points_size,
             max_points_size=max_points_size,
         )
@@ -284,6 +289,7 @@ def test_invalid_polygons_sizes(
     with pytest.raises(ValueError):
         mixes(
             coordinates,
+            context=context,
             min_polygons_size=min_polygons_size,
             max_polygons_size=max_polygons_size,
         )
@@ -300,6 +306,7 @@ def test_invalid_segments_sizes(
     with pytest.raises(ValueError):
         mixes(
             coordinates,
+            context=context,
             min_segments_size=min_segments_size,
             max_segments_size=max_segments_size,
         )
@@ -317,6 +324,7 @@ def test_invalid_polygon_border_sizes(
     with pytest.raises(ValueError):
         mixes(
             coordinates,
+            context=context,
             min_polygon_border_size=min_polygon_border_size,
             max_polygon_border_size=max_polygon_border_size,
         )
@@ -333,6 +341,7 @@ def test_invalid_polygon_holes_list_sizes(
     with pytest.raises(ValueError):
         mixes(
             coordinates,
+            context=context,
             min_polygon_holes_size=min_polygon_holes_size,
             max_polygon_holes_size=max_polygon_holes_size,
         )
@@ -350,6 +359,7 @@ def test_invalid_polygon_holes_sizes(
     with pytest.raises(ValueError):
         mixes(
             coordinates,
+            context=context,
             min_polygon_hole_size=min_polygon_hole_size,
             max_polygon_hole_size=max_polygon_hole_size,
         )
@@ -367,6 +377,7 @@ def test_non_valid_polygon_border_sizes(
     with pytest.warns(HypothesisWarning) as warnings:
         mixes(
             coordinates,
+            context=context,
             min_polygon_border_size=min_polygon_border_size,
             max_polygon_border_size=max_polygon_border_size,
         )
@@ -386,6 +397,7 @@ def test_non_valid_polygon_holes_sizes(
     with pytest.warns(HypothesisWarning) as warnings:
         mixes(
             coordinates,
+            context=context,
             min_polygon_hole_size=min_polygon_hole_size,
             max_polygon_hole_size=max_polygon_hole_size,
         )

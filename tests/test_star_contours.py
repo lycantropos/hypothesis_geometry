@@ -9,10 +9,10 @@ from tests.utils import (
     ScalarStrategyLimitsWithType,
     SizePair,
     are_vertices_strict,
+    context,
     contour_has_coordinate_types,
     contour_has_coordinates_in_range,
     contour_has_valid_sizes,
-    is_contour,
     is_contour_counterclockwise,
     is_contour_non_self_intersecting,
     is_contour_strict,
@@ -26,7 +26,9 @@ def test_basic(
 ) -> None:
     min_size, max_size = sizes_pair
 
-    result = star_contours(coordinates, min_size=min_size, max_size=max_size)
+    result = star_contours(
+        coordinates, context=context, min_size=min_size, max_size=max_size
+    )
 
     assert isinstance(result, st.SearchStrategy)
 
@@ -56,12 +58,16 @@ def test_properties(
     min_size, max_size = sizes_pair
 
     strategy = star_contours(
-        x_coordinates, y_coordinates, min_size=min_size, max_size=max_size
+        x_coordinates,
+        y_coordinates,
+        context=context,
+        min_size=min_size,
+        max_size=max_size,
     )
 
     result = data.draw(strategy)
 
-    assert is_contour(result)
+    assert isinstance(result, context.contour_cls)
     assert contour_has_valid_sizes(
         result, min_size=min_size, max_size=max_size
     )
@@ -92,11 +98,13 @@ def test_same_coordinates(
     (coordinates, (min_value, max_value)), type_ = coordinates_limits_type
     min_size, max_size = sizes_pair
 
-    strategy = star_contours(coordinates, min_size=min_size, max_size=max_size)
+    strategy = star_contours(
+        coordinates, context=context, min_size=min_size, max_size=max_size
+    )
 
     result = data.draw(strategy)
 
-    assert is_contour(result)
+    assert isinstance(result, context.contour_cls)
     assert contour_has_valid_sizes(
         result, min_size=min_size, max_size=max_size
     )
@@ -124,7 +132,9 @@ def test_invalid_sizes(
     min_size, max_size = invalid_sizes_pair
 
     with pytest.raises(ValueError):
-        star_contours(coordinates, min_size=min_size, max_size=max_size)
+        star_contours(
+            coordinates, context=context, min_size=min_size, max_size=max_size
+        )
 
 
 @given(
@@ -137,6 +147,8 @@ def test_non_valid_sizes(
     min_size, max_size = non_valid_sizes_pair
 
     with pytest.warns(HypothesisWarning) as warnings:
-        star_contours(coordinates, min_size=min_size, max_size=max_size)
+        star_contours(
+            coordinates, context=context, min_size=min_size, max_size=max_size
+        )
 
     assert len(warnings) == 1

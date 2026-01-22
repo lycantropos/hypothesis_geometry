@@ -1,6 +1,6 @@
 import warnings as _warnings
 
-from ground.context import Context as _Context, get_context as _get_context
+from ground.context import Context as _Context
 from ground.hints import (
     Box as _Box,
     Contour as _Contour,
@@ -48,32 +48,33 @@ from .hints import Multicontour as _Multicontour
 
 
 def empty_geometries(
-    context: _Context[_ScalarT] | None = None,
+    *, context: _Context[_ScalarT]
 ) -> _st.SearchStrategy[_Empty[_ScalarT]]:
     """
     Returns a strategy for empty geometries.
 
     :param context: strategy context.
 
-    >>> from ground.context import get_context
+    >>> import math
+    >>> from fractions import Fraction
+    >>> from ground.context import Context
     >>> from hypothesis_geometry import planar
-    >>> context = get_context()
+    >>> context = Context(coordinate_factory=Fraction, sqrt=math.sqrt)
     >>> Empty = context.empty_cls
-    >>> empty_geometries = planar.empty_geometries()
+    >>> empty_geometries = planar.empty_geometries(context=context)
     >>> empty = empty_geometries.example()
     >>> isinstance(empty, Empty)
     True
     """
-    if context is None:
-        context = _get_context()
     return _to_empty_geometries(context)
 
 
 def points(
     x_coordinates: _st.SearchStrategy[_ScalarT],
     y_coordinates: _st.SearchStrategy[_ScalarT] | None = None,
+    /,
     *,
-    context: _Context[_ScalarT] | None = None,
+    context: _Context[_ScalarT],
 ) -> _st.SearchStrategy[_Point[_ScalarT]]:
     """
     Returns a strategy for points.
@@ -84,23 +85,20 @@ def points(
         ``None`` for reusing x-coordinates strategy.
     :param context: strategy context.
 
-    >>> from ground.context import get_context
+    >>> import math
+    >>> from fractions import Fraction
+    >>> from ground.context import Context
     >>> from hypothesis import strategies
     >>> from hypothesis_geometry import planar
-    >>> context = get_context()
+    >>> context = Context(coordinate_factory=Fraction, sqrt=math.sqrt)
     >>> Point = context.point_cls
 
     For same coordinates' domain:
 
-    >>> min_coordinate, max_coordinate = -1.0, 1.0
-    >>> coordinates_type = float
-    >>> coordinates = strategies.floats(
-    ...     min_coordinate,
-    ...     max_coordinate,
-    ...     allow_infinity=False,
-    ...     allow_nan=False,
-    ... )
-    >>> points = planar.points(coordinates)
+    >>> min_coordinate, max_coordinate = -1, 1
+    >>> coordinates_type = Fraction
+    >>> coordinates = strategies.fractions(min_coordinate, max_coordinate)
+    >>> points = planar.points(coordinates, context=context)
     >>> point = points.example()
     >>> isinstance(point, Point)
     True
@@ -117,22 +115,16 @@ def points(
 
     For different coordinates' domains:
 
-    >>> min_x_coordinate, max_x_coordinate = -1.0, 1.0
-    >>> min_y_coordinate, max_y_coordinate = 10.0, 100.0
-    >>> coordinates_type = float
-    >>> x_coordinates = strategies.floats(
-    ...     min_x_coordinate,
-    ...     max_x_coordinate,
-    ...     allow_infinity=False,
-    ...     allow_nan=False,
+    >>> min_x_coordinate, max_x_coordinate = -1, 1
+    >>> min_y_coordinate, max_y_coordinate = 10, 100
+    >>> coordinates_type = Fraction
+    >>> x_coordinates = strategies.fractions(
+    ...     min_x_coordinate, max_x_coordinate
     ... )
-    >>> y_coordinates = strategies.floats(
-    ...     min_y_coordinate,
-    ...     max_y_coordinate,
-    ...     allow_infinity=False,
-    ...     allow_nan=False,
+    >>> y_coordinates = strategies.fractions(
+    ...     min_y_coordinate, max_y_coordinate
     ... )
-    >>> points = planar.points(x_coordinates, y_coordinates)
+    >>> points = planar.points(x_coordinates, y_coordinates, context=context)
     >>> point = points.example()
     >>> isinstance(point, Point)
     True
@@ -147,18 +139,17 @@ def points(
     ... )
     True
     """
-    if context is None:
-        context = _get_context()
     return _to_points(x_coordinates, y_coordinates, context=context)
 
 
 def multipoints(
     x_coordinates: _st.SearchStrategy[_ScalarT],
     y_coordinates: _st.SearchStrategy[_ScalarT] | None = None,
+    /,
     *,
+    context: _Context[_ScalarT],
     min_size: int = _MIN_MULTIPOINT_SIZE,
     max_size: int | None = None,
-    context: _Context[_ScalarT] | None = None,
 ) -> _st.SearchStrategy[_Multipoint[_ScalarT]]:
     """
     Returns a strategy for multipoints.
@@ -167,29 +158,26 @@ def multipoints(
     :param y_coordinates:
         strategy for points' y-coordinates,
         ``None`` for reusing x-coordinates strategy.
+    :param context: strategy context.
     :param min_size: lower bound for multipoint size.
     :param max_size: upper bound for multipoint size, ``None`` for unbound.
-    :param context: strategy context.
 
-    >>> from ground.context import get_context
+    >>> import math
+    >>> from fractions import Fraction
+    >>> from ground.context import Context
     >>> from hypothesis import strategies
     >>> from hypothesis_geometry import planar
-    >>> context = get_context()
+    >>> context = Context(coordinate_factory=Fraction, sqrt=math.sqrt)
     >>> Multipoint = context.multipoint_cls
 
     For same coordinates' domain:
 
-    >>> min_coordinate, max_coordinate = -1.0, 1.0
-    >>> coordinates_type = float
-    >>> coordinates = strategies.floats(
-    ...     min_coordinate,
-    ...     max_coordinate,
-    ...     allow_infinity=False,
-    ...     allow_nan=False,
-    ... )
+    >>> min_coordinate, max_coordinate = -1, 1
+    >>> coordinates_type = Fraction
+    >>> coordinates = strategies.fractions(min_coordinate, max_coordinate)
     >>> min_size, max_size = 5, 10
     >>> multipoints = planar.multipoints(
-    ...     coordinates, min_size=min_size, max_size=max_size
+    ...     coordinates, context=context, min_size=min_size, max_size=max_size
     ... )
     >>> multipoint = multipoints.example()
     >>> isinstance(multipoint, Multipoint)
@@ -211,24 +199,22 @@ def multipoints(
 
     For different coordinates' domains:
 
-    >>> min_x_coordinate, max_x_coordinate = -1.0, 1.0
-    >>> min_y_coordinate, max_y_coordinate = 10.0, 100.0
-    >>> coordinates_type = float
-    >>> x_coordinates = strategies.floats(
-    ...     min_x_coordinate,
-    ...     max_x_coordinate,
-    ...     allow_infinity=False,
-    ...     allow_nan=False,
+    >>> min_x_coordinate, max_x_coordinate = -1, 1
+    >>> min_y_coordinate, max_y_coordinate = 10, 100
+    >>> coordinates_type = Fraction
+    >>> x_coordinates = strategies.fractions(
+    ...     min_x_coordinate, max_x_coordinate
     ... )
-    >>> y_coordinates = strategies.floats(
-    ...     min_y_coordinate,
-    ...     max_y_coordinate,
-    ...     allow_infinity=False,
-    ...     allow_nan=False,
+    >>> y_coordinates = strategies.fractions(
+    ...     min_y_coordinate, max_y_coordinate
     ... )
     >>> min_size, max_size = 5, 10
     >>> multipoints = planar.multipoints(
-    ...     x_coordinates, y_coordinates, min_size=min_size, max_size=max_size
+    ...     x_coordinates,
+    ...     y_coordinates,
+    ...     context=context,
+    ...     min_size=min_size,
+    ...     max_size=max_size,
     ... )
     >>> multipoint = multipoints.example()
     >>> isinstance(multipoint, Multipoint)
@@ -249,8 +235,6 @@ def multipoints(
     True
     """
     _validate_sizes(min_size, max_size, _MIN_MULTIPOINT_SIZE)
-    if context is None:
-        context = _get_context()
     return _to_multipoints(
         x_coordinates,
         y_coordinates,
@@ -263,8 +247,9 @@ def multipoints(
 def segments(
     x_coordinates: _st.SearchStrategy[_ScalarT],
     y_coordinates: _st.SearchStrategy[_ScalarT] | None = None,
+    /,
     *,
-    context: _Context[_ScalarT] | None = None,
+    context: _Context[_ScalarT],
 ) -> _st.SearchStrategy[_Segment[_ScalarT]]:
     """
     Returns a strategy for segments.
@@ -275,23 +260,20 @@ def segments(
         ``None`` for reusing x-coordinates strategy.
     :param context: strategy context.
 
-    >>> from ground.context import get_context
+    >>> import math
+    >>> from fractions import Fraction
+    >>> from ground.context import Context
     >>> from hypothesis import strategies
     >>> from hypothesis_geometry import planar
-    >>> context = get_context()
+    >>> context = Context(coordinate_factory=Fraction, sqrt=math.sqrt)
     >>> Segment = context.segment_cls
 
     For same coordinates' domain:
 
-    >>> min_coordinate, max_coordinate = -1.0, 1.0
-    >>> coordinates_type = float
-    >>> coordinates = strategies.floats(
-    ...     min_coordinate,
-    ...     max_coordinate,
-    ...     allow_infinity=False,
-    ...     allow_nan=False,
-    ... )
-    >>> segments = planar.segments(coordinates)
+    >>> min_coordinate, max_coordinate = -1, 1
+    >>> coordinates_type = Fraction
+    >>> coordinates = strategies.fractions(min_coordinate, max_coordinate)
+    >>> segments = planar.segments(coordinates, context=context)
     >>> segment = segments.example()
     >>> isinstance(segment, Segment)
     True
@@ -312,22 +294,18 @@ def segments(
 
     For different coordinates' domains:
 
-    >>> min_x_coordinate, max_x_coordinate = -1.0, 1.0
-    >>> min_y_coordinate, max_y_coordinate = 10.0, 100.0
-    >>> coordinates_type = float
-    >>> x_coordinates = strategies.floats(
-    ...     min_x_coordinate,
-    ...     max_x_coordinate,
-    ...     allow_infinity=False,
-    ...     allow_nan=False,
+    >>> min_x_coordinate, max_x_coordinate = -1, 1
+    >>> min_y_coordinate, max_y_coordinate = 10, 100
+    >>> coordinates_type = Fraction
+    >>> x_coordinates = strategies.fractions(
+    ...     min_x_coordinate, max_x_coordinate
     ... )
-    >>> y_coordinates = strategies.floats(
-    ...     min_y_coordinate,
-    ...     max_y_coordinate,
-    ...     allow_infinity=False,
-    ...     allow_nan=False,
+    >>> y_coordinates = strategies.fractions(
+    ...     min_y_coordinate, max_y_coordinate
     ... )
-    >>> segments = planar.segments(x_coordinates, y_coordinates)
+    >>> segments = planar.segments(
+    ...     x_coordinates, y_coordinates, context=context
+    ... )
     >>> segment = segments.example()
     >>> isinstance(segment, Segment)
     True
@@ -346,18 +324,17 @@ def segments(
     ... )
     True
     """
-    if context is None:
-        context = _get_context()
     return _to_segments(x_coordinates, y_coordinates, context=context)
 
 
 def multisegments(
     x_coordinates: _st.SearchStrategy[_ScalarT],
     y_coordinates: _st.SearchStrategy[_ScalarT] | None = None,
+    /,
     *,
+    context: _Context[_ScalarT],
     min_size: int = _MIN_MULTISEGMENT_SIZE,
     max_size: int | None = None,
-    context: _Context[_ScalarT] | None = None,
 ) -> _st.SearchStrategy[_Multisegment[_ScalarT]]:
     """
     Returns a strategy for multisegments.
@@ -366,29 +343,26 @@ def multisegments(
     :param y_coordinates:
         strategy for segments' y-coordinates,
         ``None`` for reusing x-coordinates strategy.
+    :param context: strategy context.
     :param min_size: lower bound for multisegment size.
     :param max_size: upper bound for multisegment size, ``None`` for unbound.
-    :param context: strategy context.
 
-    >>> from ground.context import get_context
+    >>> import math
+    >>> from fractions import Fraction
+    >>> from ground.context import Context
     >>> from hypothesis import strategies
     >>> from hypothesis_geometry import planar
-    >>> context = get_context()
+    >>> context = Context(coordinate_factory=Fraction, sqrt=math.sqrt)
     >>> Multisegment = context.multisegment_cls
 
     For same coordinates' domain:
 
-    >>> min_coordinate, max_coordinate = -1.0, 1.0
-    >>> coordinates_type = float
-    >>> coordinates = strategies.floats(
-    ...     min_coordinate,
-    ...     max_coordinate,
-    ...     allow_infinity=False,
-    ...     allow_nan=False,
-    ... )
+    >>> min_coordinate, max_coordinate = -1, 1
+    >>> coordinates_type = Fraction
+    >>> coordinates = strategies.fractions(min_coordinate, max_coordinate)
     >>> min_size, max_size = 5, 10
     >>> multisegments = planar.multisegments(
-    ...     coordinates, min_size=min_size, max_size=max_size
+    ...     coordinates, context=context, min_size=min_size, max_size=max_size
     ... )
     >>> multisegment = multisegments.example()
     >>> isinstance(multisegment, Multisegment)
@@ -414,24 +388,22 @@ def multisegments(
 
     For different coordinates' domains:
 
-    >>> min_x_coordinate, max_x_coordinate = -1.0, 1.0
-    >>> min_y_coordinate, max_y_coordinate = 10.0, 100.0
-    >>> coordinates_type = float
-    >>> x_coordinates = strategies.floats(
-    ...     min_x_coordinate,
-    ...     max_x_coordinate,
-    ...     allow_infinity=False,
-    ...     allow_nan=False,
+    >>> min_x_coordinate, max_x_coordinate = -1, 1
+    >>> min_y_coordinate, max_y_coordinate = 10, 100
+    >>> coordinates_type = Fraction
+    >>> x_coordinates = strategies.fractions(
+    ...     min_x_coordinate, max_x_coordinate
     ... )
-    >>> y_coordinates = strategies.floats(
-    ...     min_y_coordinate,
-    ...     max_y_coordinate,
-    ...     allow_infinity=False,
-    ...     allow_nan=False,
+    >>> y_coordinates = strategies.fractions(
+    ...     min_y_coordinate, max_y_coordinate
     ... )
     >>> min_size, max_size = 5, 10
     >>> multisegments = planar.multisegments(
-    ...     x_coordinates, y_coordinates, min_size=min_size, max_size=max_size
+    ...     x_coordinates,
+    ...     y_coordinates,
+    ...     context=context,
+    ...     min_size=min_size,
+    ...     max_size=max_size,
     ... )
     >>> multisegment = multisegments.example()
     >>> isinstance(multisegment, Multisegment)
@@ -456,8 +428,6 @@ def multisegments(
     True
     """
     _validate_sizes(min_size, max_size, _MIN_MULTISEGMENT_SIZE)
-    if context is None:
-        context = _get_context()
     return _to_multisegments(
         x_coordinates,
         y_coordinates,
@@ -470,10 +440,11 @@ def multisegments(
 def contours(
     x_coordinates: _st.SearchStrategy[_ScalarT],
     y_coordinates: _st.SearchStrategy[_ScalarT] | None = None,
+    /,
     *,
+    context: _Context[_ScalarT],
     min_size: int = _MIN_CONTOUR_SIZE,
     max_size: int | None = None,
-    context: _Context[_ScalarT] | None = None,
 ) -> _st.SearchStrategy[_Contour[_ScalarT]]:
     """
     Returns a strategy for contours.
@@ -482,29 +453,26 @@ def contours(
     :param y_coordinates:
         strategy for vertices' y-coordinates,
         ``None`` for reusing x-coordinates strategy.
+    :param context: strategy context.
     :param min_size: lower bound for contour size.
     :param max_size: upper bound for contour size, ``None`` for unbound.
-    :param context: strategy context.
 
-    >>> from ground.context import get_context
+    >>> import math
+    >>> from fractions import Fraction
+    >>> from ground.context import Context
     >>> from hypothesis import strategies
     >>> from hypothesis_geometry import planar
-    >>> context = get_context()
+    >>> context = Context(coordinate_factory=Fraction, sqrt=math.sqrt)
     >>> Contour = context.contour_cls
 
     For same coordinates' domain:
 
-    >>> min_coordinate, max_coordinate = -1.0, 1.0
-    >>> coordinates_type = float
-    >>> coordinates = strategies.floats(
-    ...     min_coordinate,
-    ...     max_coordinate,
-    ...     allow_infinity=False,
-    ...     allow_nan=False,
-    ... )
+    >>> min_coordinate, max_coordinate = -1, 1
+    >>> coordinates_type = Fraction
+    >>> coordinates = strategies.fractions(min_coordinate, max_coordinate)
     >>> min_size, max_size = 5, 10
     >>> contours = planar.contours(
-    ...     coordinates, min_size=min_size, max_size=max_size
+    ...     coordinates, context=context, min_size=min_size, max_size=max_size
     ... )
     >>> contour = contours.example()
     >>> isinstance(contour, Contour)
@@ -526,24 +494,22 @@ def contours(
 
     For different coordinates' domains:
 
-    >>> min_x_coordinate, max_x_coordinate = -1.0, 1.0
-    >>> min_y_coordinate, max_y_coordinate = 10.0, 100.0
-    >>> coordinates_type = float
-    >>> x_coordinates = strategies.floats(
-    ...     min_x_coordinate,
-    ...     max_x_coordinate,
-    ...     allow_infinity=False,
-    ...     allow_nan=False,
+    >>> min_x_coordinate, max_x_coordinate = -1, 1
+    >>> min_y_coordinate, max_y_coordinate = 10, 100
+    >>> coordinates_type = Fraction
+    >>> x_coordinates = strategies.fractions(
+    ...     min_x_coordinate, max_x_coordinate
     ... )
-    >>> y_coordinates = strategies.floats(
-    ...     min_y_coordinate,
-    ...     max_y_coordinate,
-    ...     allow_infinity=False,
-    ...     allow_nan=False,
+    >>> y_coordinates = strategies.fractions(
+    ...     min_y_coordinate, max_y_coordinate
     ... )
     >>> min_size, max_size = 5, 10
     >>> contours = planar.contours(
-    ...     x_coordinates, y_coordinates, min_size=min_size, max_size=max_size
+    ...     x_coordinates,
+    ...     y_coordinates,
+    ...     context=context,
+    ...     min_size=min_size,
+    ...     max_size=max_size,
     ... )
     >>> contour = contours.example()
     >>> isinstance(contour, Contour)
@@ -564,8 +530,6 @@ def contours(
     True
     """
     _validate_sizes(min_size, max_size, _MIN_CONTOUR_SIZE)
-    if context is None:
-        context = _get_context()
     return _to_vertex_sequences(
         x_coordinates,
         y_coordinates,
@@ -578,10 +542,11 @@ def contours(
 def convex_contours(
     x_coordinates: _st.SearchStrategy[_ScalarT],
     y_coordinates: _st.SearchStrategy[_ScalarT] | None = None,
+    /,
     *,
+    context: _Context[_ScalarT],
     min_size: int = _MinContourSize.CONVEX,
     max_size: int | None = None,
-    context: _Context[_ScalarT] | None = None,
 ) -> _st.SearchStrategy[_Contour[_ScalarT]]:
     """
     Returns a strategy for convex contours.
@@ -593,29 +558,26 @@ def convex_contours(
     :param y_coordinates:
         strategy for vertices' y-coordinates,
         ``None`` for reusing x-coordinates strategy.
+    :param context: strategy context.
     :param min_size: lower bound for contour size.
     :param max_size: upper bound for contour size, ``None`` for unbound.
-    :param context: strategy context.
 
-    >>> from ground.context import get_context
+    >>> import math
+    >>> from fractions import Fraction
+    >>> from ground.context import Context
     >>> from hypothesis import strategies
     >>> from hypothesis_geometry import planar
-    >>> context = get_context()
+    >>> context = Context(coordinate_factory=Fraction, sqrt=math.sqrt)
     >>> Contour = context.contour_cls
 
     For same coordinates' domain:
 
-    >>> min_coordinate, max_coordinate = -1.0, 1.0
-    >>> coordinates_type = float
-    >>> coordinates = strategies.floats(
-    ...     min_coordinate,
-    ...     max_coordinate,
-    ...     allow_infinity=False,
-    ...     allow_nan=False,
-    ... )
+    >>> min_coordinate, max_coordinate = -1, 1
+    >>> coordinates_type = Fraction
+    >>> coordinates = strategies.fractions(min_coordinate, max_coordinate)
     >>> min_size, max_size = 5, 10
     >>> contours = planar.convex_contours(
-    ...     coordinates, min_size=min_size, max_size=max_size
+    ...     coordinates, context=context, min_size=min_size, max_size=max_size
     ... )
     >>> contour = contours.example()
     >>> isinstance(contour, Contour)
@@ -637,24 +599,22 @@ def convex_contours(
 
     For different coordinates' domains:
 
-    >>> min_x_coordinate, max_x_coordinate = -1.0, 1.0
-    >>> min_y_coordinate, max_y_coordinate = 10.0, 100.0
-    >>> coordinates_type = float
-    >>> x_coordinates = strategies.floats(
-    ...     min_x_coordinate,
-    ...     max_x_coordinate,
-    ...     allow_infinity=False,
-    ...     allow_nan=False,
+    >>> min_x_coordinate, max_x_coordinate = -1, 1
+    >>> min_y_coordinate, max_y_coordinate = 10, 100
+    >>> coordinates_type = Fraction
+    >>> x_coordinates = strategies.fractions(
+    ...     min_x_coordinate, max_x_coordinate
     ... )
-    >>> y_coordinates = strategies.floats(
-    ...     min_y_coordinate,
-    ...     max_y_coordinate,
-    ...     allow_infinity=False,
-    ...     allow_nan=False,
+    >>> y_coordinates = strategies.fractions(
+    ...     min_y_coordinate, max_y_coordinate
     ... )
     >>> min_size, max_size = 5, 10
     >>> contours = planar.convex_contours(
-    ...     x_coordinates, y_coordinates, min_size=min_size, max_size=max_size
+    ...     x_coordinates,
+    ...     y_coordinates,
+    ...     context=context,
+    ...     min_size=min_size,
+    ...     max_size=max_size,
     ... )
     >>> contour = contours.example()
     >>> isinstance(contour, Contour)
@@ -675,8 +635,6 @@ def convex_contours(
     True
     """
     _validate_sizes(min_size, max_size, _MinContourSize.CONVEX)
-    if context is None:
-        context = _get_context()
     min_size = max(min_size, _MinContourSize.CONVEX)
     return _to_convex_vertex_sequences(
         x_coordinates,
@@ -690,10 +648,11 @@ def convex_contours(
 def concave_contours(
     x_coordinates: _st.SearchStrategy[_ScalarT],
     y_coordinates: _st.SearchStrategy[_ScalarT] | None = None,
+    /,
     *,
+    context: _Context[_ScalarT],
     min_size: int = _MinContourSize.CONCAVE,
     max_size: int | None = None,
-    context: _Context[_ScalarT] | None = None,
 ) -> _st.SearchStrategy[_Contour[_ScalarT]]:
     """
     Returns a strategy for concave contours.
@@ -703,29 +662,26 @@ def concave_contours(
     :param y_coordinates:
         strategy for vertices' y-coordinates,
         ``None`` for reusing x-coordinates strategy.
+    :param context: strategy context.
     :param min_size: lower bound for contour size.
     :param max_size: upper bound for contour size, ``None`` for unbound.
-    :param context: strategy context.
 
-    >>> from ground.context import get_context
+    >>> import math
+    >>> from fractions import Fraction
+    >>> from ground.context import Context
     >>> from hypothesis import strategies
     >>> from hypothesis_geometry import planar
-    >>> context = get_context()
+    >>> context = Context(coordinate_factory=Fraction, sqrt=math.sqrt)
     >>> Contour = context.contour_cls
 
     For same coordinates' domain:
 
-    >>> min_coordinate, max_coordinate = -1.0, 1.0
-    >>> coordinates_type = float
-    >>> coordinates = strategies.floats(
-    ...     min_coordinate,
-    ...     max_coordinate,
-    ...     allow_infinity=False,
-    ...     allow_nan=False,
-    ... )
+    >>> min_coordinate, max_coordinate = -1, 1
+    >>> coordinates_type = Fraction
+    >>> coordinates = strategies.fractions(min_coordinate, max_coordinate)
     >>> min_size, max_size = 5, 10
     >>> contours = planar.concave_contours(
-    ...     coordinates, min_size=min_size, max_size=max_size
+    ...     coordinates, context=context, min_size=min_size, max_size=max_size
     ... )
     >>> contour = contours.example()
     >>> isinstance(contour, Contour)
@@ -747,24 +703,22 @@ def concave_contours(
 
     For different coordinates' domains:
 
-    >>> min_x_coordinate, max_x_coordinate = -1.0, 1.0
-    >>> min_y_coordinate, max_y_coordinate = 10.0, 100.0
-    >>> coordinates_type = float
-    >>> x_coordinates = strategies.floats(
-    ...     min_x_coordinate,
-    ...     max_x_coordinate,
-    ...     allow_infinity=False,
-    ...     allow_nan=False,
+    >>> min_x_coordinate, max_x_coordinate = -1, 1
+    >>> min_y_coordinate, max_y_coordinate = 10, 100
+    >>> coordinates_type = Fraction
+    >>> x_coordinates = strategies.fractions(
+    ...     min_x_coordinate, max_x_coordinate
     ... )
-    >>> y_coordinates = strategies.floats(
-    ...     min_y_coordinate,
-    ...     max_y_coordinate,
-    ...     allow_infinity=False,
-    ...     allow_nan=False,
+    >>> y_coordinates = strategies.fractions(
+    ...     min_y_coordinate, max_y_coordinate
     ... )
     >>> min_size, max_size = 5, 10
     >>> contours = planar.concave_contours(
-    ...     x_coordinates, y_coordinates, min_size=min_size, max_size=max_size
+    ...     x_coordinates,
+    ...     y_coordinates,
+    ...     context=context,
+    ...     min_size=min_size,
+    ...     max_size=max_size,
     ... )
     >>> contour = contours.example()
     >>> isinstance(contour, Contour)
@@ -785,8 +739,6 @@ def concave_contours(
     True
     """
     _validate_sizes(min_size, max_size, _MinContourSize.CONCAVE)
-    if context is None:
-        context = _get_context()
     min_size = max(min_size, _MinContourSize.CONCAVE)
     return _to_concave_vertex_sequences(
         x_coordinates,
@@ -800,7 +752,9 @@ def concave_contours(
 def triangular_contours(
     x_coordinates: _st.SearchStrategy[_ScalarT],
     y_coordinates: _st.SearchStrategy[_ScalarT] | None = None,
-    context: _Context[_ScalarT] | None = None,
+    /,
+    *,
+    context: _Context[_ScalarT],
 ) -> _st.SearchStrategy[_Contour[_ScalarT]]:
     """
     Returns a strategy for triangular contours.
@@ -812,23 +766,20 @@ def triangular_contours(
         ``None`` for reusing x-coordinates strategy.
     :param context: strategy context.
 
-    >>> from ground.context import get_context
+    >>> import math
+    >>> from fractions import Fraction
+    >>> from ground.context import Context
     >>> from hypothesis import strategies
     >>> from hypothesis_geometry import planar
-    >>> context = get_context()
+    >>> context = Context(coordinate_factory=Fraction, sqrt=math.sqrt)
     >>> Contour = context.contour_cls
 
     For same coordinates' domain:
 
-    >>> min_coordinate, max_coordinate = -1.0, 1.0
-    >>> coordinates_type = float
-    >>> coordinates = strategies.floats(
-    ...     min_coordinate,
-    ...     max_coordinate,
-    ...     allow_infinity=False,
-    ...     allow_nan=False,
-    ... )
-    >>> contours = planar.triangular_contours(coordinates)
+    >>> min_coordinate, max_coordinate = -1, 1
+    >>> coordinates_type = Fraction
+    >>> coordinates = strategies.fractions(min_coordinate, max_coordinate)
+    >>> contours = planar.triangular_contours(coordinates, context=context)
     >>> contour = contours.example()
     >>> isinstance(contour, Contour)
     True
@@ -849,22 +800,18 @@ def triangular_contours(
 
     For different coordinates' domains:
 
-    >>> min_x_coordinate, max_x_coordinate = -1.0, 1.0
-    >>> min_y_coordinate, max_y_coordinate = 10.0, 100.0
-    >>> coordinates_type = float
-    >>> x_coordinates = strategies.floats(
-    ...     min_x_coordinate,
-    ...     max_x_coordinate,
-    ...     allow_infinity=False,
-    ...     allow_nan=False,
+    >>> min_x_coordinate, max_x_coordinate = -1, 1
+    >>> min_y_coordinate, max_y_coordinate = 10, 100
+    >>> coordinates_type = Fraction
+    >>> x_coordinates = strategies.fractions(
+    ...     min_x_coordinate, max_x_coordinate
     ... )
-    >>> y_coordinates = strategies.floats(
-    ...     min_y_coordinate,
-    ...     max_y_coordinate,
-    ...     allow_infinity=False,
-    ...     allow_nan=False,
+    >>> y_coordinates = strategies.fractions(
+    ...     min_y_coordinate, max_y_coordinate
     ... )
-    >>> contours = planar.triangular_contours(x_coordinates, y_coordinates)
+    >>> contours = planar.triangular_contours(
+    ...     x_coordinates, y_coordinates, context=context
+    ... )
     >>> contour = contours.example()
     >>> isinstance(contour, Contour)
     True
@@ -883,8 +830,6 @@ def triangular_contours(
     ... )
     True
     """
-    if context is None:
-        context = _get_context()
     return _to_triangular_vertex_sequences(
         x_coordinates, y_coordinates, context=context
     ).map(context.contour_cls)
@@ -893,7 +838,9 @@ def triangular_contours(
 def rectangular_contours(
     x_coordinates: _st.SearchStrategy[_ScalarT],
     y_coordinates: _st.SearchStrategy[_ScalarT] | None = None,
-    context: _Context[_ScalarT] | None = None,
+    /,
+    *,
+    context: _Context[_ScalarT],
 ) -> _st.SearchStrategy[_Contour[_ScalarT]]:
     """
     Returns a strategy for axis-aligned rectangular contours.
@@ -905,23 +852,20 @@ def rectangular_contours(
         ``None`` for reusing x-coordinates strategy.
     :param context: strategy context.
 
-    >>> from ground.context import get_context
+    >>> import math
+    >>> from fractions import Fraction
+    >>> from ground.context import Context
     >>> from hypothesis import strategies
     >>> from hypothesis_geometry import planar
-    >>> context = get_context()
+    >>> context = Context(coordinate_factory=Fraction, sqrt=math.sqrt)
     >>> Contour = context.contour_cls
 
     For same coordinates' domain:
 
-    >>> min_coordinate, max_coordinate = -1.0, 1.0
-    >>> coordinates_type = float
-    >>> coordinates = strategies.floats(
-    ...     min_coordinate,
-    ...     max_coordinate,
-    ...     allow_infinity=False,
-    ...     allow_nan=False,
-    ... )
-    >>> contours = planar.rectangular_contours(coordinates)
+    >>> min_coordinate, max_coordinate = -1, 1
+    >>> coordinates_type = Fraction
+    >>> coordinates = strategies.fractions(min_coordinate, max_coordinate)
+    >>> contours = planar.rectangular_contours(coordinates, context=context)
     >>> contour = contours.example()
     >>> isinstance(contour, Contour)
     True
@@ -942,22 +886,18 @@ def rectangular_contours(
 
     For different coordinates' domains:
 
-    >>> min_x_coordinate, max_x_coordinate = -1.0, 1.0
-    >>> min_y_coordinate, max_y_coordinate = 10.0, 100.0
-    >>> coordinates_type = float
-    >>> x_coordinates = strategies.floats(
-    ...     min_x_coordinate,
-    ...     max_x_coordinate,
-    ...     allow_infinity=False,
-    ...     allow_nan=False,
+    >>> min_x_coordinate, max_x_coordinate = -1, 1
+    >>> min_y_coordinate, max_y_coordinate = 10, 100
+    >>> coordinates_type = Fraction
+    >>> x_coordinates = strategies.fractions(
+    ...     min_x_coordinate, max_x_coordinate
     ... )
-    >>> y_coordinates = strategies.floats(
-    ...     min_y_coordinate,
-    ...     max_y_coordinate,
-    ...     allow_infinity=False,
-    ...     allow_nan=False,
+    >>> y_coordinates = strategies.fractions(
+    ...     min_y_coordinate, max_y_coordinate
     ... )
-    >>> contours = planar.rectangular_contours(x_coordinates, y_coordinates)
+    >>> contours = planar.rectangular_contours(
+    ...     x_coordinates, y_coordinates, context=context
+    ... )
     >>> contour = contours.example()
     >>> isinstance(contour, Contour)
     True
@@ -976,8 +916,6 @@ def rectangular_contours(
     ... )
     True
     """
-    if context is None:
-        context = _get_context()
     return _to_rectangular_vertex_sequences(
         x_coordinates, y_coordinates, context=context
     ).map(context.contour_cls)
@@ -986,7 +924,9 @@ def rectangular_contours(
 def boxes(
     x_coordinates: _st.SearchStrategy[_ScalarT],
     y_coordinates: _st.SearchStrategy[_ScalarT] | None = None,
-    context: _Context[_ScalarT] | None = None,
+    /,
+    *,
+    context: _Context[_ScalarT],
 ) -> _st.SearchStrategy[_Box[_ScalarT]]:
     """
     Returns a strategy for boxes.
@@ -997,23 +937,20 @@ def boxes(
         ``None`` for reusing x-coordinates strategy.
     :param context: strategy context.
 
-    >>> from ground.context import get_context
+    >>> import math
+    >>> from fractions import Fraction
+    >>> from ground.context import Context
     >>> from hypothesis import strategies
     >>> from hypothesis_geometry import planar
-    >>> context = get_context()
+    >>> context = Context(coordinate_factory=Fraction, sqrt=math.sqrt)
     >>> Box = context.box_cls
 
     For same coordinates' domain:
 
-    >>> min_coordinate, max_coordinate = -1.0, 1.0
-    >>> coordinates_type = float
-    >>> coordinates = strategies.floats(
-    ...     min_coordinate,
-    ...     max_coordinate,
-    ...     allow_infinity=False,
-    ...     allow_nan=False,
-    ... )
-    >>> boxes = planar.boxes(coordinates)
+    >>> min_coordinate, max_coordinate = -1, 1
+    >>> coordinates_type = Fraction
+    >>> coordinates = strategies.fractions(min_coordinate, max_coordinate)
+    >>> boxes = planar.boxes(coordinates, context=context)
     >>> box = boxes.example()
     >>> isinstance(box, Box)
     True
@@ -1034,22 +971,16 @@ def boxes(
 
     For different coordinates' domains:
 
-    >>> min_x_coordinate, max_x_coordinate = -1.0, 1.0
-    >>> min_y_coordinate, max_y_coordinate = 10.0, 100.0
-    >>> coordinates_type = float
-    >>> x_coordinates = strategies.floats(
-    ...     min_x_coordinate,
-    ...     max_x_coordinate,
-    ...     allow_infinity=False,
-    ...     allow_nan=False,
+    >>> min_x_coordinate, max_x_coordinate = -1, 1
+    >>> min_y_coordinate, max_y_coordinate = 10, 100
+    >>> coordinates_type = Fraction
+    >>> x_coordinates = strategies.fractions(
+    ...     min_x_coordinate, max_x_coordinate
     ... )
-    >>> y_coordinates = strategies.floats(
-    ...     min_y_coordinate,
-    ...     max_y_coordinate,
-    ...     allow_infinity=False,
-    ...     allow_nan=False,
+    >>> y_coordinates = strategies.fractions(
+    ...     min_y_coordinate, max_y_coordinate
     ... )
-    >>> boxes = planar.boxes(x_coordinates, y_coordinates)
+    >>> boxes = planar.boxes(x_coordinates, y_coordinates, context=context)
     >>> box = boxes.example()
     >>> isinstance(box, Box)
     True
@@ -1071,18 +1002,17 @@ def boxes(
     ... )
     True
     """
-    if context is None:
-        context = _get_context()
     return _to_boxes(x_coordinates, y_coordinates, context=context)
 
 
 def star_contours(
     x_coordinates: _st.SearchStrategy[_ScalarT],
     y_coordinates: _st.SearchStrategy[_ScalarT] | None = None,
+    /,
     *,
+    context: _Context[_ScalarT],
     min_size: int = _MIN_CONTOUR_SIZE,
     max_size: int | None = None,
-    context: _Context[_ScalarT] | None = None,
 ) -> _st.SearchStrategy[_Contour[_ScalarT]]:
     """
     Returns a strategy for star contours.
@@ -1097,25 +1027,22 @@ def star_contours(
     :param max_size: upper bound for contour size, ``None`` for unbound.
     :param context: strategy context.
 
-    >>> from ground.context import get_context
+    >>> import math
+    >>> from fractions import Fraction
+    >>> from ground.context import Context
     >>> from hypothesis import strategies
     >>> from hypothesis_geometry import planar
-    >>> context = get_context()
+    >>> context = Context(coordinate_factory=Fraction, sqrt=math.sqrt)
     >>> Contour = context.contour_cls
 
     For same coordinates' domain:
 
-    >>> min_coordinate, max_coordinate = -1.0, 1.0
-    >>> coordinates_type = float
-    >>> coordinates = strategies.floats(
-    ...     min_coordinate,
-    ...     max_coordinate,
-    ...     allow_infinity=False,
-    ...     allow_nan=False,
-    ... )
+    >>> min_coordinate, max_coordinate = -1, 1
+    >>> coordinates_type = Fraction
+    >>> coordinates = strategies.fractions(min_coordinate, max_coordinate)
     >>> min_size, max_size = 5, 10
     >>> contours = planar.star_contours(
-    ...     coordinates, min_size=min_size, max_size=max_size
+    ...     coordinates, context=context, min_size=min_size, max_size=max_size
     ... )
     >>> contour = contours.example()
     >>> isinstance(contour, Contour)
@@ -1137,24 +1064,22 @@ def star_contours(
 
     For different coordinates' domains:
 
-    >>> min_x_coordinate, max_x_coordinate = -1.0, 1.0
-    >>> min_y_coordinate, max_y_coordinate = 10.0, 100.0
-    >>> coordinates_type = float
-    >>> x_coordinates = strategies.floats(
-    ...     min_x_coordinate,
-    ...     max_x_coordinate,
-    ...     allow_infinity=False,
-    ...     allow_nan=False,
+    >>> min_x_coordinate, max_x_coordinate = -1, 1
+    >>> min_y_coordinate, max_y_coordinate = 10, 100
+    >>> coordinates_type = Fraction
+    >>> x_coordinates = strategies.fractions(
+    ...     min_x_coordinate, max_x_coordinate
     ... )
-    >>> y_coordinates = strategies.floats(
-    ...     min_y_coordinate,
-    ...     max_y_coordinate,
-    ...     allow_infinity=False,
-    ...     allow_nan=False,
+    >>> y_coordinates = strategies.fractions(
+    ...     min_y_coordinate, max_y_coordinate
     ... )
     >>> min_size, max_size = 5, 10
     >>> contours = planar.star_contours(
-    ...     x_coordinates, y_coordinates, min_size=min_size, max_size=max_size
+    ...     x_coordinates,
+    ...     y_coordinates,
+    ...     context=context,
+    ...     min_size=min_size,
+    ...     max_size=max_size,
     ... )
     >>> contour = contours.example()
     >>> isinstance(contour, Contour)
@@ -1175,8 +1100,6 @@ def star_contours(
     True
     """
     _validate_sizes(min_size, max_size, _MIN_CONTOUR_SIZE)
-    if context is None:
-        context = _get_context()
     min_size = max(min_size, _MIN_CONTOUR_SIZE)
     return _to_star_vertex_sequences(
         x_coordinates,
@@ -1190,12 +1113,13 @@ def star_contours(
 def multicontours(
     x_coordinates: _st.SearchStrategy[_ScalarT],
     y_coordinates: _st.SearchStrategy[_ScalarT] | None = None,
+    /,
     *,
+    context: _Context[_ScalarT],
     min_size: int = _MIN_MULTICONTOUR_SIZE,
     max_size: int | None = None,
     min_contour_size: int = _MIN_CONTOUR_SIZE,
     max_contour_size: int | None = None,
-    context: _Context[_ScalarT] | None = None,
 ) -> _st.SearchStrategy[_Multicontour[_ScalarT]]:
     """
     Returns a strategy for multicontours.
@@ -1213,26 +1137,24 @@ def multicontours(
         upper bound for contour size, ``None`` for unbound.
     :param context: strategy context.
 
-    >>> from ground.context import get_context
+    >>> import math
+    >>> from fractions import Fraction
+    >>> from ground.context import Context
     >>> from hypothesis import strategies
     >>> from hypothesis_geometry import planar
-    >>> context = get_context()
+    >>> context = Context(coordinate_factory=Fraction, sqrt=math.sqrt)
     >>> Contour = context.contour_cls
 
     For same coordinates' domain:
 
-    >>> min_coordinate, max_coordinate = -1.0, 1.0
-    >>> coordinates_type = float
-    >>> coordinates = strategies.floats(
-    ...     min_coordinate,
-    ...     max_coordinate,
-    ...     allow_infinity=False,
-    ...     allow_nan=False,
-    ... )
+    >>> min_coordinate, max_coordinate = -1, 1
+    >>> coordinates_type = Fraction
+    >>> coordinates = strategies.fractions(min_coordinate, max_coordinate)
     >>> min_size, max_size = 5, 10
     >>> min_contour_size, max_contour_size = 3, 5
     >>> multicontours = planar.multicontours(
     ...     coordinates,
+    ...     context=context,
     ...     min_size=min_size,
     ...     max_size=max_size,
     ...     min_contour_size=min_contour_size,
@@ -1267,26 +1189,21 @@ def multicontours(
 
     For different coordinates' domains:
 
-    >>> min_x_coordinate, max_x_coordinate = -1.0, 1.0
-    >>> min_y_coordinate, max_y_coordinate = 10.0, 100.0
-    >>> coordinates_type = float
-    >>> x_coordinates = strategies.floats(
-    ...     min_x_coordinate,
-    ...     max_x_coordinate,
-    ...     allow_infinity=False,
-    ...     allow_nan=False,
+    >>> min_x_coordinate, max_x_coordinate = -1, 1
+    >>> min_y_coordinate, max_y_coordinate = 10, 100
+    >>> coordinates_type = Fraction
+    >>> x_coordinates = strategies.fractions(
+    ...     min_x_coordinate, max_x_coordinate
     ... )
-    >>> y_coordinates = strategies.floats(
-    ...     min_y_coordinate,
-    ...     max_y_coordinate,
-    ...     allow_infinity=False,
-    ...     allow_nan=False,
+    >>> y_coordinates = strategies.fractions(
+    ...     min_y_coordinate, max_y_coordinate
     ... )
     >>> min_size, max_size = 5, 10
     >>> min_contour_size, max_contour_size = 3, 5
     >>> multicontours = planar.multicontours(
     ...     x_coordinates,
     ...     y_coordinates,
+    ...     context=context,
     ...     min_size=min_size,
     ...     max_size=max_size,
     ...     min_contour_size=min_contour_size,
@@ -1327,8 +1244,6 @@ def multicontours(
         'min_contour_size',
         'max_contour_size',
     )
-    if context is None:
-        context = _get_context()
     min_size = max(min_size, _MIN_MULTICONTOUR_SIZE)
     return _to_multicontours(
         x_coordinates,
@@ -1344,14 +1259,15 @@ def multicontours(
 def polygons(
     x_coordinates: _st.SearchStrategy[_ScalarT],
     y_coordinates: _st.SearchStrategy[_ScalarT] | None = None,
+    /,
     *,
+    context: _Context[_ScalarT],
     min_size: int = _MIN_CONTOUR_SIZE,
     max_size: int | None = None,
     min_holes_size: int = 0,
     max_holes_size: int | None = None,
     min_hole_size: int = _MIN_CONTOUR_SIZE,
     max_hole_size: int | None = None,
-    context: _Context[_ScalarT] | None = None,
 ) -> _st.SearchStrategy[_Polygon[_ScalarT]]:
     """
     Returns a strategy for polygons.
@@ -1368,27 +1284,25 @@ def polygons(
     :param max_hole_size: upper bound for hole size, ``None`` for unbound.
     :param context: strategy context.
 
-    >>> from ground.context import get_context
+    >>> import math
+    >>> from fractions import Fraction
+    >>> from ground.context import Context
     >>> from hypothesis import strategies
     >>> from hypothesis_geometry import planar
-    >>> context = get_context()
+    >>> context = Context(coordinate_factory=Fraction, sqrt=math.sqrt)
     >>> Polygon = context.polygon_cls
 
     For same coordinates' domain:
 
-    >>> min_coordinate, max_coordinate = -1.0, 1.0
-    >>> coordinates_type = float
-    >>> coordinates = strategies.floats(
-    ...     min_coordinate,
-    ...     max_coordinate,
-    ...     allow_infinity=False,
-    ...     allow_nan=False,
-    ... )
+    >>> min_coordinate, max_coordinate = -1, 1
+    >>> coordinates_type = Fraction
+    >>> coordinates = strategies.fractions(min_coordinate, max_coordinate)
     >>> min_size, max_size = 5, 10
     >>> min_holes_size, max_holes_size = 1, 4
     >>> min_hole_size, max_hole_size = 3, 5
     >>> polygons = planar.polygons(
     ...     coordinates,
+    ...     context=context,
     ...     min_size=min_size,
     ...     max_size=max_size,
     ...     min_holes_size=min_holes_size,
@@ -1437,20 +1351,14 @@ def polygons(
 
     For different coordinates' domains:
 
-    >>> min_x_coordinate, max_x_coordinate = -1.0, 1.0
-    >>> min_y_coordinate, max_y_coordinate = 10.0, 100.0
-    >>> coordinates_type = float
-    >>> x_coordinates = strategies.floats(
-    ...     min_x_coordinate,
-    ...     max_x_coordinate,
-    ...     allow_infinity=False,
-    ...     allow_nan=False,
+    >>> min_x_coordinate, max_x_coordinate = -1, 1
+    >>> min_y_coordinate, max_y_coordinate = 10, 100
+    >>> coordinates_type = Fraction
+    >>> x_coordinates = strategies.fractions(
+    ...     min_x_coordinate, max_x_coordinate
     ... )
-    >>> y_coordinates = strategies.floats(
-    ...     min_y_coordinate,
-    ...     max_y_coordinate,
-    ...     allow_infinity=False,
-    ...     allow_nan=False,
+    >>> y_coordinates = strategies.fractions(
+    ...     min_y_coordinate, max_y_coordinate
     ... )
     >>> min_size, max_size = 5, 10
     >>> min_holes_size, max_holes_size = 1, 4
@@ -1458,6 +1366,7 @@ def polygons(
     >>> polygons = planar.polygons(
     ...     x_coordinates,
     ...     y_coordinates,
+    ...     context=context,
     ...     min_size=min_size,
     ...     max_size=max_size,
     ...     min_holes_size=min_holes_size,
@@ -1515,8 +1424,6 @@ def polygons(
         'min_hole_size',
         'max_hole_size',
     )
-    if context is None:
-        context = _get_context()
     min_size = max(min_size, _MIN_CONTOUR_SIZE)
     return _to_polygons(
         x_coordinates,
@@ -1534,7 +1441,9 @@ def polygons(
 def multipolygons(
     x_coordinates: _st.SearchStrategy[_ScalarT],
     y_coordinates: _st.SearchStrategy[_ScalarT] | None = None,
+    /,
     *,
+    context: _Context[_ScalarT],
     min_size: int = _MIN_MULTIPOLYGON_SIZE,
     max_size: int | None = None,
     min_border_size: int = _MIN_CONTOUR_SIZE,
@@ -1543,7 +1452,6 @@ def multipolygons(
     max_holes_size: int | None = None,
     min_hole_size: int = _MIN_CONTOUR_SIZE,
     max_hole_size: int | None = None,
-    context: _Context[_ScalarT] | None = None,
 ) -> _st.SearchStrategy[_Multipolygon[_ScalarT]]:
     """
     Returns a strategy for multipolygons.
@@ -1565,28 +1473,26 @@ def multipolygons(
         upper bound for polygons' hole size, ``None`` for unbound.
     :param context: strategy context.
 
-    >>> from ground.context import get_context
+    >>> import math
+    >>> from fractions import Fraction
+    >>> from ground.context import Context
     >>> from hypothesis import strategies
     >>> from hypothesis_geometry import planar
-    >>> context = get_context()
+    >>> context = Context(coordinate_factory=Fraction, sqrt=math.sqrt)
     >>> Multipolygon = context.multipolygon_cls
 
     For same coordinates' domain:
 
-    >>> min_coordinate, max_coordinate = -1.0, 1.0
-    >>> coordinates_type = float
-    >>> coordinates = strategies.floats(
-    ...     min_coordinate,
-    ...     max_coordinate,
-    ...     allow_infinity=False,
-    ...     allow_nan=False,
-    ... )
+    >>> min_coordinate, max_coordinate = -1, 1
+    >>> coordinates_type = Fraction
+    >>> coordinates = strategies.fractions(min_coordinate, max_coordinate)
     >>> min_size, max_size = 0, 5
     >>> min_border_size, max_border_size = 5, 10
     >>> min_holes_size, max_holes_size = 1, 4
     >>> min_hole_size, max_hole_size = 3, 5
     >>> multipolygons = planar.multipolygons(
     ...     coordinates,
+    ...     context=context,
     ...     min_size=min_size,
     ...     max_size=max_size,
     ...     min_border_size=min_border_size,
@@ -1644,20 +1550,14 @@ def multipolygons(
 
     For different coordinates' domains:
 
-    >>> min_x_coordinate, max_x_coordinate = -1.0, 1.0
-    >>> min_y_coordinate, max_y_coordinate = 10.0, 100.0
-    >>> coordinates_type = float
-    >>> x_coordinates = strategies.floats(
-    ...     min_x_coordinate,
-    ...     max_x_coordinate,
-    ...     allow_infinity=False,
-    ...     allow_nan=False,
+    >>> min_x_coordinate, max_x_coordinate = -1, 1
+    >>> min_y_coordinate, max_y_coordinate = 10, 100
+    >>> coordinates_type = Fraction
+    >>> x_coordinates = strategies.fractions(
+    ...     min_x_coordinate, max_x_coordinate
     ... )
-    >>> y_coordinates = strategies.floats(
-    ...     min_y_coordinate,
-    ...     max_y_coordinate,
-    ...     allow_infinity=False,
-    ...     allow_nan=False,
+    >>> y_coordinates = strategies.fractions(
+    ...     min_y_coordinate, max_y_coordinate
     ... )
     >>> min_size, max_size = 0, 5
     >>> min_border_size, max_border_size = 5, 10
@@ -1666,6 +1566,7 @@ def multipolygons(
     >>> multipolygons = planar.multipolygons(
     ...     x_coordinates,
     ...     y_coordinates,
+    ...     context=context,
     ...     min_size=min_size,
     ...     max_size=max_size,
     ...     min_border_size=min_border_size,
@@ -1739,8 +1640,6 @@ def multipolygons(
         'min_hole_size',
         'max_hole_size',
     )
-    if context is None:
-        context = _get_context()
     min_size = max(min_size, _MIN_MULTIPOLYGON_SIZE)
     min_border_size = max(min_border_size, _MIN_CONTOUR_SIZE)
     min_hole_size = max(min_hole_size, _MIN_CONTOUR_SIZE)
@@ -1762,7 +1661,9 @@ def multipolygons(
 def mixes(
     x_coordinates: _st.SearchStrategy[_ScalarT],
     y_coordinates: _st.SearchStrategy[_ScalarT] | None = None,
+    /,
     *,
+    context: _Context[_ScalarT],
     min_points_size: int = 0,
     max_points_size: int | None = None,
     min_segments_size: int = 0,
@@ -1775,7 +1676,6 @@ def mixes(
     max_polygon_holes_size: int | None = None,
     min_polygon_hole_size: int = _MIN_CONTOUR_SIZE,
     max_polygon_hole_size: int | None = None,
-    context: _Context[_ScalarT] | None = None,
 ) -> _st.SearchStrategy[_Mix[_ScalarT]]:
     """
     Returns a strategy for mixes.
@@ -1804,10 +1704,12 @@ def mixes(
         upper bound for polygons' hole size, ``None`` for unbound.
     :param context: strategy context.
 
-    >>> from ground.context import get_context
+    >>> import math
+    >>> from fractions import Fraction
+    >>> from ground.context import Context
     >>> from hypothesis import strategies
     >>> from hypothesis_geometry import planar
-    >>> context = get_context()
+    >>> context = Context(coordinate_factory=Fraction, sqrt=math.sqrt)
     >>> Contour = context.contour_cls
     >>> Empty = context.empty_cls
     >>> Mix = context.mix_cls
@@ -1819,14 +1721,9 @@ def mixes(
 
     For same coordinates' domain:
 
-    >>> min_coordinate, max_coordinate = -1.0, 1.0
-    >>> coordinates_type = float
-    >>> coordinates = strategies.floats(
-    ...     min_coordinate,
-    ...     max_coordinate,
-    ...     allow_infinity=False,
-    ...     allow_nan=False,
-    ... )
+    >>> min_coordinate, max_coordinate = -1, 1
+    >>> coordinates_type = Fraction
+    >>> coordinates = strategies.fractions(min_coordinate, max_coordinate)
     >>> min_points_size, max_points_size = 2, 3
     >>> min_segments_size, max_segments_size = 1, 4
     >>> min_polygons_size, max_polygons_size = 0, 5
@@ -1835,6 +1732,7 @@ def mixes(
     >>> min_polygon_hole_size, max_polygon_hole_size = 3, 5
     >>> mixes = planar.mixes(
     ...     coordinates,
+    ...     context=context,
     ...     min_points_size=min_points_size,
     ...     max_points_size=max_points_size,
     ...     min_segments_size=min_segments_size,
@@ -1965,20 +1863,14 @@ def mixes(
 
     For different coordinates' domains:
 
-    >>> min_x_coordinate, max_x_coordinate = -1.0, 1.0
-    >>> min_y_coordinate, max_y_coordinate = 10.0, 100.0
-    >>> coordinates_type = float
-    >>> x_coordinates = strategies.floats(
-    ...     min_x_coordinate,
-    ...     max_x_coordinate,
-    ...     allow_infinity=False,
-    ...     allow_nan=False,
+    >>> min_x_coordinate, max_x_coordinate = -1, 1
+    >>> min_y_coordinate, max_y_coordinate = 10, 100
+    >>> coordinates_type = Fraction
+    >>> x_coordinates = strategies.fractions(
+    ...     min_x_coordinate, max_x_coordinate
     ... )
-    >>> y_coordinates = strategies.floats(
-    ...     min_y_coordinate,
-    ...     max_y_coordinate,
-    ...     allow_infinity=False,
-    ...     allow_nan=False,
+    >>> y_coordinates = strategies.fractions(
+    ...     min_y_coordinate, max_y_coordinate
     ... )
     >>> min_points_size, max_points_size = 2, 3
     >>> min_segments_size, max_segments_size = 1, 4
@@ -1989,6 +1881,7 @@ def mixes(
     >>> mixes = planar.mixes(
     ...     x_coordinates,
     ...     y_coordinates,
+    ...     context=context,
     ...     min_points_size=min_points_size,
     ...     max_points_size=max_points_size,
     ...     min_segments_size=min_segments_size,
@@ -2172,8 +2065,6 @@ def mixes(
     min_polygon_border_size = max(min_polygon_border_size, _MIN_CONTOUR_SIZE)
     min_polygon_holes_size = max(min_polygon_holes_size, 0)
     min_polygon_hole_size = max(min_polygon_hole_size, _MIN_CONTOUR_SIZE)
-    if context is None:
-        context = _get_context()
     return (
         (
             (
