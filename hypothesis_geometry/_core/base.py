@@ -51,20 +51,24 @@ from .utils import (
 )
 
 
-def to_boxes(
-    x_coordinates: st.SearchStrategy[ScalarT],
-    y_coordinates: st.SearchStrategy[ScalarT] | None,
+def to_box_strategy(
+    x_coordinate_strategy: st.SearchStrategy[ScalarT],
+    y_coordinate_strategy: st.SearchStrategy[ScalarT] | None,
     /,
     *,
     context: Context[ScalarT],
 ) -> st.SearchStrategy[Box[ScalarT]]:
     return st.builds(
         add,
-        st.lists(x_coordinates, min_size=2, max_size=2, unique=True).map(
-            sort_pair
-        ),
         st.lists(
-            x_coordinates if y_coordinates is None else y_coordinates,
+            x_coordinate_strategy, min_size=2, max_size=2, unique=True
+        ).map(sort_pair),
+        st.lists(
+            (
+                x_coordinate_strategy
+                if y_coordinate_strategy is None
+                else y_coordinate_strategy
+            ),
             min_size=2,
             max_size=2,
             unique=True,
@@ -72,13 +76,13 @@ def to_boxes(
     ).map(pack(context.box_cls))
 
 
-def to_choosers() -> st.SearchStrategy[Chooser[Any]]:
+def to_chooser_strategy() -> st.SearchStrategy[Chooser[Any]]:
     return st.randoms(use_true_random=True).map(lambda random: random.choice)
 
 
-def to_concave_vertex_sequences(
-    x_coordinates: st.SearchStrategy[ScalarT],
-    y_coordinates: st.SearchStrategy[ScalarT] | None,
+def to_concave_vertex_sequence_strategy(
+    x_coordinate_strategy: st.SearchStrategy[ScalarT],
+    y_coordinate_strategy: st.SearchStrategy[ScalarT] | None,
     /,
     *,
     context: Context[ScalarT],
@@ -86,8 +90,8 @@ def to_concave_vertex_sequences(
     max_size: int | None,
 ) -> st.SearchStrategy[Sequence[Point[ScalarT]]]:
     return _to_vertex_sequences(
-        x_coordinates,
-        y_coordinates,
+        x_coordinate_strategy,
+        y_coordinate_strategy,
         min_size=min_size,
         max_size=max_size,
         context=context,
@@ -96,9 +100,9 @@ def to_concave_vertex_sequences(
     )
 
 
-def to_convex_vertex_sequences(
-    x_coordinates: st.SearchStrategy[ScalarT],
-    y_coordinates: st.SearchStrategy[ScalarT] | None,
+def to_convex_vertex_sequence_strategy(
+    x_coordinate_strategy: st.SearchStrategy[ScalarT],
+    y_coordinate_strategy: st.SearchStrategy[ScalarT] | None,
     /,
     *,
     context: Context[ScalarT],
@@ -106,14 +110,14 @@ def to_convex_vertex_sequences(
     max_size: int | None,
 ) -> st.SearchStrategy[Sequence[Point[ScalarT]]]:
     if max_size is not None and max_size < MinContourSize.CONCAVE:
-        return to_triangular_vertex_sequences(
-            x_coordinates, y_coordinates, context=context
+        return to_triangular_vertex_sequence_strategy(
+            x_coordinate_strategy, y_coordinate_strategy, context=context
         )
     result = st.builds(
         partial(to_convex_vertex_sequence, context=context),
-        to_points_in_general_position(
-            x_coordinates,
-            y_coordinates,
+        to_point_sequence_in_general_position_strategy(
+            x_coordinate_strategy,
+            y_coordinate_strategy,
             min_size=min_size,
             max_size=max_size,
             context=context,
@@ -121,24 +125,28 @@ def to_convex_vertex_sequences(
         st.randoms(use_true_random=True),
     ).filter(partial(has_valid_size, min_size=min_size, max_size=max_size))
     result = (
-        to_rectangular_vertex_sequences(
-            x_coordinates, y_coordinates, context=context
+        (
+            to_rectangular_vertex_sequence_strategy(
+                x_coordinate_strategy, y_coordinate_strategy, context=context
+            )
+            | result
         )
-        | result
         if min_size <= 4
         else result
     )
     return (
-        to_triangular_vertex_sequences(
-            x_coordinates, y_coordinates, context=context
+        (
+            to_triangular_vertex_sequence_strategy(
+                x_coordinate_strategy, y_coordinate_strategy, context=context
+            )
+            | result
         )
-        | result
         if min_size == 3
         else result
     )
 
 
-def to_empty_geometries(
+def to_empty_geometry_strategy(
     *, context: Context[ScalarT]
 ) -> st.SearchStrategy[Empty[ScalarT]]:
     return st.builds(context.empty_cls)
@@ -147,35 +155,37 @@ def to_empty_geometries(
 _Draw: TypeAlias = Callable[[st.SearchStrategy[Any]], Any]
 
 
-def to_mixes(
-    x_coordinates: st.SearchStrategy[ScalarT],
-    y_coordinates: st.SearchStrategy[ScalarT] | None,
+def to_mix_strategy(
+    x_coordinate_strategy: st.SearchStrategy[ScalarT],
+    y_coordinate_strategy: st.SearchStrategy[ScalarT] | None,
     /,
     *,
     context: Context[ScalarT],
-    min_points_size: int,
-    max_points_size: int | None,
-    min_segments_size: int,
-    max_segments_size: int | None,
-    min_polygons_size: int,
-    max_polygons_size: int | None,
+    min_point_count: int,
+    max_point_count: int | None,
+    min_segment_count: int,
+    max_segment_count: int | None,
+    min_polygon_count: int,
+    max_polygon_count: int | None,
     min_polygon_border_size: int,
     max_polygon_border_size: int | None,
-    min_polygon_holes_size: int,
-    max_polygon_holes_size: int | None,
+    min_polygon_hole_count: int,
+    max_polygon_hole_count: int | None,
     min_polygon_hole_size: int,
     max_polygon_hole_size: int | None,
 ) -> st.SearchStrategy[Mix[ScalarT]]:
-    if y_coordinates is None:
-        y_coordinates = x_coordinates
-    min_polygon_points_count = to_next_prime(
+    if y_coordinate_strategy is None:
+        y_coordinate_strategy = x_coordinate_strategy
+    min_polygon_point_count = to_next_prime(
         min_polygon_border_size
-        + (min_polygon_holes_size * min_polygon_hole_size)
+        + (min_polygon_hole_count * min_polygon_hole_size)
     )
-    min_polygons_points_count = min_polygons_size * min_polygon_points_count
-    min_segments_points_count = 2 * min_segments_size
-    min_points_count = (
-        min_points_size + min_segments_points_count + min_polygons_points_count
+    min_polygon_total_point_count = min_polygon_count * min_polygon_point_count
+    min_segment_total_point_count = 2 * min_segment_count
+    min_total_point_count = (
+        min_point_count
+        + min_segment_total_point_count
+        + min_polygon_total_point_count
     )
     empty = context.empty
     mix_cls = context.mix_cls
@@ -185,34 +195,32 @@ def to_mixes(
 
     @st.composite
     def xs_to_mix(draw: _Draw, xs: list[ScalarT], /) -> Mix[ScalarT]:
-        (
-            points_counts,
-            segments_endpoints_counts,
-            polygons_vertices_counts,
-        ) = to_points_counts(draw, len(xs))
+        (point_counts, segment_endpoint_counts, polygon_vertex_counts) = (
+            to_point_counts(draw, len(xs))
+        )
         xs = sorted(xs)
         points, segments, polygons = [], [], []
 
-        def draw_points(points_count: int, /) -> None:
+        def draw_points(point_count: int, /) -> None:
             points.extend(
                 draw(
-                    to_unique_points_sequences(
-                        st.sampled_from(xs[:points_count]),
-                        y_coordinates,
-                        min_size=points_count,
-                        max_size=points_count,
+                    to_unique_point_sequence_strategy(
+                        st.sampled_from(xs[:point_count]),
+                        y_coordinate_strategy,
+                        min_size=point_count,
+                        max_size=point_count,
                         context=context,
                     )
                 )
             )
 
-        def draw_segments(points_count: int, /) -> None:
-            size = points_count // 2
+        def draw_segments(point_count: int, /) -> None:
+            size = point_count // 2
             segments.extend(
                 draw(
-                    to_non_crossing_non_overlapping_segments_sequences(
-                        st.sampled_from(xs[:points_count]),
-                        y_coordinates,
+                    to_non_crossing_non_overlapping_segment_sequence_strategy(
+                        st.sampled_from(xs[:point_count]),
+                        y_coordinate_strategy,
                         min_size=size,
                         max_size=size,
                         context=context,
@@ -220,61 +228,59 @@ def to_mixes(
                 )
             )
 
-        def draw_polygon(points_count: int, /) -> None:
-            polygon_x_coordinates = st.sampled_from(
-                xs[: to_prior_prime(points_count)]
+        def draw_polygon(point_count: int, /) -> None:
+            polygon_x_coordinate_strategy = st.sampled_from(
+                xs[: to_prior_prime(point_count)]
             )
             polygons.append(
                 draw(
-                    to_polygons(
-                        polygon_x_coordinates,
-                        y_coordinates,
+                    to_polygon_strategy(
+                        polygon_x_coordinate_strategy,
+                        y_coordinate_strategy,
+                        context=context,
                         min_size=min_polygon_border_size,
                         max_size=max_polygon_border_size,
-                        min_holes_size=min_polygon_holes_size,
-                        max_holes_size=max_polygon_holes_size,
+                        min_hole_count=min_polygon_hole_count,
+                        max_hole_count=max_polygon_hole_count,
                         min_hole_size=min_polygon_hole_size,
                         max_hole_size=max_polygon_hole_size,
-                        context=context,
                     )
                 )
             )
 
-        drawers_with_points_counts = draw(
+        drawers_with_point_counts = draw(
             st.permutations(
                 tuple(
                     chain(
-                        zip(repeat(draw_points), points_counts),
-                        zip(repeat(draw_segments), segments_endpoints_counts),
-                        zip(repeat(draw_polygon), polygons_vertices_counts),
+                        zip(repeat(draw_points), point_counts),
+                        zip(repeat(draw_segments), segment_endpoint_counts),
+                        zip(repeat(draw_polygon), polygon_vertex_counts),
                     )
                 )
             )
         )
         to_contour_segments = context.contour_segments
-        for index, (drawer, count) in enumerate(drawers_with_points_counts):
+        for index, (drawer, count) in enumerate(drawers_with_point_counts):
             drawer(count)
             can_touch_next_geometry = (
-                index < len(drawers_with_points_counts) - 1
+                index < len(drawers_with_point_counts) - 1
                 and (
-                    drawers_with_points_counts[index + 1][0] is not draw_points
+                    drawers_with_point_counts[index + 1][0] is not draw_points
                 )
             ) and (
                 (
                     drawer is draw_segments
-                    and index < len(drawers_with_points_counts) - 1
+                    and index < len(drawers_with_point_counts) - 1
                     and (
-                        drawers_with_points_counts[index + 1]
-                        is not draw_points
+                        drawers_with_point_counts[index + 1] is not draw_points
                     )
                     and not has_vertical_leftmost_segment(segments)
                 )
                 or (
                     drawer is draw_polygon
-                    and index < len(drawers_with_points_counts) - 1
+                    and index < len(drawers_with_point_counts) - 1
                     and (
-                        drawers_with_points_counts[index + 1]
-                        is not draw_points
+                        drawers_with_point_counts[index + 1] is not draw_points
                     )
                     and not has_vertical_leftmost_segment(
                         to_contour_segments(polygons[-1].border)
@@ -290,34 +296,32 @@ def to_mixes(
 
     @st.composite
     def ys_to_mix(draw: _Draw, ys: list[ScalarT], /) -> Mix[ScalarT]:
-        (
-            points_counts,
-            segments_endpoints_counts,
-            polygons_vertices_counts,
-        ) = to_points_counts(draw, len(ys))
+        (point_counts, segment_endpoint_counts, polygon_vertex_counts) = (
+            to_point_counts(draw, len(ys))
+        )
         ys = sorted(ys)
         points, segments, polygons = [], [], []
 
-        def draw_points(points_count: int, /) -> None:
+        def draw_points(point_count: int, /) -> None:
             points.extend(
                 draw(
-                    to_unique_points_sequences(
-                        x_coordinates,
-                        st.sampled_from(ys[:points_count]),
-                        min_size=points_count,
-                        max_size=points_count,
+                    to_unique_point_sequence_strategy(
+                        x_coordinate_strategy,
+                        st.sampled_from(ys[:point_count]),
+                        min_size=point_count,
+                        max_size=point_count,
                         context=context,
                     )
                 )
             )
 
-        def draw_segments(points_count: int, /) -> None:
-            size = points_count // 2
+        def draw_segments(point_count: int, /) -> None:
+            size = point_count // 2
             segments.extend(
                 draw(
-                    to_non_crossing_non_overlapping_segments_sequences(
-                        x_coordinates,
-                        st.sampled_from(ys[:points_count]),
+                    to_non_crossing_non_overlapping_segment_sequence_strategy(
+                        x_coordinate_strategy,
+                        st.sampled_from(ys[:point_count]),
                         min_size=size,
                         max_size=size,
                         context=context,
@@ -325,16 +329,16 @@ def to_mixes(
                 )
             )
 
-        def draw_polygon(points_count: int, /) -> None:
+        def draw_polygon(point_count: int, /) -> None:
             polygons.append(
                 draw(
-                    to_polygons(
-                        x_coordinates,
-                        st.sampled_from(ys[:points_count]),
+                    to_polygon_strategy(
+                        x_coordinate_strategy,
+                        st.sampled_from(ys[:point_count]),
                         min_size=min_polygon_border_size,
                         max_size=max_polygon_border_size,
-                        min_holes_size=min_polygon_holes_size,
-                        max_holes_size=max_polygon_holes_size,
+                        min_hole_count=min_polygon_hole_count,
+                        max_hole_count=max_polygon_hole_count,
                         min_hole_size=min_polygon_hole_size,
                         max_hole_size=max_polygon_hole_size,
                         context=context,
@@ -342,41 +346,39 @@ def to_mixes(
                 )
             )
 
-        drawers_with_points_counts = draw(
+        drawers_with_point_counts = draw(
             st.permutations(
                 tuple(
                     chain(
-                        zip(repeat(draw_points), points_counts),
-                        zip(repeat(draw_segments), segments_endpoints_counts),
-                        zip(repeat(draw_polygon), polygons_vertices_counts),
+                        zip(repeat(draw_points), point_counts),
+                        zip(repeat(draw_segments), segment_endpoint_counts),
+                        zip(repeat(draw_polygon), polygon_vertex_counts),
                     )
                 )
             )
         )
         to_contour_segments = context.contour_segments
-        for index, (drawer, count) in enumerate(drawers_with_points_counts):
+        for index, (drawer, count) in enumerate(drawers_with_point_counts):
             drawer(count)
             can_touch_next_geometry = (
-                index < len(drawers_with_points_counts) - 1
+                index < len(drawers_with_point_counts) - 1
                 and (
-                    drawers_with_points_counts[index + 1][0] is not draw_points
+                    drawers_with_point_counts[index + 1][0] is not draw_points
                 )
             ) and (
                 (
                     drawer is draw_segments
-                    and index < len(drawers_with_points_counts) - 1
+                    and index < len(drawers_with_point_counts) - 1
                     and (
-                        drawers_with_points_counts[index + 1]
-                        is not draw_points
+                        drawers_with_point_counts[index + 1] is not draw_points
                     )
                     and not has_horizontal_lowermost_segment(segments)
                 )
                 or (
                     drawer is draw_polygon
-                    and index < len(drawers_with_points_counts) - 1
+                    and index < len(drawers_with_point_counts) - 1
                     and (
-                        drawers_with_points_counts[index + 1]
-                        is not draw_points
+                        drawers_with_point_counts[index + 1] is not draw_points
                     )
                     and not has_horizontal_lowermost_segment(
                         to_contour_segments(polygons[-1].border)
@@ -413,72 +415,78 @@ def to_mixes(
             else empty
         )
 
-    def to_points_counts(
-        draw: _Draw, max_points_count: int, /
+    def to_point_counts(
+        draw: _Draw, max_total_point_count: int, /
     ) -> tuple[list[int], list[int], list[int]]:
-        max_polygons_points_count = (
-            max_points_count - min_points_size - min_segments_points_count
+        max_polygon_total_point_count = (
+            max_total_point_count
+            - min_point_count
+            - min_segment_total_point_count
         )
-        polygons_size_upper_bound = (
-            max_polygons_points_count // min_polygon_points_count
+        polygon_size_upper_bound = (
+            max_polygon_total_point_count // min_polygon_point_count
         )
-        polygons_size = draw(
+        polygon_count = draw(
             st.integers(
-                min_polygons_size,
-                polygons_size_upper_bound
-                if max_polygons_size is None
-                else min(polygons_size_upper_bound, max_polygons_size),
+                min_polygon_count,
+                (
+                    polygon_size_upper_bound
+                    if max_polygon_count is None
+                    else min(polygon_size_upper_bound, max_polygon_count)
+                ),
             )
         )
-        max_polygon_points_count = (
-            to_prior_prime(max_polygons_points_count // polygons_size)
-            if polygons_size
+        max_polygon_point_count = (
+            to_prior_prime(max_polygon_total_point_count // polygon_count)
+            if polygon_count
             else 0
         )
-        polygons_points_counts = (
+        polygon_point_counts = (
             [
-                draw(polygons_points_counts)
-                for polygons_points_counts in repeat(
+                draw(polygon_point_count_strategy)
+                for polygon_point_count_strategy in repeat(
                     st.integers(
-                        min_polygon_points_count, max_polygon_points_count
+                        min_polygon_point_count, max_polygon_point_count
                     ),
-                    polygons_size,
+                    polygon_count,
                 )
             ]
-            if polygons_size
+            if polygon_count
             else []
         )
-        polygons_points_count = sum(polygons_points_counts)
-        segments_endpoints_count_upper_bound = (
-            max_points_count - polygons_points_count - min_points_size
+        total_polygon_point_count = sum(polygon_point_counts)
+        segment_endpoint_count_upper_bound = (
+            max_total_point_count - total_polygon_point_count - min_point_count
         )
-        max_segments_points_count = (
-            segments_endpoints_count_upper_bound
-            if max_segments_size is None
-            else min(
-                segments_endpoints_count_upper_bound, 2 * max_segments_size
-            )
+        max_segment_point_count = (
+            segment_endpoint_count_upper_bound
+            if max_segment_count is None
+            else min(segment_endpoint_count_upper_bound, 2 * max_segment_count)
         )
-        segments_points_count = draw(
+        segment_point_count = draw(
             st.sampled_from(
                 range(
-                    min_segments_points_count, max_segments_points_count + 1, 2
+                    min_segment_total_point_count,
+                    max_segment_point_count + 1,
+                    2,
                 )
             )
         )
-        points_size_upper_bound = (
-            max_points_count - segments_points_count - polygons_points_count
+        point_count_upper_bound = (
+            max_total_point_count
+            - segment_point_count
+            - total_polygon_point_count
         )
-        points_size = (
-            points_size_upper_bound
-            if max_points_size is None
-            else min(points_size_upper_bound, max_points_size)
+        point_count = (
+            point_count_upper_bound
+            if max_point_count is None
+            else min(point_count_upper_bound, max_point_count)
         )
-        segments_size = segments_points_count // 2
+        segment_count = segment_point_count // 2
         return (
-            partition(draw, points_size),
-            [2 * size for size in partition(draw, segments_size)],
-            polygons_points_counts,
+            partition(draw, point_count),
+            [2 * size for size in partition(draw, segment_count)],
+            polygon_point_counts,
         )
 
     def partition(draw: _Draw, value: int, /) -> list[int]:
@@ -492,18 +500,18 @@ def to_mixes(
 
     return (
         st.lists(
-            x_coordinates, min_size=min_points_count, unique=True
+            x_coordinate_strategy, min_size=min_total_point_count, unique=True
         ).flatmap(xs_to_mix)
     ) | (
         st.lists(
-            y_coordinates, min_size=min_points_count, unique=True
+            y_coordinate_strategy, min_size=min_total_point_count, unique=True
         ).flatmap(ys_to_mix)
     )
 
 
-def to_multicontours(
-    x_coordinates: st.SearchStrategy[ScalarT],
-    y_coordinates: st.SearchStrategy[ScalarT] | None,
+def to_multicontour_strategy(
+    x_coordinate_strategy: st.SearchStrategy[ScalarT],
+    y_coordinate_strategy: st.SearchStrategy[ScalarT] | None,
     /,
     *,
     context: Context[ScalarT],
@@ -512,22 +520,24 @@ def to_multicontours(
     min_contour_size: int,
     max_contour_size: int | None,
 ) -> st.SearchStrategy[Multicontour[ScalarT]]:
-    def points_to_multicontours(
+    def point_sequence_to_multicontour_strategy(
         points: Sequence[Point[ScalarT]], /
     ) -> st.SearchStrategy[Multicontour[ScalarT]]:
         return st.builds(
             partial(to_multicontour, points, context=context),
-            to_sizes(len(points)),
-            to_choosers(),
+            to_size_strategy(len(points)),
+            to_chooser_strategy(),
         )
 
-    def to_sizes(limit: int, /) -> st.SearchStrategy[list[int]]:
+    def to_size_strategy(limit: int, /) -> st.SearchStrategy[list[int]]:
         size_upper_bound = limit // min_contour_size
         return st.integers(
             min_size,
-            size_upper_bound
-            if max_size is None
-            else min(size_upper_bound, max_size),
+            (
+                size_upper_bound
+                if max_size is None
+                else min(size_upper_bound, max_size)
+            ),
         ).flatmap(
             partial(_to_sizes, min_element_size=min_contour_size, limit=limit)
         )
@@ -539,29 +549,29 @@ def to_multicontours(
         indices = cycle(range(size))
         for _ in range(limit - size * min_element_size):
             max_sizes[next(indices)] += 1
-        sizes_ranges = [
+        size_ranges = [
             range(min_element_size, max_element_size + 1)
             for max_element_size in max_sizes
         ]
         return st.tuples(
-            *[st.sampled_from(sizes_range) for sizes_range in sizes_ranges]
+            *[st.sampled_from(size_range) for size_range in size_ranges]
         ).flatmap(st.permutations)
 
-    min_points_count = min_size * min_contour_size
-    max_points_count = (
+    min_total_point_count = min_size * min_contour_size
+    max_total_point_count = (
         None
         if max_size is None or max_contour_size is None
         else max_size * max_contour_size
     )
     return (
-        to_points_in_general_position(
-            x_coordinates,
-            y_coordinates,
-            min_size=min_points_count,
-            max_size=max_points_count,
+        to_point_sequence_in_general_position_strategy(
+            x_coordinate_strategy,
+            y_coordinate_strategy,
+            min_size=min_total_point_count,
+            max_size=max_total_point_count,
             context=context,
         )
-        .flatmap(points_to_multicontours)
+        .flatmap(point_sequence_to_multicontour_strategy)
         .filter(
             partial(
                 multicontour_has_valid_sizes,
@@ -574,27 +584,27 @@ def to_multicontours(
     )
 
 
-def to_multipoints(
-    x_coordinates: st.SearchStrategy[ScalarT],
-    y_coordinates: st.SearchStrategy[ScalarT] | None,
+def to_multipoint_strategy(
+    x_coordinate_strategy: st.SearchStrategy[ScalarT],
+    y_coordinate_strategy: st.SearchStrategy[ScalarT] | None,
     /,
     *,
     context: Context[ScalarT],
     min_size: int,
     max_size: int | None,
 ) -> st.SearchStrategy[Multipoint[ScalarT]]:
-    return to_unique_points_sequences(
-        x_coordinates,
-        y_coordinates,
+    return to_unique_point_sequence_strategy(
+        x_coordinate_strategy,
+        y_coordinate_strategy,
         min_size=min_size,
         max_size=max_size,
         context=context,
     ).map(context.multipoint_cls)
 
 
-def to_multipolygons(
-    x_coordinates: st.SearchStrategy[ScalarT],
-    y_coordinates: st.SearchStrategy[ScalarT] | None,
+def to_multipolygon_strategy(
+    x_coordinate_strategy: st.SearchStrategy[ScalarT],
+    y_coordinate_strategy: st.SearchStrategy[ScalarT] | None,
     /,
     *,
     context: Context[ScalarT],
@@ -602,52 +612,54 @@ def to_multipolygons(
     max_size: int | None,
     min_border_size: int,
     max_border_size: int | None,
-    min_holes_size: int,
-    max_holes_size: int | None,
+    min_hole_count: int,
+    max_hole_count: int | None,
     min_hole_size: int,
     max_hole_size: int | None,
 ) -> st.SearchStrategy[Multipolygon[ScalarT]]:
-    if y_coordinates is None:
-        y_coordinates = x_coordinates
-    min_polygon_points_count = to_next_prime(
-        min_border_size + min_holes_size * min_hole_size
+    if y_coordinate_strategy is None:
+        y_coordinate_strategy = x_coordinate_strategy
+    min_polygon_point_count = to_next_prime(
+        min_border_size + min_hole_count * min_hole_size
     )
 
     @st.composite
     def xs_to_polygons(
         draw: _Draw, xs: list[ScalarT], /
     ) -> Sequence[Polygon[ScalarT]]:
-        size_upper_bound = len(xs) // min_polygon_points_count
+        size_upper_bound = len(xs) // min_polygon_point_count
         size = draw(
             st.integers(
                 min_size,
-                size_upper_bound
-                if max_size is None
-                else min(max_size, size_upper_bound),
+                (
+                    size_upper_bound
+                    if max_size is None
+                    else min(max_size, size_upper_bound)
+                ),
             )
         )
         xs = sorted(xs)
         to_contour_segments = context.contour_segments
         result = []
-        start, coordinates_count = 0, len(xs)
+        start, coordinate_count = 0, len(xs)
         for index in range(size - 1):
-            polygon_points_count = draw(
+            polygon_point_count = draw(
                 st.integers(
-                    min_polygon_points_count,
-                    (coordinates_count - start) // (size - index),
+                    min_polygon_point_count,
+                    (coordinate_count - start) // (size - index),
                 )
             )
             polygon_xs = xs[
-                start : start + to_prior_prime(polygon_points_count)
+                start : start + to_prior_prime(polygon_point_count)
             ]
             polygon = draw(
-                to_polygons(
+                to_polygon_strategy(
                     st.sampled_from(polygon_xs),
-                    y_coordinates,
+                    y_coordinate_strategy,
                     min_size=min_border_size,
                     max_size=max_border_size,
-                    min_holes_size=min_holes_size,
-                    max_holes_size=max_holes_size,
+                    min_hole_count=min_hole_count,
+                    max_hole_count=max_hole_count,
                     min_hole_size=min_hole_size,
                     max_hole_size=max_hole_size,
                     context=context,
@@ -657,16 +669,16 @@ def to_multipolygons(
             can_touch_next_polygon = not has_vertical_leftmost_segment(
                 to_contour_segments(polygon.border)
             )
-            start += polygon_points_count - can_touch_next_polygon
+            start += polygon_point_count - can_touch_next_polygon
         result.append(
             draw(
-                to_polygons(
+                to_polygon_strategy(
                     st.sampled_from(xs[start:]),
-                    y_coordinates,
+                    y_coordinate_strategy,
                     min_size=min_border_size,
                     max_size=max_border_size,
-                    min_holes_size=min_holes_size,
-                    max_holes_size=max_holes_size,
+                    min_hole_count=min_hole_count,
+                    max_hole_count=max_hole_count,
                     min_hole_size=min_hole_size,
                     max_hole_size=max_hole_size,
                     context=context,
@@ -679,7 +691,7 @@ def to_multipolygons(
     def ys_to_polygons(
         draw: _Draw, ys: list[ScalarT], /
     ) -> Sequence[Polygon[ScalarT]]:
-        size_upper_bound = len(ys) // min_polygon_points_count
+        size_upper_bound = len(ys) // min_polygon_point_count
         size = draw(
             st.integers(
                 min_size,
@@ -691,25 +703,25 @@ def to_multipolygons(
         ys = sorted(ys)
         to_contour_segments = context.contour_segments
         result = []
-        start, coordinates_count = 0, len(ys)
+        start, coordinate_count = 0, len(ys)
         for index in range(size - 1):
-            polygon_points_count = draw(
+            polygon_point_count = draw(
                 st.integers(
-                    min_polygon_points_count,
-                    (coordinates_count - start) // (size - index),
+                    min_polygon_point_count,
+                    (coordinate_count - start) // (size - index),
                 )
             )
             polygon_ys = ys[
-                start : start + to_prior_prime(polygon_points_count)
+                start : start + to_prior_prime(polygon_point_count)
             ]
             polygon = draw(
-                to_polygons(
-                    x_coordinates,
+                to_polygon_strategy(
+                    x_coordinate_strategy,
                     st.sampled_from(polygon_ys),
                     min_size=min_border_size,
                     max_size=max_border_size,
-                    min_holes_size=min_holes_size,
-                    max_holes_size=max_holes_size,
+                    min_hole_count=min_hole_count,
+                    max_hole_count=max_hole_count,
                     min_hole_size=min_hole_size,
                     max_hole_size=max_hole_size,
                     context=context,
@@ -719,16 +731,16 @@ def to_multipolygons(
             can_touch_next_polygon = not has_horizontal_lowermost_segment(
                 to_contour_segments(polygon.border)
             )
-            start += polygon_points_count - can_touch_next_polygon
+            start += polygon_point_count - can_touch_next_polygon
         result.append(
             draw(
-                to_polygons(
-                    x_coordinates,
+                to_polygon_strategy(
+                    x_coordinate_strategy,
                     st.sampled_from(ys[start:]),
                     min_size=min_border_size,
                     max_size=max_border_size,
-                    min_holes_size=min_holes_size,
-                    max_holes_size=max_holes_size,
+                    min_hole_count=min_hole_count,
+                    max_hole_count=max_hole_count,
                     min_hole_size=min_hole_size,
                     max_hole_size=max_hole_size,
                     context=context,
@@ -737,36 +749,36 @@ def to_multipolygons(
         )
         return result
 
-    min_points_count = min_size * min_polygon_points_count
-    max_points_count = (
+    min_total_point_count = min_size * min_polygon_point_count
+    max_total_point_count = (
         None
         if (
             max_size is None
             or max_border_size is None
-            or max_holes_size is None
+            or max_hole_count is None
             or max_hole_size is None
         )
         else max(
-            max_size * (max_border_size + max_hole_size * max_holes_size),
-            min_points_count,
+            max_size * (max_border_size + max_hole_size * max_hole_count),
+            min_total_point_count,
         )
     )
-    polygons = (
+    polygon_strategy = (
         st.lists(
-            x_coordinates,
-            min_size=min_points_count,
-            max_size=max_points_count,
+            x_coordinate_strategy,
+            min_size=min_total_point_count,
+            max_size=max_total_point_count,
             unique=True,
         ).flatmap(xs_to_polygons)
     ) | (
         st.lists(
-            y_coordinates,
-            min_size=min_points_count,
-            max_size=max_points_count,
+            y_coordinate_strategy,
+            min_size=min_total_point_count,
+            max_size=max_total_point_count,
             unique=True,
         ).flatmap(ys_to_polygons)
     )
-    if not min_holes_size:
+    if min_hole_count == 0:
 
         def multicontour_to_polygons(
             multicontour: Multicontour[ScalarT],
@@ -776,54 +788,54 @@ def to_multipolygons(
         ) -> Sequence[Polygon[ScalarT]]:
             return [polygon_cls(contour, []) for contour in multicontour]
 
-        polygons = (
-            to_multicontours(
-                x_coordinates,
-                y_coordinates,
+        polygon_strategy = (
+            to_multicontour_strategy(
+                x_coordinate_strategy,
+                y_coordinate_strategy,
                 min_size=min_size,
                 max_size=max_size,
                 min_contour_size=min_border_size,
                 max_contour_size=max_border_size,
                 context=context,
             ).map(multicontour_to_polygons)
-        ) | polygons
-    return polygons.map(context.multipolygon_cls)
+        ) | polygon_strategy
+    return polygon_strategy.map(context.multipolygon_cls)
 
 
-def to_multisegments(
-    x_coordinates: st.SearchStrategy[ScalarT],
-    y_coordinates: st.SearchStrategy[ScalarT] | None,
+def to_multisegment_strategy(
+    x_coordinate_strategy: st.SearchStrategy[ScalarT],
+    y_coordinate_strategy: st.SearchStrategy[ScalarT] | None,
     /,
     *,
     context: Context[ScalarT],
     min_size: int,
     max_size: int | None,
 ) -> st.SearchStrategy[Multisegment[ScalarT]]:
-    return to_non_crossing_non_overlapping_segments_sequences(
-        x_coordinates,
-        y_coordinates,
+    return to_non_crossing_non_overlapping_segment_sequence_strategy(
+        x_coordinate_strategy,
+        y_coordinate_strategy,
         min_size=min_size,
         max_size=max_size,
         context=context,
     ).map(context.multisegment_cls)
 
 
-def to_non_crossing_non_overlapping_segments_sequences(
-    x_coordinates: st.SearchStrategy[ScalarT],
-    y_coordinates: st.SearchStrategy[ScalarT] | None,
+def to_non_crossing_non_overlapping_segment_sequence_strategy(
+    x_coordinate_strategy: st.SearchStrategy[ScalarT],
+    y_coordinate_strategy: st.SearchStrategy[ScalarT] | None,
     /,
     *,
     context: Context[ScalarT],
     min_size: int,
     max_size: int | None,
 ) -> st.SearchStrategy[Sequence[Segment[ScalarT]]]:
-    if y_coordinates is None:
-        y_coordinates = x_coordinates
+    if y_coordinate_strategy is None:
+        y_coordinate_strategy = x_coordinate_strategy
     if max_size is not None and max_size < 2:
         return (
-            to_segments(x_coordinates, y_coordinates, context=context).map(
-                lambda segment: [segment]
-            )
+            to_segment_strategy(
+                x_coordinate_strategy, y_coordinate_strategy, context=context
+            ).map(lambda segment: [segment])
             if max_size
             else st.builds(list)
         )
@@ -851,9 +863,9 @@ def to_non_crossing_non_overlapping_segments_sequences(
     )
     result = st.builds(
         to_vertical_multisegment,
-        x_coordinates,
+        x_coordinate_strategy,
         st.lists(
-            y_coordinates,
+            y_coordinate_strategy,
             min_size=next_min_size,
             max_size=next_max_size,
             unique=True,
@@ -861,18 +873,18 @@ def to_non_crossing_non_overlapping_segments_sequences(
     ) | st.builds(
         to_horizontal_multisegment,
         st.lists(
-            x_coordinates,
+            x_coordinate_strategy,
             min_size=next_min_size,
             max_size=next_max_size,
             unique=True,
         ),
-        y_coordinates,
+        y_coordinate_strategy,
     )
     if max_size is None or max_size >= MIN_CONTOUR_SIZE:
         result |= (
-            to_vertex_sequences(
-                x_coordinates,
-                y_coordinates,
+            to_vertex_sequence_strategy(
+                x_coordinate_strategy,
+                y_coordinate_strategy,
                 min_size=max(min_size, MIN_CONTOUR_SIZE),
                 max_size=max_size,
                 context=context,
@@ -886,7 +898,9 @@ def to_non_crossing_non_overlapping_segments_sequences(
         )
     return result | (
         st.lists(
-            to_segments(x_coordinates, y_coordinates, context=context),
+            to_segment_strategy(
+                x_coordinate_strategy, y_coordinate_strategy, context=context
+            ),
             min_size=min_size,
             max_size=max_size,
         ).filter(
@@ -895,23 +909,27 @@ def to_non_crossing_non_overlapping_segments_sequences(
     )
 
 
-def to_points(
-    x_coordinates: st.SearchStrategy[ScalarT],
-    y_coordinates: st.SearchStrategy[ScalarT] | None,
+def to_point_strategy(
+    x_coordinate_strategy: st.SearchStrategy[ScalarT],
+    y_coordinate_strategy: st.SearchStrategy[ScalarT] | None,
     /,
     *,
     context: Context[ScalarT],
 ) -> st.SearchStrategy[Point[ScalarT]]:
     return st.builds(
         context.point_cls,
-        x_coordinates,
-        x_coordinates if y_coordinates is None else y_coordinates,
+        x_coordinate_strategy,
+        (
+            x_coordinate_strategy
+            if y_coordinate_strategy is None
+            else y_coordinate_strategy
+        ),
     )
 
 
-def to_points_in_general_position(
-    x_coordinates: st.SearchStrategy[ScalarT],
-    y_coordinates: st.SearchStrategy[ScalarT] | None,
+def to_point_sequence_in_general_position_strategy(
+    x_coordinate_strategy: st.SearchStrategy[ScalarT],
+    y_coordinate_strategy: st.SearchStrategy[ScalarT] | None,
     /,
     *,
     context: Context[ScalarT],
@@ -923,19 +941,21 @@ def to_points_in_general_position(
         max_size if max_size is None else max(max_size, grid_size_lower_bound)
     )
 
-    def coordinates_to_points(
+    def coordinate_sequence_pair_to_point_sequence_strategy(
         xs: Sequence[ScalarT], ys: Sequence[ScalarT], /
     ) -> st.SearchStrategy[Sequence[Point[ScalarT]]]:
         xs, ys = sorted(xs), sorted(ys)
         grid_size = to_prior_prime(min(len(xs), len(ys)))
-        scales = st.integers(0).flatmap(
+        scale_strategy = st.integers(0).flatmap(
             lambda scale: st.integers(
                 scale * grid_size + 1, (scale + 1) * grid_size - 1
             )
         )
         return st.builds(
-            partial(x_indices_to_points, grid_size, xs, ys), scales
-        ) | st.builds(partial(y_indices_to_points, grid_size, xs, ys), scales)
+            partial(x_indices_to_points, grid_size, xs, ys), scale_strategy
+        ) | st.builds(
+            partial(y_indices_to_points, grid_size, xs, ys), scale_strategy
+        )
 
     def x_indices_to_points(
         grid_size: int,
@@ -946,7 +966,7 @@ def to_points_in_general_position(
         *,
         point_cls: type[Point[ScalarT]] = context.point_cls,
     ) -> Sequence[Point[ScalarT]]:
-        assert are_indices_pairs_sparse(
+        assert are_index_sequence_pair_sparse(
             range(grid_size),
             [
                 (scale * (index * index)) % grid_size
@@ -967,7 +987,7 @@ def to_points_in_general_position(
         *,
         point_cls: type[Point[ScalarT]] = context.point_cls,
     ) -> Sequence[Point[ScalarT]]:
-        assert are_indices_pairs_sparse(
+        assert are_index_sequence_pair_sparse(
             range(grid_size),
             [
                 (scale * (index * index)) % grid_size
@@ -979,7 +999,7 @@ def to_points_in_general_position(
             for index in range(grid_size)
         ]
 
-    def are_indices_pairs_sparse(
+    def are_index_sequence_pair_sparse(
         left_indices: Sequence[int], right_indices: Sequence[int], /
     ) -> bool:
         return (
@@ -1009,100 +1029,104 @@ def to_points_in_general_position(
 
     return st.tuples(
         st.lists(
-            x_coordinates,
+            x_coordinate_strategy,
             unique=True,
             min_size=grid_size_lower_bound,
             max_size=grid_size_upper_bound,
         ),
         st.lists(
-            x_coordinates if y_coordinates is None else y_coordinates,
+            (
+                x_coordinate_strategy
+                if y_coordinate_strategy is None
+                else y_coordinate_strategy
+            ),
             unique=True,
             min_size=grid_size_lower_bound,
             max_size=grid_size_upper_bound,
         ),
-    ).flatmap(pack(coordinates_to_points))
+    ).flatmap(pack(coordinate_sequence_pair_to_point_sequence_strategy))
 
 
-def to_polygons(
-    x_coordinates: st.SearchStrategy[ScalarT],
-    y_coordinates: st.SearchStrategy[ScalarT] | None,
+def to_polygon_strategy(
+    x_coordinate_strategy: st.SearchStrategy[ScalarT],
+    y_coordinate_strategy: st.SearchStrategy[ScalarT] | None,
     /,
     *,
     context: Context[ScalarT],
     min_size: int,
     max_size: int | None,
-    min_holes_size: int,
-    max_holes_size: int | None,
+    min_hole_count: int,
+    max_hole_count: int | None,
     min_hole_size: int,
     max_hole_size: int | None,
 ) -> st.SearchStrategy[Polygon[ScalarT]]:
-    def points_to_polygons(
+    def point_sequence_to_polygon_strategy(
         points: Sequence[Point[ScalarT]], /
     ) -> st.SearchStrategy[Polygon[ScalarT]]:
-        max_border_points_count = len(points) - min_inner_points_count
+        max_border_point_count = len(points) - min_inner_point_count
         min_border_size = max(
             min_size, len(context.points_convex_hull(points))
         )
         max_border_size = (
-            max_border_points_count
+            max_border_point_count
             if max_size is None
-            else min(max_size, max_border_points_count)
+            else min(max_size, max_border_point_count)
         )
         return st.builds(
             partial(to_polygon, points, context=context),
             st.integers(min_border_size, max_border_size),
             to_hole_sizes(points),
-            to_choosers(),
+            to_chooser_strategy(),
         )
 
     def to_hole_sizes(
         points: Sequence[Point[ScalarT]], /
     ) -> st.SearchStrategy[Sequence[int]]:
-        max_inner_points_count = len(points) - len(
+        max_inner_point_count = len(points) - len(
             to_max_convex_hull(points, orienteer=context.angle_orientation)
         )
-        holes_size_scale = max_inner_points_count // min_hole_size
-        points_max_hole_size = (
-            holes_size_scale
-            if max_holes_size is None
-            else min(max_holes_size, holes_size_scale)
+        hole_count_scale = max_inner_point_count // min_hole_size
+        point_max_hole_size = (
+            hole_count_scale
+            if max_hole_count is None
+            else min(max_hole_count, hole_count_scale)
         )
         return (
             (
-                st.integers(min_holes_size, points_max_hole_size).flatmap(
+                st.integers(min_hole_count, point_max_hole_size).flatmap(
                     partial(
                         _to_hole_sizes,
-                        min_hole_points_count=min_hole_size,
-                        max_hole_points_count=max_inner_points_count,
+                        min_hole_point_count=min_hole_size,
+                        max_hole_point_count=max_inner_point_count,
                     )
                 )
             )
-            if max_inner_points_count >= min_hole_size
+            if max_inner_point_count >= min_hole_size
             else st.builds(list)
         )
 
     def _to_hole_sizes(
-        holes_size: int,
+        hole_count: int,
         /,
         *,
-        min_hole_points_count: int,
-        max_hole_points_count: int,
+        min_hole_point_count: int,
+        max_hole_point_count: int,
     ) -> st.SearchStrategy[Sequence[int]]:
-        if not holes_size:
+        if hole_count == 0:
             return st.builds(list)
-        max_holes_points_counts = [min_hole_points_count] * holes_size
-        indices = cycle(range(holes_size))
+        max_hole_point_counts = [min_hole_point_count] * hole_count
+        indices = cycle(range(hole_count))
         for _ in range(
-            max_hole_points_count - holes_size * min_hole_points_count
+            max_hole_point_count - hole_count * min_hole_point_count
         ):
-            max_holes_points_counts[next(indices)] += 1
-        sizes_ranges = [
-            range(min_hole_points_count, max_hole_points_count + 1)
-            for max_hole_points_count in max_holes_points_counts
+            max_hole_point_counts[next(indices)] += 1
+        size_ranges = [
+            range(min_hole_point_count, max_hole_point_count + 1)
+            for max_hole_point_count in max_hole_point_counts
         ]
         return (
             st.permutations(
-                [st.sampled_from(sizes_range) for sizes_range in sizes_ranges]
+                [st.sampled_from(size_range) for size_range in size_ranges]
             )
             .flatmap(pack(st.tuples))
             .map(list)
@@ -1113,15 +1137,15 @@ def to_polygons(
             polygon.border.vertices, min_size=min_size, max_size=max_size
         ) and multicontour_has_valid_sizes(
             polygon.holes,
-            min_size=min_holes_size,
-            max_size=max_holes_size,
+            min_size=min_hole_count,
+            max_size=max_hole_count,
             min_contour_size=min_hole_size,
             max_contour_size=max_hole_size,
         )
 
-    min_inner_points_count = min_hole_size * min_holes_size
+    min_inner_point_count = min_hole_size * min_hole_count
 
-    def has_valid_inner_points_count(
+    def has_valid_inner_point_count(
         points: Sequence[Point[ScalarT]], /
     ) -> bool:
         return (
@@ -1132,34 +1156,34 @@ def to_polygons(
             - len(
                 to_max_convex_hull(points, orienteer=context.angle_orientation)
             )
-            >= min_inner_points_count
+            >= min_inner_point_count
         )
 
-    min_points_count = min_size + min_inner_points_count
-    max_points_count = (
+    min_point_count = min_size + min_inner_point_count
+    max_point_count = (
         None
         if (
-            max_size is None or max_holes_size is None or max_hole_size is None
+            max_size is None or max_hole_count is None or max_hole_size is None
         )
-        else max_size + max_hole_size * max_holes_size
+        else max_size + max_hole_size * max_hole_count
     )
     return (
-        to_points_in_general_position(
-            x_coordinates,
-            y_coordinates,
-            min_size=min_points_count,
-            max_size=max_points_count,
+        to_point_sequence_in_general_position_strategy(
+            x_coordinate_strategy,
+            y_coordinate_strategy,
+            min_size=min_point_count,
+            max_size=max_point_count,
             context=context,
         )
-        .filter(has_valid_inner_points_count)
-        .flatmap(points_to_polygons)
+        .filter(has_valid_inner_point_count)
+        .flatmap(point_sequence_to_polygon_strategy)
         .filter(has_valid_sizes)
     )
 
 
-def to_rectangular_vertex_sequences(
-    x_coordinates: st.SearchStrategy[ScalarT],
-    y_coordinates: st.SearchStrategy[ScalarT] | None,
+def to_rectangular_vertex_sequence_strategy(
+    x_coordinate_strategy: st.SearchStrategy[ScalarT],
+    y_coordinate_strategy: st.SearchStrategy[ScalarT] | None,
     /,
     *,
     context: Context[ScalarT],
@@ -1177,35 +1201,37 @@ def to_rectangular_vertex_sequences(
             point_cls(box.min_x, box.max_y),
         ]
 
-    return to_boxes(x_coordinates, y_coordinates, context=context).map(
-        to_vertices
-    )
+    return to_box_strategy(
+        x_coordinate_strategy, y_coordinate_strategy, context=context
+    ).map(to_vertices)
 
 
-def to_segments(
-    x_coordinates: st.SearchStrategy[ScalarT],
-    y_coordinates: st.SearchStrategy[ScalarT] | None,
+def to_segment_strategy(
+    x_coordinate_strategy: st.SearchStrategy[ScalarT],
+    y_coordinate_strategy: st.SearchStrategy[ScalarT] | None,
     /,
     *,
     context: Context[ScalarT],
 ) -> st.SearchStrategy[Segment[ScalarT]]:
-    def non_degenerate_endpoints(
+    def are_endpoints_non_degenerate(
         endpoints: tuple[Point[ScalarT], Point[ScalarT]], /
     ) -> bool:
         start, end = endpoints
         return start != end
 
-    points = to_points(x_coordinates, y_coordinates, context=context)
+    point_strategy = to_point_strategy(
+        x_coordinate_strategy, y_coordinate_strategy, context=context
+    )
     return (
-        st.tuples(points, points)
-        .filter(non_degenerate_endpoints)
+        st.tuples(point_strategy, point_strategy)
+        .filter(are_endpoints_non_degenerate)
         .map(pack(context.segment_cls))
     )
 
 
-def to_star_vertex_sequences(
-    x_coordinates: st.SearchStrategy[ScalarT],
-    y_coordinates: st.SearchStrategy[ScalarT] | None,
+def to_star_vertex_sequence_strategy(
+    x_coordinate_strategy: st.SearchStrategy[ScalarT],
+    y_coordinate_strategy: st.SearchStrategy[ScalarT] | None,
     /,
     *,
     context: Context[ScalarT],
@@ -1213,9 +1239,9 @@ def to_star_vertex_sequences(
     max_size: int | None,
 ) -> st.SearchStrategy[Sequence[Point[ScalarT]]]:
     return (
-        to_points_in_general_position(
-            x_coordinates,
-            y_coordinates,
+        to_point_sequence_in_general_position_strategy(
+            x_coordinate_strategy,
+            y_coordinate_strategy,
             min_size=min_size,
             max_size=max_size,
             context=context,
@@ -1233,24 +1259,22 @@ def to_sub_sequence_strategy(
     )
 
 
-def to_triangular_vertex_sequences(
-    x_coordinates: st.SearchStrategy[ScalarT],
-    y_coordinates: st.SearchStrategy[ScalarT] | None,
+def to_triangular_vertex_sequence_strategy(
+    x_coordinate_strategy: st.SearchStrategy[ScalarT],
+    y_coordinate_strategy: st.SearchStrategy[ScalarT] | None,
     /,
     *,
     context: Context[ScalarT],
 ) -> st.SearchStrategy[Sequence[Point[ScalarT]]]:
     def to_counterclockwise_vertices(
-        vertices_triplet: tuple[
-            Point[ScalarT], Point[ScalarT], Point[ScalarT]
-        ],
+        vertex_triplet: tuple[Point[ScalarT], Point[ScalarT], Point[ScalarT]],
         /,
         *,
         orienteer: Orienteer[ScalarT] = context.angle_orientation,
     ) -> tuple[Point[ScalarT], Point[ScalarT], Point[ScalarT]]:
-        vertex, first_ray_point, second_ray_point = vertices_triplet
+        vertex, first_ray_point, second_ray_point = vertex_triplet
         return (
-            vertices_triplet
+            vertex_triplet
             if (
                 orienteer(vertex, first_ray_point, second_ray_point)
                 is Orientation.COUNTERCLOCKWISE
@@ -1258,9 +1282,11 @@ def to_triangular_vertex_sequences(
             else (second_ray_point, first_ray_point, vertex)
         )
 
-    vertices = to_points(x_coordinates, y_coordinates, context=context)
+    vertex_strategy = to_point_strategy(
+        x_coordinate_strategy, y_coordinate_strategy, context=context
+    )
     return (
-        st.tuples(vertices, vertices, vertices)
+        st.tuples(vertex_strategy, vertex_strategy, vertex_strategy)
         .filter(
             partial(are_vertices_strict, orienteer=context.angle_orientation)
         )
@@ -1269,9 +1295,9 @@ def to_triangular_vertex_sequences(
     )
 
 
-def to_unique_points_sequences(
-    x_coordinates: st.SearchStrategy[ScalarT],
-    y_coordinates: st.SearchStrategy[ScalarT] | None,
+def to_unique_point_sequence_strategy(
+    x_coordinate_strategy: st.SearchStrategy[ScalarT],
+    y_coordinate_strategy: st.SearchStrategy[ScalarT] | None,
     /,
     *,
     context: Context[ScalarT],
@@ -1279,31 +1305,33 @@ def to_unique_points_sequences(
     max_size: int | None,
 ) -> st.SearchStrategy[Sequence[Point[ScalarT]]]:
     return st.lists(
-        to_points(x_coordinates, y_coordinates, context=context),
+        to_point_strategy(
+            x_coordinate_strategy, y_coordinate_strategy, context=context
+        ),
         unique=True,
         min_size=min_size,
         max_size=max_size,
     )
 
 
-def to_vertex_sequences(
-    x_coordinates: st.SearchStrategy[ScalarT],
-    y_coordinates: st.SearchStrategy[ScalarT] | None,
+def to_vertex_sequence_strategy(
+    x_coordinate_strategy: st.SearchStrategy[ScalarT],
+    y_coordinate_strategy: st.SearchStrategy[ScalarT] | None,
     /,
     *,
     context: Context[ScalarT],
     min_size: int,
     max_size: int | None,
 ) -> st.SearchStrategy[Sequence[Point[ScalarT]]]:
-    return to_convex_vertex_sequences(
-        x_coordinates,
-        y_coordinates,
+    return to_convex_vertex_sequence_strategy(
+        x_coordinate_strategy,
+        y_coordinate_strategy,
         min_size=min_size,
         max_size=max_size,
         context=context,
     ) | _to_vertex_sequences(
-        x_coordinates,
-        y_coordinates,
+        x_coordinate_strategy,
+        y_coordinate_strategy,
         min_size=min_size,
         max_size=max_size,
         context=context,
@@ -1311,38 +1339,38 @@ def to_vertex_sequences(
 
 
 def _to_vertex_sequences(
-    x_coordinates: st.SearchStrategy[ScalarT],
-    y_coordinates: st.SearchStrategy[ScalarT] | None,
+    x_coordinate_strategy: st.SearchStrategy[ScalarT],
+    y_coordinate_strategy: st.SearchStrategy[ScalarT] | None,
     /,
     *,
     context: Context[ScalarT],
     min_size: int,
     max_size: int | None,
 ) -> st.SearchStrategy[Sequence[Point[ScalarT]]]:
-    def to_points_with_sizes(
+    def to_point_sequence_with_size_strategy(
         points: Sequence[Point[ScalarT]], /
     ) -> st.SearchStrategy[tuple[Sequence[Point[ScalarT]], int]]:
-        sizes = st.integers(
+        size_strategy = st.integers(
             min_size,
             len(points) if max_size is None else min(len(points), max_size),
         )
-        return st.tuples(st.just(points), sizes)
+        return st.tuples(st.just(points), size_strategy)
 
-    return to_star_vertex_sequences(
-        x_coordinates,
-        y_coordinates,
+    return to_star_vertex_sequence_strategy(
+        x_coordinate_strategy,
+        y_coordinate_strategy,
         min_size=min_size,
         max_size=max_size,
         context=context,
     ) | (
-        to_points_in_general_position(
-            x_coordinates,
-            y_coordinates,
+        to_point_sequence_in_general_position_strategy(
+            x_coordinate_strategy,
+            y_coordinate_strategy,
             min_size=min_size,
             max_size=max_size,
             context=context,
         )
-        .flatmap(to_points_with_sizes)
+        .flatmap(to_point_sequence_with_size_strategy)
         .map(pack(partial(to_vertex_sequence, context=context)))
         .filter(partial(has_valid_size, min_size=min_size, max_size=max_size))
     )
