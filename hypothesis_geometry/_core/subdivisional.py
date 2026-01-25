@@ -25,6 +25,7 @@ class QuadEdge(HasCustomRepr, Generic[ScalarT]):
         cls,
         start: Point[ScalarT],
         end: Point[ScalarT],
+        /,
         *,
         context: Context[ScalarT],
     ) -> Self:
@@ -113,6 +114,7 @@ class QuadEdge(HasCustomRepr, Generic[ScalarT]):
         start: Point[ScalarT] | None = None,
         left_from_start: Self | None = None,
         rotated: Self | None = None,
+        /,
         *,
         context: Context[ScalarT],
     ) -> None:
@@ -125,7 +127,7 @@ class QuadEdge(HasCustomRepr, Generic[ScalarT]):
 
     __repr__ = generate_repr(from_endpoints)
 
-    def connect(self, other: Self) -> Self:
+    def connect(self, other: Self, /) -> Self:
         """Connects the edge with the other."""
         result = self.from_endpoints(
             self.end, other.start, context=self.context
@@ -139,7 +141,7 @@ class QuadEdge(HasCustomRepr, Generic[ScalarT]):
         self.splice(self.right_from_start)
         self.opposite.splice(self.opposite.right_from_start)
 
-    def orientation_of(self, point: Point[ScalarT]) -> Orientation:
+    def orientation_of(self, point: Point[ScalarT], /) -> Orientation:
         """Returns orientation of the point relative to the edge."""
         return self.context.angle_orientation(self.start, self.end, point)
 
@@ -169,7 +171,9 @@ class QuadEdge(HasCustomRepr, Generic[ScalarT]):
         opposite._start = opposite_side.end  # noqa: SLF001
 
 
-def to_edge_neighbours(edge: QuadEdge[ScalarT]) -> Sequence[QuadEdge[ScalarT]]:
+def to_edge_neighbours(
+    edge: QuadEdge[ScalarT], /
+) -> Sequence[QuadEdge[ScalarT]]:
     candidate = edge.left_from_start
     return (
         (candidate, candidate.right_from_end)

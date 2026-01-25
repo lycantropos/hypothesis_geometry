@@ -4,7 +4,7 @@ from collections.abc import Callable, Iterable, Sequence
 from itertools import accumulate, chain, repeat
 from typing import Generic
 
-from decision.partition import coin_change  # type: ignore[import-untyped]
+from decision.partition import coin_change
 from ground.context import Context
 from ground.enums import Location, Orientation
 from ground.hints import Point
@@ -50,6 +50,7 @@ class Triangulation(HasCustomRepr, Generic[ScalarT]):
         left_side: QuadEdge[ScalarT],
         right_side: QuadEdge[ScalarT],
         context: Context[ScalarT],
+        /,
     ) -> None:
         self.context, self.left_side, self.right_side = (
             context,
@@ -65,11 +66,12 @@ class Triangulation(HasCustomRepr, Generic[ScalarT]):
         left_side: QuadEdge[ScalarT],
         right_side: QuadEdge[ScalarT],
         context: Context[ScalarT],
+        /,
     ) -> Self:
         """Constructs triangulation given its sides."""
         return cls(left_side, right_side, context)
 
-    def delete(self, edge: QuadEdge[ScalarT]) -> None:
+    def delete(self, edge: QuadEdge[ScalarT], /) -> None:
         """Deletes given edge from the triangulation."""
         if edge is self.right_side or edge.opposite is self.right_side:
             assert (
@@ -120,11 +122,12 @@ class Triangulation(HasCustomRepr, Generic[ScalarT]):
         cls: type[Triangulation[ScalarT]],
         points: Sequence[Point[ScalarT]],
         context: Context[ScalarT],
+        /,
     ) -> Triangulation[ScalarT]:
         return _base_cases[len(points)](cls, points, context)
 
     def _to_left_candidate(
-        self, base_edge: QuadEdge[ScalarT]
+        self, base_edge: QuadEdge[ScalarT], /
     ) -> QuadEdge[ScalarT] | None:
         result = base_edge.opposite.left_from_start
         if base_edge.orientation_of(result.end) is not Orientation.CLOCKWISE:
@@ -193,6 +196,7 @@ def _triangulate_two_points(
     cls: type[Triangulation[ScalarT]],
     sorted_points: Sequence[Point[ScalarT]],
     context: Context[ScalarT],
+    /,
 ) -> Triangulation[ScalarT]:
     first_edge = QuadEdge.from_endpoints(*sorted_points, context=context)
     return cls.from_sides(first_edge, first_edge.opposite, context)
@@ -202,6 +206,7 @@ def _triangulate_three_points(
     cls: type[Triangulation[ScalarT]],
     sorted_points: Sequence[Point[ScalarT]],
     context: Context[ScalarT],
+    /,
 ) -> Triangulation[ScalarT]:
     left_point, mid_point, right_point = sorted_points
     first_edge, second_edge = (
@@ -228,13 +233,13 @@ TriangulationBaseConstructor = Callable[
 
 
 def to_boundary_edges(
-    triangulation: Triangulation[ScalarT],
+    triangulation: Triangulation[ScalarT], /
 ) -> list[QuadEdge[ScalarT]]:
     return list(_to_boundary_edges(triangulation))
 
 
 def _to_boundary_edges(
-    triangulation: Triangulation[ScalarT],
+    triangulation: Triangulation[ScalarT], /
 ) -> Iterable[QuadEdge[ScalarT]]:
     # boundary is traversed in counterclockwise direction
     start = triangulation.left_side

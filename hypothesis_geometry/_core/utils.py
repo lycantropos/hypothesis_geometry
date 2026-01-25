@@ -11,22 +11,22 @@ from typing_extensions import Self
 from .hints import Domain, Range, ScalarT
 
 
-def apply(function: Callable[..., Range], args: Iterable[Domain]) -> Range:
+def apply(function: Callable[..., Range], args: Iterable[Domain], /) -> Range:
     return function(*args)
 
 
-def ceil_log2(number: int) -> int:
+def ceil_log2(number: int, /) -> int:
     return number.bit_length() - (not (number & (number - 1)))
 
 
-def cut(values: Sequence[Domain], limit: int) -> Sequence[Domain]:
+def cut(values: Sequence[Domain], limit: int, /) -> Sequence[Domain]:
     return values[:limit] if limit < len(values) else values
 
 
 flatten = chain.from_iterable
 
 
-def to_prior_prime(value: int) -> int:
+def to_prior_prime(value: int, /) -> int:
     assert value > 2, value
     step = value + ((value & 1) - 1)
     while not _is_prime(step):
@@ -34,7 +34,7 @@ def to_prior_prime(value: int) -> int:
     return step
 
 
-def to_next_prime(value: int) -> int:
+def to_next_prime(value: int, /) -> int:
     assert value > 2, value
     step = value | 1
     while not _is_prime(step):
@@ -42,7 +42,7 @@ def to_next_prime(value: int) -> int:
     return step
 
 
-def _is_prime(value: int) -> bool:
+def _is_prime(value: int, /) -> bool:
     assert value % 2 != 0
     if value % 3 == 0:
         return False

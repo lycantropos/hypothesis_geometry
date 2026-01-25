@@ -66,7 +66,7 @@ def empty_geometries(
     >>> isinstance(empty, Empty)
     True
     """
-    return _to_empty_geometries(context)
+    return _to_empty_geometries(context=context)
 
 
 def points(

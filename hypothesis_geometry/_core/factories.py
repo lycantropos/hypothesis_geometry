@@ -37,6 +37,8 @@ def to_multicontour(
     points: Sequence[Point[ScalarT]],
     sizes: Sequence[int],
     chooser: Chooser[Any],
+    /,
+    *,
     context: Context[ScalarT],
 ) -> Multicontour[ScalarT]:
     sorting_key_chooser = partial(
@@ -59,7 +61,9 @@ def to_multicontour(
                 else has_horizontal_lowermost_segment,
             )
             points.sort(key=sorting_key)
-        contour_vertices = to_vertex_sequence(points[:size], size, context)
+        contour_vertices = to_vertex_sequence(
+            points[:size], size, context=context
+        )
         if len(contour_vertices) >= MIN_CONTOUR_SIZE:
             contour = contour_cls(contour_vertices)
             result.append(contour)
@@ -74,6 +78,8 @@ def to_polygon(
     border_size: int,
     hole_sizes: Sequence[int],
     chooser: Chooser[Any],
+    /,
+    *,
     context: Context[ScalarT],
 ) -> Polygon[ScalarT]:
     triangulation = Triangulation.delaunay(points, context)
@@ -104,7 +110,9 @@ def to_polygon(
             )
             inner_points.sort(key=sorting_key)
         hole_points = inner_points[:hole_size]
-        hole_vertices = to_vertex_sequence(hole_points, hole_size, context)
+        hole_vertices = to_vertex_sequence(
+            hole_points, hole_size, context=context
+        )
         if len(hole_vertices) >= MIN_CONTOUR_SIZE:
             hole = contour_cls(_reverse_vertices(hole_vertices))
             assert contours_do_not_cross_or_overlap(
@@ -186,7 +194,7 @@ def to_polygon(
         key=_edge_key,
     )
     boundary_vertices = [edge.start for edge in boundary_edges]
-    compress_contour(boundary_vertices, context.angle_orientation)
+    compress_contour(boundary_vertices, orienteer=context.angle_orientation)
     current_border_size = len(boundary_vertices)
     while current_border_size < border_size:
         try:
@@ -209,17 +217,17 @@ def to_polygon(
 
 
 def _reverse_vertices(
-    vertices: Sequence[Point[ScalarT]],
+    vertices: Sequence[Point[ScalarT]], /
 ) -> Sequence[Point[ScalarT]]:
     return [*vertices[:1], *vertices[:0:-1]]
 
 
-def _to_segment_angle(start: Point[ScalarT], end: Point[ScalarT]) -> float:
+def _to_segment_angle(start: Point[ScalarT], end: Point[ScalarT], /) -> float:
     return math.atan2(end.y - start.y, end.x - start.x)
 
 
 def to_star_contour_vertices(
-    points: Sequence[Point[ScalarT]], context: Context[ScalarT]
+    points: Sequence[Point[ScalarT]], /, *, context: Context[ScalarT]
 ) -> Sequence[Point[ScalarT]]:
     centroid = context.multipoint_centroid(context.multipoint_cls(points))
     contour_cls, region_centroid_constructor, orienteer = (
@@ -253,12 +261,16 @@ def to_star_contour_vertices(
                 ):
                     del result[index]
                 index += 1
-            compress_contour(result, orienteer)
+            compress_contour(result, orienteer=orienteer)
     return result
 
 
 def to_convex_vertex_sequence(
-    points: Sequence[Point[ScalarT]], random: Random, context: Context[ScalarT]
+    points: Sequence[Point[ScalarT]],
+    random: Random,
+    /,
+    *,
+    context: Context[ScalarT],
 ) -> Sequence[Point[ScalarT]]:
     """
     Based on Valtr algorithm by Sander Verdonschot.
@@ -279,6 +291,7 @@ def to_convex_vertex_sequence(
         coordinates: list[ScalarT],
         min_coordinate: ScalarT,
         max_coordinate: ScalarT,
+        /,
     ) -> list[ScalarT]:
         last_min = last_max = min_coordinate
         result = []
@@ -296,7 +309,7 @@ def to_convex_vertex_sequence(
     vectors_ys = to_vectors_coordinates(ys, min_y, max_y)
     random.shuffle(vectors_ys)
 
-    def to_vector_angle(vector: tuple[ScalarT, ScalarT]) -> float:
+    def to_vector_angle(vector: tuple[ScalarT, ScalarT], /) -> float:
         x, y = vector
         return atan2(y, x)
 
@@ -328,7 +341,10 @@ def to_convex_vertex_sequence(
 
 
 def compress_contour(
-    vertices: MutableSequence[Point[ScalarT]], orienteer: Orienteer[ScalarT]
+    vertices: MutableSequence[Point[ScalarT]],
+    /,
+    *,
+    orienteer: Orienteer[ScalarT],
 ) -> None:
     index = -len(vertices) + 1
     while index < 0:
@@ -352,16 +368,16 @@ def compress_contour(
 
 
 def to_max_convex_hull(
-    points: Sequence[Point[ScalarT]], orienteer: Orienteer[ScalarT]
+    points: Sequence[Point[ScalarT]], /, *, orienteer: Orienteer[ScalarT]
 ) -> Sequence[Point[ScalarT]]:
     points = sorted(points)
-    lower = _to_sub_hull(points, orienteer)
-    upper = _to_sub_hull(reversed(points), orienteer)
+    lower = _to_sub_hull(points, orienteer=orienteer)
+    upper = _to_sub_hull(reversed(points), orienteer=orienteer)
     return lower[:-1] + upper[:-1]
 
 
 def _to_sub_hull(
-    points: Iterable[Point[ScalarT]], orienteer: Orienteer[ScalarT]
+    points: Iterable[Point[ScalarT]], /, *, orienteer: Orienteer[ScalarT]
 ) -> list[Point[ScalarT]]:
     result: list[Point[ScalarT]] = []
     for point in points:
@@ -378,7 +394,10 @@ def _to_sub_hull(
 
 
 def contour_vertices_to_edges(
-    vertices: Sequence[Point[ScalarT]], segment_cls: type[Segment[ScalarT]]
+    vertices: Sequence[Point[ScalarT]],
+    /,
+    *,
+    segment_cls: type[Segment[ScalarT]],
 ) -> Sequence[Segment[ScalarT]]:
     return [
         segment_cls(vertices[index - 1], vertices[index])
@@ -387,7 +406,11 @@ def contour_vertices_to_edges(
 
 
 def to_vertex_sequence(
-    points: Sequence[Point[ScalarT]], size: int, context: Context[ScalarT]
+    points: Sequence[Point[ScalarT]],
+    size: int,
+    /,
+    *,
+    context: Context[ScalarT],
 ) -> Sequence[Point[ScalarT]]:
     """
     Based on chi-algorithm by M. Duckham et al.
@@ -401,18 +424,22 @@ def to_vertex_sequence(
     """
     triangulation = Triangulation.delaunay(points, context)
     boundary_edges = to_boundary_edges(triangulation)
-    return _to_vertex_sequence(triangulation, boundary_edges, size, context)
+    return _to_vertex_sequence(
+        triangulation, boundary_edges, size, context=context
+    )
 
 
 def _to_vertex_sequence(
     triangulation: Triangulation[ScalarT],
     boundary_edges: Sequence[QuadEdge[ScalarT]],
     size: int,
+    /,
+    *,
     context: Context[ScalarT],
 ) -> Sequence[Point[ScalarT]]:
     boundary_points = {edge.start for edge in boundary_edges}
     boundary_vertices = [edge.start for edge in boundary_edges]
-    compress_contour(boundary_vertices, context.angle_orientation)
+    compress_contour(boundary_vertices, orienteer=context.angle_orientation)
     if len(boundary_vertices) < MIN_CONTOUR_SIZE:
         return boundary_vertices
     mouths_increments = _to_mouths_increments(boundary_edges)
@@ -552,7 +579,7 @@ def _edge_key(
     return weight, edge.start, edge.end
 
 
-def to_edges(edge: QuadEdge[ScalarT]) -> Iterable[QuadEdge[ScalarT]]:
+def to_edges(edge: QuadEdge[ScalarT], /) -> Iterable[QuadEdge[ScalarT]]:
     visited_edges: set[QuadEdge[ScalarT]] = set()
     is_visited, visit_multiple = (
         visited_edges.__contains__,
@@ -575,7 +602,7 @@ def to_edges(edge: QuadEdge[ScalarT]) -> Iterable[QuadEdge[ScalarT]]:
         )
 
 
-def _mouth_to_increment(edge: QuadEdge[ScalarT]) -> int:
+def _mouth_to_increment(edge: QuadEdge[ScalarT], /) -> int:
     return (
         1
         - (
@@ -597,7 +624,7 @@ def _mouth_to_increment(edge: QuadEdge[ScalarT]) -> int:
     )
 
 
-def _ear_to_increment(edge: QuadEdge[ScalarT]) -> int:
+def _ear_to_increment(edge: QuadEdge[ScalarT], /) -> int:
     return (
         (
             edge.right_from_end.orientation_of(
@@ -621,7 +648,7 @@ def _ear_to_increment(edge: QuadEdge[ScalarT]) -> int:
     )
 
 
-def _is_convex_quadrilateral_diagonal(edge: QuadEdge[ScalarT]) -> bool:
+def _is_convex_quadrilateral_diagonal(edge: QuadEdge[ScalarT], /) -> bool:
     return (
         edge.right_from_start.orientation_of(edge.end)
         is Orientation.COUNTERCLOCKWISE
@@ -635,7 +662,7 @@ def _is_convex_quadrilateral_diagonal(edge: QuadEdge[ScalarT]) -> bool:
     )
 
 
-def _is_ear(edge: QuadEdge[ScalarT]) -> bool:
+def _is_ear(edge: QuadEdge[ScalarT], /) -> bool:
     return (
         edge.orientation_of(edge.right_from_end.end)
         is Orientation.COUNTERCLOCKWISE
@@ -647,7 +674,7 @@ def _is_ear(edge: QuadEdge[ScalarT]) -> bool:
 
 
 def _is_mouth(
-    edge: QuadEdge[ScalarT], boundary_points: Collection[Point[ScalarT]]
+    edge: QuadEdge[ScalarT], boundary_points: Collection[Point[ScalarT]], /
 ) -> bool:
     assert edge.start in boundary_points
     return edge.left_from_start.end not in boundary_points
@@ -658,7 +685,7 @@ MAX_EAR_INCREMENT = 1
 
 
 def _to_ears_increments(
-    edges: Iterable[QuadEdge[ScalarT]],
+    edges: Iterable[QuadEdge[ScalarT]], /
 ) -> Sequence[KeyedSet[Any, QuadEdge[ScalarT]]]:
     result: list[KeyedSet[Any, QuadEdge[ScalarT]]] = [
         red_black.set_(key=_edge_key)
@@ -675,7 +702,7 @@ MAX_MOUTH_INCREMENT = 3
 
 
 def _to_mouths_increments(
-    edges: Iterable[QuadEdge[ScalarT]],
+    edges: Iterable[QuadEdge[ScalarT]], /
 ) -> Sequence[KeyedSet[Any, QuadEdge[ScalarT]]]:
     result: list[KeyedSet[Any, QuadEdge[ScalarT]]] = [
         red_black.set_(key=_edge_key)
@@ -688,16 +715,16 @@ def _to_mouths_increments(
 
 
 def _triangulation_to_border_vertices(
-    triangulation: Triangulation[ScalarT],
+    triangulation: Triangulation[ScalarT], /
 ) -> Sequence[Point[ScalarT]]:
     result = [edge.start for edge in to_boundary_edges(triangulation)]
-    compress_contour(result, triangulation.context.angle_orientation)
+    compress_contour(result, orienteer=triangulation.context.angle_orientation)
     return result
 
 
-def horizontal_point_key(point: Point[ScalarT]) -> tuple[ScalarT, ScalarT]:
+def horizontal_point_key(point: Point[ScalarT], /) -> tuple[ScalarT, ScalarT]:
     return point.x, point.y
 
 
-def vertical_point_key(point: Point[ScalarT]) -> tuple[ScalarT, ScalarT]:
+def vertical_point_key(point: Point[ScalarT], /) -> tuple[ScalarT, ScalarT]:
     return point.y, point.x
