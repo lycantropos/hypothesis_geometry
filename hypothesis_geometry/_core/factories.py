@@ -249,7 +249,7 @@ def to_star_contour_vertices(
                     result[index - 1],
                     result[(index + 1) % len(result)],
                     centroid,
-                    orienteer,
+                    orienteer=orienteer,
                 ):
                     del result[index]
                 index += 1

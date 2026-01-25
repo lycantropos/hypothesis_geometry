@@ -9,7 +9,7 @@ from .hints import Multicontour, Orienteer, ScalarT
 
 
 def are_segments_non_crossing_non_overlapping(
-    segments: Sequence[Segment[ScalarT]], context: Context[ScalarT], /
+    segments: Sequence[Segment[ScalarT]], /, *, context: Context[ScalarT]
 ) -> bool:
     return not segments_cross_or_overlap(segments, context=context)
 
@@ -85,8 +85,9 @@ def angle_contains_point(
     first_ray_point: Point[ScalarT],
     second_ray_point: Point[ScalarT],
     point: Point[ScalarT],
-    orienteer: Orienteer[ScalarT],
     /,
+    *,
+    orienteer: Orienteer[ScalarT],
 ) -> bool:
     angle_orientation = orienteer(vertex, first_ray_point, second_ray_point)
     first_half_orientation = orienteer(vertex, first_ray_point, point)
@@ -111,9 +112,9 @@ def angle_contains_point(
 
 
 def are_vertices_non_convex(
-    vertices: Sequence[Point[ScalarT]], orienteer: Orienteer[ScalarT], /
+    vertices: Sequence[Point[ScalarT]], /, *, orienteer: Orienteer[ScalarT]
 ) -> bool:
-    orientations = iter(to_contour_orientations(vertices, orienteer))
+    orientations = iter(to_contour_orientations(vertices, orienteer=orienteer))
     base_orientation = next(orientations)
     # orientation change means
     # that internal angle is greater than 180 degrees
@@ -123,16 +124,18 @@ def are_vertices_non_convex(
 
 
 def are_vertices_strict(
-    vertices: Sequence[Point[ScalarT]], orienteer: Orienteer[ScalarT], /
+    vertices: Sequence[Point[ScalarT]], /, *, orienteer: Orienteer[ScalarT]
 ) -> bool:
     return all(
         orientation is not Orientation.COLLINEAR
-        for orientation in to_contour_orientations(vertices, orienteer)
+        for orientation in to_contour_orientations(
+            vertices, orienteer=orienteer
+        )
     )
 
 
 def to_contour_orientations(
-    vertices: Sequence[Point[ScalarT]], orienteer: Orienteer[ScalarT], /
+    vertices: Sequence[Point[ScalarT]], /, *, orienteer: Orienteer[ScalarT]
 ) -> Iterable[Orientation]:
     return (
         orienteer(
