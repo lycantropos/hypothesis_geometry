@@ -78,90 +78,49 @@ def to_polygon(
 ) -> Polygon[ScalarT]:
     triangulation = Triangulation.delaunay(points, context)
     boundary_edges = to_boundary_edges(triangulation)
-    border_points = [edge.start for edge in boundary_edges]
-    boundary_points = set(border_points)
+    boundary_points = {edge.start for edge in boundary_edges}
     sorting_key_chooser = partial(
         chooser, [horizontal_point_key, vertical_point_key]
     )
     inner_points = list(set(points) - boundary_points)
     prior_sorting_key = None
+    predicate: Callable[[Sequence[Segment[ScalarT]]], bool] | None = None
     holes: list[Contour[ScalarT]] = []
-    hole_edges: list[Segment[ScalarT]] = []
-    contour_cls, orienteer, points_squared_distance, to_contour_segments = (
+    all_hole_edges: list[Segment[ScalarT]] = []
+    contour_cls, to_contour_segments = (
         context.contour_cls,
-        context.angle_orientation,
-        context.points_squared_distance,
         context.contour_segments,
     )
-
-    def is_valid_border_point(
-        first_hole_vertex: Point[ScalarT],
-        second_hole_vertex: Point[ScalarT],
-        point: Point[ScalarT],
-    ) -> bool:
-        first_segment = context.segment_cls(first_hole_vertex, point)
-        second_segment = context.segment_cls(second_hole_vertex, point)
-        return all(
-            (
-                context.segments_relation(edge, first_segment)
-                in (Relation.TOUCH, Relation.DISJOINT)
-            )
-            and (
-                context.segments_relation(edge, second_segment)
-                in (Relation.TOUCH, Relation.DISJOINT)
-            )
-            for edge in hole_edges
-        ) and (
-            orienteer(first_hole_vertex, second_hole_vertex, point)
-            is not Orientation.COLLINEAR
-        )
-
-    touches_border = touches_prior_hole = False
     for hole_size in hole_sizes:
         sorting_key = sorting_key_chooser()
         if sorting_key is not prior_sorting_key:
-            prior_sorting_key = sorting_key
+            prior_sorting_key, predicate = (
+                sorting_key,
+                (
+                    has_vertical_leftmost_segment
+                    if sorting_key is horizontal_point_key
+                    else has_horizontal_lowermost_segment
+                ),
+            )
             inner_points.sort(key=sorting_key)
         hole_points = inner_points[:hole_size]
         hole_vertices = to_vertex_sequence(hole_points, hole_size, context)
-        if len(hole_vertices) == hole_size - 1:
-            min_hole_vertex = min(hole_vertices, key=sorting_key)
-            max_hole_vertex = max(hole_vertices, key=sorting_key)
-            candidates = [
-                point
-                for point in border_points
-                if is_valid_border_point(
-                    min_hole_vertex, max_hole_vertex, point
-                )
-            ]
-            touches_border = (
-                not touches_border or not touches_prior_hole
-            ) and len(candidates) > 0
-            if touches_border:
-                border_point = min(
-                    candidates,
-                    key=partial(points_squared_distance, max_hole_vertex),
-                )
-                hole_points.append(border_point)
-                hole_vertices = to_vertex_sequence(
-                    hole_points, hole_size, context
-                )
-                assert len(hole_vertices) == hole_size
-        else:
-            touches_border = False
         if len(hole_vertices) >= MIN_CONTOUR_SIZE:
             hole = contour_cls(_reverse_vertices(hole_vertices))
             assert contours_do_not_cross_or_overlap(
                 [*holes, hole], context.contour_segments, context=context
             )
             holes.append(hole)
-            hole_edges = list(to_contour_segments(hole))
-            hole_edges.extend(hole_edges)
+            hole_edges = to_contour_segments(hole)
+            all_hole_edges.extend(hole_edges)
             boundary_points.update(hole_points)
-            touches_prior_hole = False
-            inner_points = inner_points[len(hole_points) :]
+            assert predicate is not None
+            can_touch_next_hole = predicate(hole_edges)
+            inner_points = inner_points[
+                len(hole_points) - can_touch_next_hole :
+            ]
 
-    def to_cross_or_overlap_segments_detector(
+    def to_cross_or_overlap_segment_detector(
         segments: Sequence[Segment[ScalarT]], /
     ) -> Callable[[Segment[ScalarT]], bool]:
         if len(segments) > 0:
@@ -182,7 +141,6 @@ def to_polygon(
                 )
 
             return detector
-
         return lambda _segment, /: False
 
     def is_mouth(
@@ -204,15 +162,15 @@ def to_polygon(
         )
 
     def segments_cross_or_overlap(
-        left: Segment[ScalarT], right: Segment[ScalarT]
+        left: Segment[ScalarT], right: Segment[ScalarT], /
     ) -> bool:
         relation = context.segments_relation(left, right)
-        return relation is not Relation.DISJOINT and (
-            relation is not Relation.TOUCH
+        return not (
+            relation is Relation.DISJOINT or relation is Relation.TOUCH
         )
 
     edges_cross_or_overlap_holes_detector = (
-        to_cross_or_overlap_segments_detector(hole_edges)
+        to_cross_or_overlap_segment_detector(all_hole_edges)
     )
     edges_neighbours = {
         edge: to_edge_neighbours(edge) for edge in boundary_edges

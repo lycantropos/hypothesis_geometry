@@ -9,20 +9,20 @@ from .hints import Multicontour, Orienteer, ScalarT
 
 
 def are_segments_non_crossing_non_overlapping(
-    segments: Sequence[Segment[ScalarT]], context: Context[ScalarT]
+    segments: Sequence[Segment[ScalarT]], context: Context[ScalarT], /
 ) -> bool:
     return not segments_cross_or_overlap(segments, context=context)
 
 
 def has_valid_size(
-    sized: Sized, *, min_size: int, max_size: int | None
+    sized: Sized, /, *, min_size: int, max_size: int | None
 ) -> bool:
     size = len(sized)
     return min_size <= size and (max_size is None or size <= max_size)
 
 
 def has_horizontal_lowermost_segment(
-    segments: Sequence[Segment[ScalarT]],
+    segments: Sequence[Segment[ScalarT]], /
 ) -> bool:
     lowermost_segment = max(segments, key=segment_to_min_y)
     min_y = segment_to_min_y(lowermost_segment)
@@ -33,7 +33,7 @@ def has_horizontal_lowermost_segment(
 
 
 def has_vertical_leftmost_segment(
-    segments: Sequence[Segment[ScalarT]],
+    segments: Sequence[Segment[ScalarT]], /
 ) -> bool:
     leftmost_segment = max(segments, key=segment_to_max_x)
     max_x = segment_to_max_x(leftmost_segment)
@@ -43,16 +43,17 @@ def has_vertical_leftmost_segment(
     )
 
 
-def is_segment_horizontal(segment: Segment[ScalarT]) -> bool:
+def is_segment_horizontal(segment: Segment[ScalarT], /) -> bool:
     return segment.start.y == segment.end.y
 
 
-def is_segment_vertical(segment: Segment[ScalarT]) -> bool:
+def is_segment_vertical(segment: Segment[ScalarT], /) -> bool:
     return segment.start.x == segment.end.x
 
 
 def multicontour_has_valid_sizes(
     multicontour: Multicontour[ScalarT],
+    /,
     *,
     min_size: int,
     max_size: int | None,
@@ -71,11 +72,11 @@ def multicontour_has_valid_sizes(
     )
 
 
-def segment_to_max_x(segment: Segment[ScalarT]) -> ScalarT:
+def segment_to_max_x(segment: Segment[ScalarT], /) -> ScalarT:
     return min(segment.start.x, segment.end.x)
 
 
-def segment_to_min_y(segment: Segment[ScalarT]) -> ScalarT:
+def segment_to_min_y(segment: Segment[ScalarT], /) -> ScalarT:
     return min(segment.start.y, segment.end.y)
 
 
@@ -85,6 +86,7 @@ def angle_contains_point(
     second_ray_point: Point[ScalarT],
     point: Point[ScalarT],
     orienteer: Orienteer[ScalarT],
+    /,
 ) -> bool:
     angle_orientation = orienteer(vertex, first_ray_point, second_ray_point)
     first_half_orientation = orienteer(vertex, first_ray_point, point)
@@ -109,7 +111,7 @@ def angle_contains_point(
 
 
 def are_vertices_non_convex(
-    vertices: Sequence[Point[ScalarT]], orienteer: Orienteer[ScalarT]
+    vertices: Sequence[Point[ScalarT]], orienteer: Orienteer[ScalarT], /
 ) -> bool:
     orientations = iter(to_contour_orientations(vertices, orienteer))
     base_orientation = next(orientations)
@@ -121,7 +123,7 @@ def are_vertices_non_convex(
 
 
 def are_vertices_strict(
-    vertices: Sequence[Point[ScalarT]], orienteer: Orienteer[ScalarT]
+    vertices: Sequence[Point[ScalarT]], orienteer: Orienteer[ScalarT], /
 ) -> bool:
     return all(
         orientation is not Orientation.COLLINEAR
@@ -130,7 +132,7 @@ def are_vertices_strict(
 
 
 def to_contour_orientations(
-    vertices: Sequence[Point[ScalarT]], orienteer: Orienteer[ScalarT]
+    vertices: Sequence[Point[ScalarT]], orienteer: Orienteer[ScalarT], /
 ) -> Iterable[Orientation]:
     return (
         orienteer(
