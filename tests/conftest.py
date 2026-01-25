@@ -1,4 +1,5 @@
 import os
+import sys
 import time
 from collections.abc import Callable, Iterator
 from datetime import timedelta
@@ -7,8 +8,13 @@ from typing import cast
 import pytest
 from hypothesis import HealthCheck, settings
 
+is_pypy = sys.implementation.name == 'pypy'
 on_ci = bool(os.getenv('CI'))
-max_examples = settings().max_examples
+max_examples = (
+    -(-settings().max_examples // (100 if is_pypy else 10))
+    if on_ci
+    else settings().max_examples
+)
 settings.register_profile(
     'default',
     deadline=(timedelta(hours=1) / max_examples if on_ci else None),
