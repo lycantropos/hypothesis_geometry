@@ -20,7 +20,7 @@ from datetime import date
 import hypothesis_geometry
 
 project = hypothesis_geometry.__name__
-copyright = f'{date.today().year}, Azat Ibrakov'  # noqa: A001
+copyright = f'{date.today().year}, Azat Ibrakov'  # ruff: ignore[builtin-variable-shadowing]
 author = 'Azat Ibrakov'
 
 # The full version, including alpha/beta/rc tags

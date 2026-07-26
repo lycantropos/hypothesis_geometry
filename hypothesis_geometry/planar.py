@@ -28,7 +28,7 @@ from ._core.base import (
     to_multisegment_strategy as _to_multisegments,
     to_point_strategy as _to_points,
     to_polygon_strategy as _to_polygons,
-    to_rectangular_vertex_sequence_strategy as _to_rectangular_vertex_sequences,  # noqa: E501
+    to_rectangular_vertex_sequence_strategy as _to_rectangular_vertex_sequences,  # ruff: ignore[line-too-long]
     to_segment_strategy as _to_segments,
     to_star_vertex_sequence_strategy as _to_star_vertex_sequences,
     to_triangular_vertex_sequence_strategy as _to_triangular_vertex_sequences,

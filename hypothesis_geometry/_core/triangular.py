@@ -36,7 +36,7 @@ class Triangulation(HasCustomRepr, Generic[ScalarT]):
             parts_to_merge_count = len(result) // 2 * 2
             result = (
                 [
-                    result[offset]._merge(result[offset + 1])  # noqa: SLF001
+                    result[offset]._merge(result[offset + 1])  # ruff: ignore[private-member-access]
                     for offset in range(0, parts_to_merge_count, 2)
                 ]
                 + result[parts_to_merge_count:]

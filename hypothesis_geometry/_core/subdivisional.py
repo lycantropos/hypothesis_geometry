@@ -149,11 +149,11 @@ class QuadEdge(HasCustomRepr, Generic[ScalarT]):
         """Splices the edge with the other."""
         alpha = self.left_from_start.rotated
         beta = other.left_from_start.rotated
-        self._left_from_start, other._left_from_start = (  # noqa: SLF001
+        self._left_from_start, other._left_from_start = (
             other.left_from_start,
             self.left_from_start,
         )
-        alpha._left_from_start, beta._left_from_start = (  # noqa: SLF001
+        alpha._left_from_start, beta._left_from_start = (  # ruff: ignore[private-member-access]
             beta.left_from_start,
             alpha.left_from_start,
         )
@@ -168,7 +168,7 @@ class QuadEdge(HasCustomRepr, Generic[ScalarT]):
         self.splice(side.left_from_end)
         opposite.splice(opposite_side.left_from_end)
         self._start = side.end
-        opposite._start = opposite_side.end  # noqa: SLF001
+        opposite._start = opposite_side.end  # ruff: ignore[private-member-access]
 
 
 def to_edge_neighbours(
